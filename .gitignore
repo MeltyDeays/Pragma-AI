@@ -22,3 +22,10 @@ dist-ssr
 *.njsproj
 *.sln
 *.sw?
+
+# Repomix, Claude, Agents and Large Videos
+repomix-output.xml
+repomix.config.json
+CLAUDE.md
+*.mp4
+.agents
