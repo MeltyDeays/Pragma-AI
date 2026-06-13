@@ -191,34 +191,47 @@ function LobbyView({ estudiante, backendUrl, onUpdate }) {
       )}
 
       {searching && (
-        <div className="searching-container">
-          {/* Esquinas del panel de radar */}
+        <div className="searching-container hud-panel p-8 rounded-none">
+          {/* Inyección de Brackets Tácticos */}
           <div className="hud-corner top-left"></div>
           <div className="hud-corner top-right"></div>
           <div className="hud-corner bottom-left"></div>
           <div className="hud-corner bottom-right"></div>
 
-          {/* Radar concéntrico animado SVG */}
-          <svg className="radar-scanner-svg" viewBox="0 0 120 120">
-            <defs>
-              <radialGradient id="sweep-gradient" cx="50%" cy="50%" r="50%" fx="50%" fy="50%">
-                <stop offset="0%" stopColor="#00f3ff" stopOpacity="0.45" />
-                <stop offset="100%" stopColor="#00f3ff" stopOpacity="0" />
-              </radialGradient>
-            </defs>
-            <circle cx="60" cy="60" r="50" className="radar-circle" />
-            <circle cx="60" cy="60" r="35" className="radar-circle" />
-            <circle cx="60" cy="60" r="20" className="radar-circle" />
-            <line x1="10" y1="60" x2="110" y2="60" className="radar-circle" strokeDasharray="2,2" />
-            <line x1="60" y1="10" x2="60" y2="110" className="radar-circle" strokeDasharray="2,2" />
-            <path d="M 60,60 L 60,10 A 50,50 0 0,1 110,60 Z" className="radar-sweep" />
-            <circle cx="90" cy="45" r="4" className="radar-blip" />
-          </svg>
-
-          <h3 className={`telemetry-ticker ${searchTimer % 3 === 0 ? 'glitch-active' : ''}`}>
-            [TELEMETRÍA] BUSCANDO OPONENTES EN LA RED DE PRAGMA AI...
+          <h3 className="text-xl font-bold tracking-widest uppercase mb-6" style={{ fontFamily: 'var(--font-title)' }}>
+            Escaneo de Red Arena
           </h3>
-          <p className="timer">Tiempo transcurrido: {searchTimer}s</p>
+
+          {/* Esfera del Radar Vectorial */}
+          <div className="relative w-48 h-48 mx-auto mb-6" style={{ width: '12rem', height: '12rem', position: 'relative' }}>
+            <svg className="w-full h-full animate-spin" style={{ animationDuration: '4s', width: '100%', height: '100%' }} viewBox="0 0 200 200">
+              {/* Círculos concéntricos del Sonar */}
+              <circle cx="100" cy="100" r="90" fill="none" stroke="rgba(0, 243, 255, 0.15)" strokeWidth="1" />
+              <circle cx="100" cy="100" r="60" fill="none" stroke="rgba(0, 243, 255, 0.2)" strokeWidth="1" />
+              <circle cx="100" cy="100" r="30" fill="none" stroke="rgba(0, 243, 255, 0.3)" strokeWidth="1" />
+              {/* Ejes de Rejilla */}
+              <line x1="100" y1="10" x2="100" y2="190" stroke="rgba(0, 243, 255, 0.2)" strokeWidth="1" />
+              <line x1="10" y1="100" x2="190" y2="100" stroke="rgba(0, 243, 255, 0.2)" strokeWidth="1" />
+              {/* Haz de barrido con gradiente */}
+              <path d="M100,100 L100,10 A90,90 0 0,1 190,100 Z" fill="url(#radar-gradient)" opacity="0.4" />
+              <defs>
+                <linearGradient id="radar-gradient" x1="0%" y1="0%" x2="100%" y2="100%">
+                  <stop offset="0%" stopColor="var(--neon-cyan)" stopOpacity="1" />
+                  <stop offset="100%" stopColor="var(--neon-cyan)" stopOpacity="0" />
+                </linearGradient>
+              </defs>
+            </svg>
+            {/* Punto de parpadeo central fija */}
+            <div className="absolute top-1/2 left-1/2 w-2 h-2 bg-red-500 rounded-full -translate-x-1/2 -translate-y-1/2 animate-ping" style={{ position: 'absolute', top: '50%', left: '50%', transform: 'translate(-50%, -50%)', width: '8px', height: '8px', borderRadius: '50%', backgroundColor: '#ff0055' }} />
+          </div>
+
+          {/* Telemetry Log Feed */}
+          <div className="text-left bg-black/40 p-3 rounded border border-cyan-500/10 font-mono text-xs text-cyan-400 h-24 overflow-y-hidden space-y-1" style={{ textAlign: 'left', background: 'rgba(0,0,0,0.4)', padding: '12px', border: '1px solid rgba(0,243,255,0.1)', fontFamily: 'var(--font-hud)', fontSize: '12px', color: 'var(--neon-cyan)', height: '96px', overflow: 'hidden', margin: '15px 0' }}>
+            <p className="opacity-90">[INFO] INICIALIZANDO CAPA SOCKETS... [{searchTimer}s]</p>
+            <p className="opacity-70">[PING] BUSCANDO PARÁMETROS COGNITIVOS EN NODO JUIGALPA...</p>
+            <p className="text-amber-400 animate-pulse" style={{ color: 'var(--neon-gold)' }}>[SCAN] ESCANEANDO MATCH DISPONIBLE DE RANGO NOVATO...</p>
+          </div>
+
           <button className="btn-action btn-cancel-search" style={{ marginTop: '20px', background: '#ff0055', borderColor: '#ff0055' }} onClick={cancelSearch}>
             ❌ Cancelar Búsqueda
           </button>
@@ -975,7 +988,7 @@ function DefenseView({ estudiante, onUpdate }) {
           <button className="btn-action start-game-btn" onClick={startGame}>Iniciar Protocolo de Defensa</button>
         </div>
       ) : (
-        <div className="arcade-hud-wrapper">
+        <div className="arcade-hud-wrapper crt-overlay">
           <div className={`defense-field ${shake ? 'animate-shake-glitch' : ''}`}>
             {/* Info HUD */}
             <div className="hud">

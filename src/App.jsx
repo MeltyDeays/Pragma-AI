@@ -239,44 +239,37 @@ const parsearRequisitos = (descripcion) => {
 
 function NebulaCanvas() {
   const canvasRef = useRef(null);
-  const mouseRef = useRef({ x: 0, y: 0, targetX: 0, targetY: 0 });
 
   useEffect(() => {
     const canvas = canvasRef.current;
     if (!canvas) return;
     const ctx = canvas.getContext('2d');
-    
     let animationFrameId;
-    let width = canvas.width = canvas.offsetWidth || 800;
-    let height = canvas.height = canvas.offsetHeight || 600;
 
-    const stars = [];
-    const starCount = 100;
-    for (let i = 0; i < starCount; i++) {
-      stars.push({
-        x: Math.random() * width,
-        y: Math.random() * height,
-        size: Math.random() * 1.5 + 0.5,
-        twinkleSpeed: 0.01 + Math.random() * 0.03,
-        alpha: Math.random(),
-        direction: Math.random() > 0.5 ? 1 : -1
-      });
-    }
-
-    const handleResize = () => {
-      if (!canvas) return;
-      width = canvas.width = canvas.offsetWidth || 800;
-      height = canvas.height = canvas.offsetHeight || 600;
+    const resizeCanvas = () => {
+      if (!canvas.parentElement) return;
+      canvas.width = canvas.parentElement.clientWidth;
+      canvas.height = canvas.parentElement.clientHeight;
     };
+    resizeCanvas();
+    window.addEventListener('resize', resizeCanvas);
 
-    window.addEventListener('resize', handleResize);
+    // Inicialización de partículas de estrellas fijas con efecto parallax
+    const stars = Array.from({ length: 80 }, () => ({
+      x: Math.random() * (canvas.width || 800),
+      y: Math.random() * (canvas.height || 600),
+      radius: Math.random() * 1.5,
+      alpha: Math.random(),
+      speed: 0.01 + Math.random() * 0.02
+    }));
 
+    // Seguir el mouse para un gradiente interactivo
+    let mouseX = canvas.width / 2;
+    let mouseY = canvas.height / 2;
     const handleMouseMove = (e) => {
       const rect = canvas.getBoundingClientRect();
-      const x = e.clientX - rect.left;
-      const y = e.clientY - rect.top;
-      mouseRef.current.targetX = x;
-      mouseRef.current.targetY = y;
+      mouseX = e.clientX - rect.left;
+      mouseY = e.clientY - rect.top;
     };
 
     const parent = canvas.parentElement;
@@ -285,61 +278,52 @@ function NebulaCanvas() {
     }
 
     const render = () => {
-      ctx.fillStyle = '#020205';
-      ctx.fillRect(0, 0, width, height);
+      ctx.fillStyle = '#000000';
+      ctx.fillRect(0, 0, canvas.width, canvas.height);
 
-      const mouse = mouseRef.current;
-      mouse.x += (mouse.targetX - mouse.x) * 0.05;
-      mouse.y += (mouse.targetY - mouse.y) * 0.05;
-
-      const gradientX = width / 2 + (mouse.x - width / 2) * 0.15;
-      const gradientY = height / 2 + (mouse.y - height / 2) * 0.15;
-
+      // Dibujar la nebulosa interactiva de fondo
       const nebula = ctx.createRadialGradient(
-        gradientX, gradientY, 50,
-        gradientX, gradientY, Math.max(width, height) * 0.7
+        mouseX, mouseY, 50,
+        mouseX, mouseY, Math.max(canvas.width, canvas.height) * 0.7
       );
-      nebula.addColorStop(0, 'rgba(0, 243, 255, 0.07)');
+      nebula.addColorStop(0, 'rgba(0, 243, 255, 0.08)');
       nebula.addColorStop(0.3, 'rgba(124, 58, 237, 0.04)');
-      nebula.addColorStop(1, 'rgba(2, 2, 5, 0)');
-
+      nebula.addColorStop(1, 'rgba(0, 0, 0, 0)');
       ctx.fillStyle = nebula;
-      ctx.fillRect(0, 0, width, height);
+      ctx.fillRect(0, 0, canvas.width, canvas.height);
 
+      // Dibujo del Twinkle Effect de estrellas
       stars.forEach(star => {
-        star.alpha += star.twinkleSpeed * star.direction;
-        if (star.alpha <= 0.1) {
-          star.alpha = 0.1;
-          star.direction = 1;
-        } else if (star.alpha >= 1) {
-          star.alpha = 1;
-          star.direction = -1;
-        }
-
-        const parallaxX = (mouse.x - width / 2) * (star.size * 0.015);
-        const parallaxY = (mouse.y - height / 2) * (star.size * 0.015);
-
-        ctx.fillStyle = `rgba(0, 243, 255, ${star.alpha * 0.75})`;
+        star.alpha += star.speed;
+        if (star.alpha > 1 || star.alpha < 0) star.speed = -star.speed;
+        ctx.globalAlpha = Math.abs(star.alpha);
+        ctx.fillStyle = '#ffffff';
         ctx.beginPath();
-        ctx.arc(star.x + parallaxX, star.y + parallaxY, star.size, 0, Math.PI * 2);
+        ctx.arc(star.x, star.y, star.radius, 0, Math.PI * 2);
         ctx.fill();
       });
 
+      ctx.globalAlpha = 1.0;
       animationFrameId = requestAnimationFrame(render);
     };
-
     render();
 
     return () => {
-      window.removeEventListener('resize', handleResize);
+      cancelAnimationFrame(animationFrameId);
+      window.removeEventListener('resize', resizeCanvas);
       if (parent) {
         parent.removeEventListener('mousemove', handleMouseMove);
       }
-      cancelAnimationFrame(animationFrameId);
     };
   }, []);
 
-  return <canvas ref={canvasRef} className="nebula-canvas-background" />;
+  return (
+    <canvas 
+      ref={canvasRef} 
+      className="absolute top-0 left-0 w-full h-full pointer-events-none" 
+      style={{ zIndex: 0 }}
+    />
+  );
 }
 
 function App() {
