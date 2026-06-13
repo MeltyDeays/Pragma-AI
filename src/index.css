@@ -84,3 +84,59 @@ body {
 ::-webkit-scrollbar-thumb:hover {
   background: #334155;
 }
+
+/* =========================================
+   OVERRIDE GLOBAL HUD TÁCTICO ESPACIAL
+   Mata TODAS las esquinas redondeadas web,
+   fondos grises genéricos y fuentes sans-serif
+   ========================================= */
+
+body, html, #root {
+  background-color: var(--bg-space-dark) !important;
+  color: #ffffff !important;
+  font-family: var(--font-hud) !important;
+}
+
+.glass-panel,
+.lobby-panel,
+.defense-panel,
+.copiloto-panel,
+.trivia-panel,
+.tinder-panel,
+.pragma-header-panel,
+.searching-container,
+.battle-result-container,
+.setup-container,
+.rewards-card,
+.player-card,
+.start-screen,
+.inv-item,
+.pragma-nav-strip button,
+.rank-badge {
+  border-radius: 0px !important;
+  background: rgba(2, 2, 6, 0.65) !important;
+  backdrop-filter: blur(20px) !important;
+  border: 1px solid var(--glass-border) !important;
+  box-shadow: inset 0 0 25px rgba(0, 243, 255, 0.04) !important;
+  position: relative;
+}
+
+.glass-panel h2,
+.glass-panel h3,
+.lobby-panel h2,
+.defense-panel h2 {
+  font-family: var(--font-title) !important;
+  letter-spacing: 2px;
+  text-transform: uppercase;
+}
+
+.btn-glow,
+.btn-action,
+.start-match-btn,
+.start-game-btn {
+  border-radius: 0px !important;
+  font-family: var(--font-hud) !important;
+  letter-spacing: 1px;
+  text-transform: uppercase;
+}
+

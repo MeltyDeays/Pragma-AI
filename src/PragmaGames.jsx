@@ -89,28 +89,60 @@ function LobbyView({ estudiante, backendUrl, onUpdate }) {
   const [searching, setSearching] = useState(false);
   const [searchTimer, setSearchTimer] = useState(0);
   const [battleResult, setBattleResult] = useState(null);
+  const [lobbyPlayers, setLobbyPlayers] = useState([]);
   const intervalRef = useRef(null);
   const pollingRef = useRef(null);
+
+  // Jugadores simulados para llenar el lobby como la Imagen 5
+  const ORANGE_TEAM_MOCK = [
+    { nombre: "K1NET1C", rank: "S", level: 92, avatar: "🛸", color: "#ff9900" },
+    { nombre: "DR3ADBLADE", rank: "A+", level: 78, avatar: "💀", color: "#ff0055" },
+    { nombre: "SHADOW_FX", rank: "A", level: 64, avatar: "👤", color: "#ffaa00" },
+    { nombre: "VOID_RUNNER", rank: "B+", level: 50, avatar: "🏃", color: "#ff5500" }
+  ];
+
+  const BLUE_TEAM_MOCK = [
+    { nombre: "CYBER_PUNK", rank: "S", level: 95, avatar: "🕶️", color: "#00f3ff" },
+    { nombre: "NIGHT_OWL", rank: "A+", level: 82, avatar: "🦉", color: "#00aaff" },
+    { nombre: "NEON_HACK", rank: "A", level: 68, avatar: "💻", color: "#00ffaa" },
+    { nombre: "MATRIX_01", rank: "B+", level: 45, avatar: "🤖", color: "#00ff66" }
+  ];
 
   const startSearch = async () => {
     setSearching(true);
     setSearchTimer(0);
     setBattleResult(null);
+    setLobbyPlayers([]);
+
+    // Simular que los jugadores se unen a la cola uno a uno
+    let step = 0;
+    const intervalPlayers = setInterval(() => {
+      step++;
+      if (step === 1) {
+        setLobbyPlayers([{ ...ORANGE_TEAM_MOCK[0], team: 'orange' }]);
+      } else if (step === 2) {
+        setLobbyPlayers(prev => [...prev, { ...BLUE_TEAM_MOCK[0], team: 'blue' }]);
+      } else if (step === 3) {
+        setLobbyPlayers(prev => [...prev, { ...ORANGE_TEAM_MOCK[1], team: 'orange' }, { ...BLUE_TEAM_MOCK[1], team: 'blue' }]);
+      } else if (step === 4) {
+        setLobbyPlayers(prev => [...prev, { ...ORANGE_TEAM_MOCK[2], team: 'orange' }, { ...BLUE_TEAM_MOCK[2], team: 'blue' }]);
+      } else if (step === 5) {
+        setLobbyPlayers(prev => [...prev, { ...ORANGE_TEAM_MOCK[3], team: 'orange' }, { ...BLUE_TEAM_MOCK[3], team: 'blue' }]);
+        clearInterval(intervalPlayers);
+      }
+    }, 800);
 
     try {
-      // Registrar ticket de matchmaking en el backend
       await fetch(`${backendUrl}/api/pragma/multiplayer/match/join`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ estudiante_id: estudiante.id, tipo_match: matchType })
       });
 
-      // Temporizador visual
       intervalRef.current = setInterval(() => {
         setSearchTimer(prev => prev + 1);
       }, 1000);
 
-      // Polling de estado cada 1.5s
       pollingRef.current = setInterval(async () => {
         try {
           const statusRes = await fetch(`${backendUrl}/api/pragma/multiplayer/match/status/${estudiante.id}`);
@@ -119,10 +151,10 @@ function LobbyView({ estudiante, backendUrl, onUpdate }) {
           if (statusData.status === 'completado') {
             clearInterval(intervalRef.current);
             clearInterval(pollingRef.current);
+            clearInterval(intervalPlayers);
             setSearching(false);
             setBattleResult(statusData.matchResult);
 
-            // Actualizar datos del estudiante según resultado
             const res = statusData.matchResult;
             const profileCopy = { ...estudiante.pragma_profile };
             if (res.victoria) {
@@ -135,13 +167,14 @@ function LobbyView({ estudiante, backendUrl, onUpdate }) {
             onUpdate(profileCopy);
           }
         } catch (e) {
-          console.error("Error al consultar estado del match:", e);
+          console.error(e);
         }
       }, 1500);
 
     } catch (err) {
       console.error(err);
       setSearching(false);
+      clearInterval(intervalPlayers);
     }
   };
 
@@ -156,7 +189,7 @@ function LobbyView({ estudiante, backendUrl, onUpdate }) {
         body: JSON.stringify({ estudiante_id: estudiante.id })
       });
     } catch (err) {
-      console.error("Error al cancelar ticket de matchmaking:", err);
+      console.error(err);
     }
   };
 
@@ -168,106 +201,184 @@ function LobbyView({ estudiante, backendUrl, onUpdate }) {
   }, []);
 
   return (
-    <div className="lobby-panel glass-panel">
-      {/* Esquinas tácticas militares del HUD */}
+    <div className="lobby-panel glass-panel codewars-arena-panel">
       <div className="hud-corner top-left"></div>
       <div className="hud-corner top-right"></div>
       <div className="hud-corner bottom-left"></div>
       <div className="hud-corner bottom-right"></div>
 
-      <h2>⚔️ Terminal de Combate Multijugador</h2>
-      <p className="panel-desc">Empareja tu código con oponentes del servidor en retos rápidos. Soporte 1v1, 2v2, 4v4 y Todos contra Todos.</p>
+      <div className="arena-header">
+        <div>
+          <h2 className="arena-title">CODEWARS: MULTIPLAYER ARENA</h2>
+          <div className="arena-sub-telemetry">
+            <span>STATUS: <span className="text-green text-glow">ONLINE</span></span>
+            <span style={{ marginLeft: '15px' }}>LOBBY: <span className="text-cyan text-glow">ALPHA-7</span></span>
+          </div>
+        </div>
+
+        {searching && (
+          <div className="queue-timer-badge">
+            <span className="pulse-dot"></span>
+            MATCHMAKING QUEUE: Active - {matchType} | {Math.floor(searchTimer / 60).toString().padStart(2, '0')}:{(searchTimer % 60).toString().padStart(2, '0')}
+          </div>
+        )}
+      </div>
 
       {!searching && !battleResult && (
-        <div className="setup-container">
-          <div className="match-options">
-            <button className={matchType === '1v1' ? 'btn-glow active' : 'btn-glow'} onClick={() => setMatchType('1v1')}>1v1 Duelo</button>
-            <button className={matchType === '2v2' ? 'btn-glow active' : 'btn-glow'} onClick={() => setMatchType('2v2')}>2v2 Hack-team</button>
-            <button className={matchType === '4v4' ? 'btn-glow active' : 'btn-glow'} onClick={() => setMatchType('4v4')}>4v4 Raid</button>
-            <button className={matchType === 'todos_vs_todos' ? 'btn-glow active' : 'btn-glow'} onClick={() => setMatchType('todos_vs_todos')}>Todos vs Todos</button>
+        <div className="setup-container-spec">
+          <p className="panel-desc">Empareja tu código con oponentes en tiempo real. Configura el modo de simulación táctica:</p>
+          <div className="match-options-spec">
+            <button className={`mode-card-btn duel ${matchType === '1v1' ? 'active' : ''}`} onClick={() => setMatchType('1v1')}>
+              <span className="mode-title">1v1</span>
+              <span className="mode-sub">DUEL</span>
+            </button>
+            <button className={`mode-card-btn team-match ${matchType === '2v2' ? 'active' : ''}`} onClick={() => setMatchType('2v2')}>
+              <span className="mode-title">2v2</span>
+              <span className="mode-sub">TEAM MATCH</span>
+            </button>
+            <button className={`mode-card-btn squad ${matchType === '4v4' ? 'active' : ''}`} onClick={() => setMatchType('4v4')}>
+              <span className="mode-title">4v4</span>
+              <span className="mode-sub">SQUAD BATTLE</span>
+            </button>
           </div>
-          <button className="btn-action start-match-btn" onClick={startSearch}>Inicializar Matchmaking</button>
+          <button className="btn-action-hud start-search-btn-hud" onClick={startSearch}>INICIALIZAR MATCHMAKING</button>
         </div>
       )}
 
       {searching && (
-        <div className="searching-container hud-panel p-8 rounded-none">
-          {/* Inyección de Brackets Tácticos */}
+        <div className="arena-searching-layout">
+          {/* Fila superior de telemetría y radar */}
+          <div className="arena-searching-top">
+            <div className="radar-tactical-container">
+              <svg className="radar-vectorial animate-spin" viewBox="0 0 200 200">
+                <circle cx="100" cy="100" r="90" fill="none" stroke="rgba(0, 243, 255, 0.15)" strokeWidth="1" />
+                <circle cx="100" cy="100" r="60" fill="none" stroke="rgba(0, 243, 255, 0.2)" strokeWidth="1" />
+                <circle cx="100" cy="100" r="30" fill="none" stroke="rgba(0, 243, 255, 0.3)" strokeWidth="1" />
+                <line x1="100" y1="10" x2="100" y2="190" stroke="rgba(0, 243, 255, 0.2)" strokeWidth="1" />
+                <line x1="10" y1="100" x2="190" y2="100" stroke="rgba(0, 243, 255, 0.2)" strokeWidth="1" />
+                <path d="M100,100 L100,10 A90,90 0 0,1 190,100 Z" fill="url(#radar-glow)" opacity="0.45" />
+                <defs>
+                  <linearGradient id="radar-glow" x1="0%" y1="0%" x2="100%" y2="100%">
+                    <stop offset="0%" stopColor="var(--neon-cyan)" stopOpacity="1" />
+                    <stop offset="100%" stopColor="var(--neon-cyan)" stopOpacity="0" />
+                  </linearGradient>
+                </defs>
+              </svg>
+              <div className="radar-ping-dot" />
+            </div>
+
+            <div className="telemetry-logs-side">
+              <div className="hud-corner top-left"></div>
+              <div className="hud-corner top-right"></div>
+              <div className="hud-corner bottom-left"></div>
+              <div className="hud-corner bottom-right"></div>
+              <p className="log-line green">[OK] CAPA COGNITIVA ACTIVA</p>
+              <p className="log-line cyan">[SCAN] ANALIZANDO PUERTOS DE CONEXIÓN EN MÓDULO 1...</p>
+              <p className="log-line gold">[WARN] LATENCIA DE ENRUTAMIENTO: 14MS</p>
+              <p className="log-line cyan">[SCAN] BUSCANDO OPONENTES DE SIMILAR RANGO (NOVATO)...</p>
+              <p className="log-line green">[SUCCESS] {lobbyPlayers.length} NODOS DE COMBATE ENCONTRADOS</p>
+            </div>
+          </div>
+
+          {/* Grilla de dos equipos (Naranja vs Azul) */}
+          <div className="matchmaking-teams-view">
+            <div className="team-column orange">
+              <h3 className="team-title orange-text">ORANGE TEAM</h3>
+              <div className="team-cards-grid">
+                {ORANGE_TEAM_MOCK.map((player, idx) => {
+                  const isActive = lobbyPlayers.some(p => p.nombre === player.nombre);
+                  return (
+                    <div key={idx} className={`player-card-spec orange-theme ${isActive ? 'active' : 'placeholder'}`}>
+                      <div className="avatar-glitch">{isActive ? player.avatar : "❓"}</div>
+                      <div className="player-info-spec">
+                        <span className="player-name">{isActive ? player.nombre : "BUSCANDO..."}</span>
+                        <span className="player-rank">Rank {isActive ? player.rank : "--"}</span>
+                      </div>
+                    </div>
+                  );
+                })}
+              </div>
+            </div>
+
+            <div className="team-divider-vs">
+              <span className="vs-badge">VS</span>
+            </div>
+
+            <div className="team-column blue">
+              <h3 className="team-title blue-text">BLUE TEAM</h3>
+              <div className="team-cards-grid">
+                {BLUE_TEAM_MOCK.map((player, idx) => {
+                  const isActive = lobbyPlayers.some(p => p.nombre === player.nombre);
+                  return (
+                    <div key={idx} className={`player-card-spec blue-theme ${isActive ? 'active' : 'placeholder'}`}>
+                      <div className="avatar-glitch">{isActive ? player.avatar : "❓"}</div>
+                      <div className="player-info-spec">
+                        <span className="player-name">{isActive ? player.nombre : "BUSCANDO..."}</span>
+                        <span className="player-rank">Rank {isActive ? player.rank : "--"}</span>
+                      </div>
+                    </div>
+                  );
+                })}
+              </div>
+            </div>
+          </div>
+
+          {/* Barra de estado inferior y ondas sonoras */}
+          <div className="searching-bottom-controls">
+            <div className="audio-waveforms">
+              <div className="wave-bar animate-wave-short"></div>
+              <div className="wave-bar animate-wave-tall"></div>
+              <div className="wave-bar animate-wave-medium"></div>
+              <div className="wave-bar animate-wave-short"></div>
+              <div className="wave-bar animate-wave-tall"></div>
+              <span className="audio-label">QUEUE ACTIVE</span>
+              <div className="wave-bar animate-wave-short"></div>
+              <div className="wave-bar animate-wave-medium"></div>
+              <div className="wave-bar animate-wave-tall"></div>
+              <div className="wave-bar animate-wave-short"></div>
+            </div>
+
+            <button className="btn-hud-cancel" onClick={cancelSearch}>LEAVE QUEUE</button>
+          </div>
+        </div>
+      )}
+
+      {battleResult && (
+        <div className="battle-result-container spec-battle-result">
           <div className="hud-corner top-left"></div>
           <div className="hud-corner top-right"></div>
           <div className="hud-corner bottom-left"></div>
           <div className="hud-corner bottom-right"></div>
 
-          <h3 className="text-xl font-bold tracking-widest uppercase mb-6" style={{ fontFamily: 'var(--font-title)' }}>
-            Escaneo de Red Arena
-          </h3>
-
-          {/* Esfera del Radar Vectorial */}
-          <div className="relative w-48 h-48 mx-auto mb-6" style={{ width: '12rem', height: '12rem', position: 'relative' }}>
-            <svg className="w-full h-full animate-spin" style={{ animationDuration: '4s', width: '100%', height: '100%' }} viewBox="0 0 200 200">
-              {/* Círculos concéntricos del Sonar */}
-              <circle cx="100" cy="100" r="90" fill="none" stroke="rgba(0, 243, 255, 0.15)" strokeWidth="1" />
-              <circle cx="100" cy="100" r="60" fill="none" stroke="rgba(0, 243, 255, 0.2)" strokeWidth="1" />
-              <circle cx="100" cy="100" r="30" fill="none" stroke="rgba(0, 243, 255, 0.3)" strokeWidth="1" />
-              {/* Ejes de Rejilla */}
-              <line x1="100" y1="10" x2="100" y2="190" stroke="rgba(0, 243, 255, 0.2)" strokeWidth="1" />
-              <line x1="10" y1="100" x2="190" y2="100" stroke="rgba(0, 243, 255, 0.2)" strokeWidth="1" />
-              {/* Haz de barrido con gradiente */}
-              <path d="M100,100 L100,10 A90,90 0 0,1 190,100 Z" fill="url(#radar-gradient)" opacity="0.4" />
-              <defs>
-                <linearGradient id="radar-gradient" x1="0%" y1="0%" x2="100%" y2="100%">
-                  <stop offset="0%" stopColor="var(--neon-cyan)" stopOpacity="1" />
-                  <stop offset="100%" stopColor="var(--neon-cyan)" stopOpacity="0" />
-                </linearGradient>
-              </defs>
-            </svg>
-            {/* Punto de parpadeo central fija */}
-            <div className="absolute top-1/2 left-1/2 w-2 h-2 bg-red-500 rounded-full -translate-x-1/2 -translate-y-1/2 animate-ping" style={{ position: 'absolute', top: '50%', left: '50%', transform: 'translate(-50%, -50%)', width: '8px', height: '8px', borderRadius: '50%', backgroundColor: '#ff0055' }} />
+          <div className={`result-header-spec ${battleResult.victoria ? 'win' : 'lose'}`}>
+            {battleResult.victoria ? '🏆 DECRIPCIÓN EXITOSA' : '💀 FALLO EN EL FIREWALL'}
           </div>
+          <p className="desc-spec">{battleResult.mensaje}</p>
 
-          {/* Telemetry Log Feed */}
-          <div className="text-left bg-black/40 p-3 rounded border border-cyan-500/10 font-mono text-xs text-cyan-400 h-24 overflow-y-hidden space-y-1" style={{ textAlign: 'left', background: 'rgba(0,0,0,0.4)', padding: '12px', border: '1px solid rgba(0,243,255,0.1)', fontFamily: 'var(--font-hud)', fontSize: '12px', color: 'var(--neon-cyan)', height: '96px', overflow: 'hidden', margin: '15px 0' }}>
-            <p className="opacity-90">[INFO] INICIALIZANDO CAPA SOCKETS... [{searchTimer}s]</p>
-            <p className="opacity-70">[PING] BUSCANDO PARÁMETROS COGNITIVOS EN NODO JUIGALPA...</p>
-            <p className="text-amber-400 animate-pulse" style={{ color: 'var(--neon-gold)' }}>[SCAN] ESCANEANDO MATCH DISPONIBLE DE RANGO NOVATO...</p>
-          </div>
-
-          <button className="btn-action btn-cancel-search" style={{ marginTop: '20px', background: '#ff0055', borderColor: '#ff0055' }} onClick={cancelSearch}>
-            ❌ Cancelar Búsqueda
-          </button>
-        </div>
-      )}
-
-      {battleResult && (
-        <div className="battle-result-container">
-          <div className={`result-header ${battleResult.victoria ? 'win' : 'lose'}`}>
-            {battleResult.victoria ? '🏆 ¡VICTORIA EN RED!' : '💀 DERROTA CONCEPTUAL'}
-          </div>
-          <p className="desc">{battleResult.mensaje}</p>
-
-          <div className="lobby-players-grid">
-            {battleResult.jugadores?.map((p, idx) => (
-              <div key={idx} className={`player-card ${p.isBot ? 'bot-card' : 'user-card'}`} style={{ borderLeft: `4px solid ${p.laser_color}` }}>
-                <span className="card-badge">{p.isBot ? 'BOT' : 'TÚ'}</span>
-                <h4>{p.nombre}</h4>
-                <p className="pts">{p.rank_points} RP</p>
+          <div className="battle-stats-summary">
+            <div className="stat-box">
+              <span className="stat-num">{battleResult.victoria ? `+${battleResult.rankGanado || 15}` : '+10'}</span>
+              <span className="stat-lbl">RANK POINTS</span>
+            </div>
+            <div className="stat-box">
+              <span className="stat-num">+3</span>
+              <span className="stat-lbl">SILICON SHARDS</span>
+            </div>
+            {battleResult.victoria && (
+              <div className="stat-box">
+                <span className="stat-num">+{battleResult.xpGanada || 20}</span>
+                <span className="stat-lbl">XP COGNITIVA</span>
               </div>
-            ))}
+            )}
           </div>
 
-          <div className="rewards-card">
-            <h4>Recompensas del Combate:</h4>
-            <p className="rewards-text">
-              {battleResult.victoria ? `+${battleResult.rankGanado} RP • +3 Silicon Shards • +${battleResult.xpGanada} XP` : `+10 RP de Consolación • +3 Silicon Shards`}
-            </p>
-          </div>
-
-          <button className="btn-glow" onClick={() => setBattleResult(null)}>Regresar al Lobby</button>
+          <button className="btn-action-hud" style={{ marginTop: '20px' }} onClick={() => setBattleResult(null)}>REGRESAR AL LOBBY</button>
         </div>
       )}
     </div>
   );
 }
+
 
 /* ==========================================
    2. COPILOTO DE DEPURACIÓN
@@ -733,29 +844,171 @@ function ForjaView({ estudiante, backendUrl, onUpdate }) {
    6. GRIMORIO DE RUNAS (ÁLBUM DE CÓDIGO)
    ========================================== */
 function RunasView({ pragmaProfile }) {
-  return (
-    <div className="runas-panel glass-panel">
-      <h2>📖 Grimorio Ciberpunk de Runas</h2>
-      <p className="panel-desc">Visualiza tus hitos de programación. Cada fragmento de código que resolviste con puntuación mayor a 95 se almacena aquí como una runa de poder.</p>
+  const [selectedRune, setSelectedRune] = useState({
+    id: "chronos",
+    titulo: "CHRONOS SHARD",
+    level: 5,
+    descripcion: "Manipulación temporal. Almacena fragmentos del flujo de ejecución.",
+    cooldown: "15s",
+    tipo: "CHRONOMANCY (Green/Blue)",
+    icono: "⏳",
+    color: "#00ff66",
+    status: "ACTIVE"
+  });
+  
+  const [activeTab, setActiveTab] = useState("RUNES");
+  const [filters, setFilters] = useState({
+    active: true,
+    locked: false,
+    mystic: true,
+    cyber: false,
+    hybrid: true
+  });
 
-      {pragmaProfile.unlocked_runes?.length === 0 ? (
-        <div className="empty-runes">
-          <div className="grimoire-icon">📖</div>
-          <h3>Tu grimorio de código está vacío</h3>
-          <p>Supera auditorías en el Copiloto de Depuración con un puntaje de 95+ para grabar tu primera runa.</p>
+  const AETHER_RUNES = [
+    { id: "quantum", titulo: "QUANTUM SURGE", level: 4, descripcion: "Sobrecarga de bits en memoria temporal.", cooldown: "8s", tipo: "QUANTUM (Green)", icono: "💠", color: "#00ff66", locked: false },
+    { id: "aural", titulo: "AURAL VEIL", level: 3, descripcion: "Escudo de frecuencia acústica contra intrusiones.", cooldown: "20s", tipo: "RESONANCE (Blue)", icono: "🔊", color: "#00f3ff", locked: false },
+    { id: "cyber", titulo: "CYBER SHIELD", level: 5, descripcion: "Protección perimetral de kernel en tiempo real.", cooldown: "30s", tipo: "DEFENSE (Green)", icono: "🛡️", color: "#00ff66", locked: false },
+    { id: "void", titulo: "VOID PULSE", level: 3, descripcion: "Limpia la pila de ejecución instantáneamente.", cooldown: "12s", tipo: "VOID (Blue)", icono: "🌀", color: "#00f3ff", locked: false },
+    { id: "lock1", titulo: "OVERCLOCK CORE", level: 6, locked: true, reqLvl: 12 },
+    { id: "lock2", titulo: "MATRIX BEAM", level: 8, locked: true, reqLvl: 15 },
+    { id: "nexus", titulo: "NEXUS BIND", level: 4, descripcion: "Entrelaza sockets de red locales y remotos.", cooldown: "10s", tipo: "NEXUS (Blue)", icono: "🕸️", color: "#00f3ff", locked: false },
+    { id: "data", titulo: "DATA STREAM", level: 3, descripcion: "Canaliza paquetes de datos comprimidos.", cooldown: "5s", tipo: "FLOW (Blue)", icono: "⇄", color: "#00f3ff", locked: false },
+    { id: "pyro", titulo: "PYRO-CORE", level: 3, descripcion: "Desencadena bucles iterativos de calor sintáctico.", cooldown: "15s", tipo: "ELEMENTAL (Green)", icono: "🔥", color: "#00ff66", locked: false },
+    { id: "chronos", titulo: "CHRONOS SHARD", level: 5, descripcion: "Manipulación temporal. Almacena fragmentos del flujo de ejecución.", cooldown: "15s", tipo: "CHRONOMANCY (Green/Blue)", icono: "⏳", color: "#00ff66", locked: false },
+    { id: "lock3", titulo: "GRID RUNNER", level: 5, locked: true, reqLvl: 12 },
+    { id: "lock4", titulo: "GHOST CODE", level: 7, locked: true, reqLvl: 18 },
+    { id: "nexsis", titulo: "NEXSIS RUNE", level: 3, descripcion: "Fuerza la ejecución asíncrona de llamadas apiladas.", cooldown: "15s", tipo: "FLOW (Blue)", icono: "🪐", color: "#00f3ff", locked: false },
+    { id: "dati", titulo: "DATI STREAM", level: 3, descripcion: "Paraleliza hilos del procesador virtual.", cooldown: "22s", tipo: "FLOW (Blue)", icono: "⧓", color: "#00f3ff", locked: false },
+    { id: "aura", titulo: "AURA LOCK", level: 3, descripcion: "Previene la mutación de variables globales.", cooldown: "18s", tipo: "DEFENSE (Green)", icono: "🔒", color: "#00ff66", locked: false },
+    { id: "ghost", titulo: "GHOST NODE", level: 3, descripcion: "Oculta el hilo de ejecución de rastreadores.", cooldown: "25s", tipo: "STEALTH (Blue)", icono: "👻", color: "#00f3ff", locked: false },
+    { id: "weave", titulo: "CRYPTIC WEAVE", level: 3, descripcion: "Encriptación simétrica de flujo de bytes.", cooldown: "30s", tipo: "CRYPT (Green)", icono: "🌀", color: "#00ff66", locked: false },
+    { id: "voidp", titulo: "VOID WAVE", level: 3, descripcion: "Invoca un barrido de recolección de basura.", cooldown: "12s", tipo: "VOID (Blue)", icono: "👁️", color: "#00f3ff", locked: false }
+  ];
+
+  return (
+    <div className="runas-panel glass-panel spec-codex-panel">
+      {/* Corner Brackets */}
+      <div className="hud-corner top-left"></div>
+      <div className="hud-corner top-right"></div>
+      <div className="hud-corner bottom-left"></div>
+      <div className="hud-corner bottom-right"></div>
+
+      <div className="codex-header">
+        <h2 className="codex-title">AETHER CODEX: RUNIC PROGRAMMING GRIMOIRE</h2>
+        <div className="codex-user-energy">
+          <span>AETHERIUS</span>
+          <span className="rank-txt">Rank 14</span>
+          <div className="energy-bar-container">
+            <span className="energy-label">ENERGY 98%</span>
+            <div className="energy-bar" style={{ width: '98%' }}></div>
+          </div>
         </div>
-      ) : (
-        <div className="runes-grid">
-          {pragmaProfile.unlocked_runes?.map((runa, idx) => (
-            <div key={idx} className="rune-card">
-              <div className="rune-glow-effect"></div>
-              <h4>✨ {runa.titulo}</h4>
-              <p className="date">{runa.fecha}</p>
-              <pre className="rune-code"><code>{runa.codigo}</code></pre>
+      </div>
+
+      <div className="codex-tabs">
+        {["RUNES", "ARRAYS", "SCRIPTS", "SETTINGS"].map(tab => (
+          <button 
+            key={tab} 
+            className={`codex-tab-btn ${activeTab === tab ? 'active' : ''}`}
+            onClick={() => setActiveTab(tab)}
+          >
+            {tab}
+          </button>
+        ))}
+      </div>
+
+      <div className="codex-main-layout">
+        {/* Grilla de runas */}
+        <div className="runes-grid-spec">
+          {AETHER_RUNES.map((rune, idx) => {
+            if (rune.locked) {
+              return (
+                <div key={rune.id || idx} className="rune-card-spec locked">
+                  <div className="rune-locked-icon">🔒</div>
+                  <div className="rune-locked-label">LOCKED</div>
+                  <div className="rune-locked-req">(LVL {rune.reqLvl} REQ)</div>
+                </div>
+              );
+            }
+
+            const isSelected = selectedRune?.id === rune.id;
+            return (
+              <div 
+                key={rune.id} 
+                className={`rune-card-spec ${isSelected ? 'selected' : ''}`}
+                onClick={() => setSelectedRune(rune)}
+                style={{ '--rune-theme-color': rune.color }}
+              >
+                <div className="rune-card-header">
+                  <span className="rune-lvl">Lvl {rune.level}</span>
+                </div>
+                <div className="rune-icon-container" style={{ textShadow: `0 0 10px ${rune.color}` }}>
+                  {rune.icono}
+                </div>
+                <h4 className="rune-card-title">{rune.titulo}</h4>
+                <p className="rune-card-type">{rune.tipo.split(" ")[0]}</p>
+              </div>
+            );
+          })}
+        </div>
+
+        {/* Panel de detalles de la runa seleccionada */}
+        <div className="rune-detail-sidebar">
+          {selectedRune ? (
+            <div className="rune-detail-content" style={{ '--rune-theme-color': selectedRune.color }}>
+              <div className="hud-corner top-left"></div>
+              <div className="hud-corner top-right"></div>
+              <div className="hud-corner bottom-left"></div>
+              <div className="hud-corner bottom-right"></div>
+
+              <h3 className="detail-title">{selectedRune.titulo}</h3>
+              <p className="detail-desc">{selectedRune.descripcion}</p>
+              
+              <div className="detail-specs">
+                <div className="spec-item">
+                  <span className="spec-label">Cooldown:</span>
+                  <span className="spec-value">{selectedRune.cooldown}</span>
+                </div>
+                <div className="spec-item">
+                  <span className="spec-label">Type:</span>
+                  <span className="spec-value" style={{ color: selectedRune.color }}>{selectedRune.tipo}</span>
+                </div>
+                <div className="spec-item">
+                  <span className="spec-label">STATUS:</span>
+                  <span className="spec-value text-green" style={{ color: '#00ff66', textShadow: '0 0 5px #00ff66' }}>ACTIVE</span>
+                </div>
+              </div>
+
+              <div className="detail-actions">
+                <button className="btn-glow btn-cast">CAST</button>
+                <button className="btn-glow btn-edit">EDIT</button>
+                <button className="btn-glow btn-info">INFO</button>
+              </div>
             </div>
-          ))}
+          ) : (
+            <div className="rune-detail-empty">
+              <p>SELECCIONA UNA RUNA PARA LEER TELEMETRÍA</p>
+            </div>
+          )}
         </div>
-      )}
+      </div>
+
+      {/* Filtros inferiores */}
+      <div className="codex-bottom-filters">
+        {Object.keys(filters).map(key => (
+          <label key={key} className="filter-toggle-label">
+            <span className="filter-name">{key.toUpperCase()}</span>
+            <input 
+              type="checkbox" 
+              checked={filters[key]} 
+              onChange={() => setFilters(prev => ({ ...prev, [key]: !prev[key] }))}
+              className="filter-checkbox"
+            />
+            <span className="custom-toggle"></span>
+          </label>
+        ))}
+      </div>
     </div>
   );
 }
@@ -870,19 +1123,23 @@ function TinderView({ estudiante, backendUrl, onUpdate }) {
    ========================================== */
 function DefenseView({ estudiante, onUpdate }) {
   const [gameStarted, setGameStarted] = useState(false);
-  const [score, setScore] = useState(0);
-  const [firewallHp, setFirewallHp] = useState(100);
+  const [score, setScore] = useState(1458920); // Valor de inicio similar a la Imagen 1
+  const [highScore, setHighScore] = useState(2750000);
+  const [firewallHp, setFirewallHp] = useState(88); // 88% como la Imagen 1
   const [fallingLines, setFallingLines] = useState([]);
   const [shake, setShake] = useState(false);
+  const [combo, setCombo] = useState(24);
+  const [lives, setLives] = useState(3);
+  const [laserEffect, setLaserEffect] = useState(null); // { x1, y1, x2, y2 }
   const gameLoopRef = useRef(null);
 
   const SNIPPETS_CORRUPTOS = [
-    { text: "if (x = 2) {", corrupt: true },
-    { text: "const a = 10", corrupt: false },
-    { text: "def saludar()", corrupt: true },
-    { text: "let array = [1, 2", corrupt: true },
-    { text: "for (let i=0; i<5; i++)", corrupt: false },
-    { text: "return sum(a,b);", corrupt: false }
+    { text: "CRITICAL_ERROR: {void_syntax}", corrupt: true },
+    { text: "function_nullify(0xDF2)", corrupt: false },
+    { text: "var broken = [bad];", corrupt: true },
+    { text: "undefined_ref();", corrupt: true },
+    { text: "memory_leak.cpp", corrupt: true },
+    { text: "const active = true;", corrupt: false }
   ];
 
   const triggerShake = () => {
@@ -892,8 +1149,10 @@ function DefenseView({ estudiante, onUpdate }) {
 
   const startGame = () => {
     setGameStarted(true);
-    setScore(0);
-    setFirewallHp(100);
+    setScore(1458920);
+    setFirewallHp(88);
+    setCombo(24);
+    setLives(3);
     setFallingLines([]);
     setShake(false);
   };
@@ -902,12 +1161,11 @@ function DefenseView({ estudiante, onUpdate }) {
     if (!gameStarted) return;
 
     gameLoopRef.current = setInterval(() => {
-      // Avanzar líneas existentes
       setFallingLines(prev => {
         let hitFirewall = false;
         const updated = prev.map(line => {
-          const nextY = line.y + 4;
-          if (nextY >= 100) {
+          const nextY = line.y + 3;
+          if (nextY >= 95) {
             if (line.corrupt) hitFirewall = true;
             return null;
           }
@@ -916,117 +1174,198 @@ function DefenseView({ estudiante, onUpdate }) {
 
         if (hitFirewall) {
           setFirewallHp(hp => {
-            const nextHp = Math.max(0, hp - 20);
+            const nextHp = Math.max(0, hp - 12);
+            setCombo(1);
             triggerShake();
             return nextHp;
           });
         }
 
         // Generar nueva línea
-        if (Math.random() < 0.25 && updated.length < 5) {
+        if (Math.random() < 0.3 && updated.length < 5) {
           const randomBase = SNIPPETS_CORRUPTOS[Math.floor(Math.random() * SNIPPCOS_len(SNIPPETS_CORRUPTOS))];
           updated.push({
             id: Math.random().toString(),
             text: randomBase.text,
             corrupt: randomBase.corrupt,
-            x: Math.floor(Math.random() * 70) + 5, // posición X
+            x: Math.floor(Math.random() * 60) + 10,
             y: 0
           });
         }
 
         return updated;
       });
-    }, 200);
+    }, 250);
 
     return () => clearInterval(gameLoopRef.current);
   }, [gameStarted]);
 
-  // Función helper para length aleatorio
   const SNIPPCOS_len = (arr) => arr.length;
 
   useEffect(() => {
-    if (firewallHp <= 0) {
+    if (firewallHp <= 0 || lives <= 0) {
       clearInterval(gameLoopRef.current);
       setGameStarted(false);
       
-      // Entregar recompensa final
       const copy = { ...estudiante.pragma_profile };
-      copy.rank_points += Math.floor(score / 10);
-      copy.inventory.silicon_shards += Math.floor(score / 20);
+      copy.rank_points += Math.floor(score / 50000);
+      copy.inventory.silicon_shards += 5;
       onUpdate(copy);
 
       alert(`¡Firewall de Base de Datos Comprometido! Puntaje final: ${score}`);
     }
-  }, [firewallHp]);
+  }, [firewallHp, lives]);
 
-  const dispararLinea = (id, corrupt) => {
+  const dispararLinea = (id, corrupt, x, y) => {
+    // Definir efecto de rayo láser desde una torreta inferior hacia el fragmento
+    const turretIndex = Math.floor(Math.random() * 4); // 4 torretas en el HUD inferior
+    const turretX = 20 + turretIndex * 20; // 20%, 40%, 60%, 80%
+    setLaserEffect({
+      x1: turretX,
+      y1: 90,
+      x2: x + 10,
+      y2: y + 2
+    });
+
+    setTimeout(() => {
+      setLaserEffect(null);
+    }, 200);
+
     if (corrupt) {
-      setScore(s => s + 10);
+      setScore(s => s + 2480);
+      setCombo(c => c + 1);
     } else {
-      setFirewallHp(hp => {
-        const nextHp = Math.max(0, hp - 10);
-        triggerShake();
-        return nextHp;
-      });
+      setLives(l => Math.max(0, l - 1));
+      setCombo(1);
+      triggerShake();
     }
     setFallingLines(prev => prev.filter(line => line.id !== id));
   };
 
   return (
-    <div className="defense-panel glass-panel">
-      {/* Esquinas tácticas militares del HUD */}
+    <div className="defense-panel glass-panel spec-defense-layout">
       <div className="hud-corner top-left"></div>
       <div className="hud-corner top-right"></div>
       <div className="hud-corner bottom-left"></div>
       <div className="hud-corner bottom-right"></div>
 
-      <h2>🛡️ Syntax Defense: Firewall de Base de Datos</h2>
-      <p className="panel-desc">¡Destruye los fragmentos de código corruptos que caen de la red antes de que comprometan el Firewall!</p>
-
       {!gameStarted ? (
-        <div className="start-screen">
-          <button className="btn-action start-game-btn" onClick={startGame}>Iniciar Protocolo de Defensa</button>
+        <div className="start-screen-spec">
+          <h2 className="arcade-title-main">SYNTAX DEFENSE: DATABASE FIREWALL</h2>
+          <p className="panel-desc-spec">Arcade táctico militar de detección de errores de sintaxis a velocidad de caída de bloques.</p>
+          <button className="btn-action-hud" onClick={startGame}>INICIAR PROTOCOLO DE DEFENSA</button>
         </div>
       ) : (
-        <div className="arcade-hud-wrapper crt-overlay">
-          <div className={`defense-field ${shake ? 'animate-shake-glitch' : ''}`}>
-            {/* Info HUD */}
-            <div className="hud">
-              <span>SCORE: {score}</span>
-              <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
-                <span>SHIELD: {firewallHp}%</span>
-                <div className="segmented-health-bar">
-                  {Array.from({ length: 10 }).map((_, idx) => {
-                    const segHp = (idx + 1) * 10;
-                    const isLost = firewallHp < segHp;
-                    return (
-                      <div 
-                        key={idx} 
-                        className={`health-segment ${isLost ? 'lost' : ''}`}
-                      />
-                    );
-                  })}
-                </div>
+        <div className={`arcade-grid-arena crt-overlay ${shake ? 'animate-shake-glitch' : ''}`}>
+          {/* Header del HUD */}
+          <div className="hud-header-stats">
+            <div className="stats-group-left">
+              <div className="hud-stat-item">
+                <span className="hud-stat-lbl">SCORE:</span>
+                <span className="hud-stat-val cyan-glow">{score.toLocaleString()}</span>
+              </div>
+              <div className="hud-stat-item">
+                <span className="hud-stat-lbl">HIGHSCORE:</span>
+                <span className="hud-stat-val gold-glow">{highScore.toLocaleString()}</span>
               </div>
             </div>
 
-            {/* Área del juego */}
-            <div className="game-area">
-              {fallingLines.map(line => (
+            <div className="stats-group-right">
+              <div className="hud-stat-item">
+                <span className="hud-stat-lbl">STAGE:</span>
+                <span className="hud-stat-val">07</span>
+              </div>
+              <div className="hud-stat-item">
+                <span className="hud-stat-lbl">WAVE:</span>
+                <span className="hud-stat-val text-red">14/20</span>
+              </div>
+            </div>
+          </div>
+
+          {/* Área de juego principal de caída de bloques */}
+          <div className="game-playfield-spec">
+            {/* Grid Lines */}
+            <div className="playfield-grid-overlay"></div>
+
+            {/* Marcador de Agua Central */}
+            <div className="watermark-db-firewall">DATABASE FIREWALL</div>
+
+            {/* Efecto de Rayo Láser */}
+            {laserEffect && (
+              <svg className="laser-svg-overlay">
+                <line 
+                  x1={`${laserEffect.x1}%`} 
+                  y1={`${laserEffect.y1}%`} 
+                  x2={`${laserEffect.x2}%`} 
+                  y2={`${laserEffect.y2}%`} 
+                  stroke="var(--neon-cyan)" 
+                  strokeWidth="3"
+                  className="laser-line-glow"
+                />
+              </svg>
+            )}
+
+            {/* Fragmentos de código cayendo */}
+            {fallingLines.map(line => {
+              const borderClass = line.corrupt ? "border-red" : "border-cyan";
+              return (
                 <div
                   key={line.id}
-                  className="falling-code"
+                  className={`falling-code-block ${borderClass}`}
                   style={{ left: `${line.x}%`, top: `${line.y}%` }}
-                  onClick={() => dispararLinea(line.id, line.corrupt)}
+                  onClick={() => dispararLinea(line.id, line.corrupt, line.x, line.y)}
                 >
-                  {line.text}
+                  <span className="block-warning-tag">{line.corrupt ? "CRITICAL" : "OK"}</span>
+                  <code className="block-code-text">{line.text}</code>
                 </div>
-              ))}
+              );
+            })}
+          </div>
+
+          {/* Controles y Status Inferior */}
+          <div className="hud-footer-stats">
+            <div className="stats-group-left">
+              <div className="hud-stat-item flex-align">
+                <span className="hud-stat-lbl">LIVES:</span>
+                <div className="glowing-skulls">
+                  {Array.from({ length: 3 }).map((_, i) => (
+                    <span key={i} className={`skull-ico ${i < lives ? 'active' : 'dead'}`}>💀</span>
+                  ))}
+                  <span className="shield-ico">🛡️</span>
+                </div>
+              </div>
+              <div className="hud-stat-item">
+                <span className="hud-stat-lbl">SHIELD:</span>
+                <span className="hud-stat-val text-cyan">{firewallHp}%</span>
+              </div>
+              <div className="hud-stat-item">
+                <span className="hud-stat-lbl">COMBO:</span>
+                <span className="hud-stat-val text-gold">x{combo}</span>
+              </div>
             </div>
 
-            {/* Firewall Visual */}
-            <div className="firewall-bar" style={{ borderColor: firewallHp > 40 ? 'var(--neon-cyan)' : 'var(--neon-red)' }}>
-              🔒 FIREWALL DE DATOS ACTIVO
+            {/* Torretas visuales */}
+            <div className="turret-defense-strip">
+              <div className="turret-node"></div>
+              <div className="turret-node active"></div>
+              <div className="turret-center-core"></div>
+              <div className="turret-node active"></div>
+              <div className="turret-node"></div>
+            </div>
+
+            <div className="stats-group-right">
+              <div className="hud-stat-item">
+                <span className="hud-stat-lbl">POWER:</span>
+                <span className="hud-stat-val text-cyan">100%</span>
+              </div>
+              <div className="hud-stat-item">
+                <span className="hud-stat-lbl">SPECIAL:</span>
+                <span className="hud-stat-val text-gold">[FIREWALL BLAST]</span>
+              </div>
+              <div className="hud-stat-item">
+                <span className="hud-stat-lbl">DATA INTEGRITY:</span>
+                <span className="hud-stat-val text-green">[{firewallHp}%]</span>
+              </div>
             </div>
           </div>
         </div>

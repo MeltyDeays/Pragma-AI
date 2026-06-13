@@ -1,43 +1,39 @@
 /* ==========================================================================
-   IA-PROFESOR — Sistema de Estilado Ultra-Premium (Emerald & Obsidian)
+   IA-PROFESOR — Sistema HUD Táctico Espacial (Sci-Fi Command Interface)
    ========================================================================== */
 
 :root {
-  --font-primary: 'Inter', -apple-system, sans-serif;
-  --font-title: 'Inter', -apple-system, sans-serif;
+  --font-primary: 'Share Tech Mono', monospace;
+  --font-title: 'Orbitron', sans-serif;
 
-  /* Human-Designed Clean Minimalist Dark Mode */
-  --bg-deep: #09090b;
-  --bg-card: #18181b;
-  --bg-card-hover: #27272a;
-  --bg-input: #18181b;
+  --bg-deep: #000000;
+  --bg-card: rgba(2, 2, 6, 0.65);
+  --bg-card-hover: rgba(0, 243, 255, 0.06);
+  --bg-input: rgba(2, 2, 6, 0.8);
 
-  --color-primary: #3b82f6; /* Clean Slate Blue */
-  --color-primary-rgb: 59, 130, 246;
-  --color-primary-glow: rgba(59, 130, 246, 0.05);
+  --color-primary: #00f3ff;
+  --color-primary-rgb: 0, 243, 255;
+  --color-primary-glow: rgba(0, 243, 255, 0.05);
   
-  --color-accent: #60a5fa; /* Soft Steel Blue */
-  --color-accent-light: #93c5fd;
+  --color-accent: #00f3ff;
+  --color-accent-light: #66f7ff;
   
-  /* Neutral Zinc */
-  --color-text-main: #f4f4f5;
-  --color-text-muted: #a1a1aa;
-  --color-text-subtle: #71717a;
+  --color-text-main: #ffffff;
+  --color-text-muted: rgba(0, 243, 255, 0.6);
+  --color-text-subtle: rgba(0, 243, 255, 0.35);
   
-  /* Borders & Shadows */
-  --border-light: rgba(255, 255, 255, 0.07);
-  --border-active: rgba(59, 130, 246, 0.35);
-  --shadow-main: 0 4px 20px rgba(0, 0, 0, 0.2);
-  --shadow-glow: none;
+  --border-light: rgba(0, 243, 255, 0.12);
+  --border-active: rgba(0, 243, 255, 0.45);
+  --shadow-main: 0 4px 30px rgba(0, 0, 0, 0.6), inset 0 0 20px rgba(0, 243, 255, 0.03);
+  --shadow-glow: 0 0 15px rgba(0, 243, 255, 0.15);
   
-  /* State Colors */
-  --color-error: #ef4444;
-  --color-error-bg: rgba(239, 68, 68, 0.05);
-  --color-error-border: rgba(239, 68, 68, 0.1);
+  --color-error: #ff0055;
+  --color-error-bg: rgba(255, 0, 85, 0.05);
+  --color-error-border: rgba(255, 0, 85, 0.15);
   
-  --color-success: #10b981;
-  --color-success-bg: rgba(16, 185, 129, 0.05);
-  --color-success-border: rgba(16, 185, 129, 0.1);
+  --color-success: #00ff66;
+  --color-success-bg: rgba(0, 255, 102, 0.05);
+  --color-success-border: rgba(0, 255, 102, 0.15);
 
   --transition-smooth: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
 }
@@ -4466,7 +4462,45 @@ body::before {
   color: #c084fc;
   box-shadow: 0 0 15px rgba(139, 92, 246, 0.3);
 }
+/* =========================================
+   OVERRIDE GLOBAL HUD TÁCTICO — App.css
+   Destruye esquinas redondeadas y fondos
+   grises genéricos en TODA la aplicación
+   ========================================= */
 
+.dashboard-panel,
+.temario-progreso-container,
+.sidebar-panel,
+.chat-container,
+.mentor-container,
+.achievement-card,
+.logro-card,
+.tema-card,
+.tema-item,
+.task-card,
+.btn-filter {
+  border-radius: 0px !important;
+  border-color: rgba(0, 243, 255, 0.12) !important;
+}
 
+.dashboard-panel {
+  background: rgba(2, 2, 6, 0.65) !important;
+  backdrop-filter: blur(20px) !important;
+  border: 1px solid rgba(0, 243, 255, 0.12) !important;
+  box-shadow: 0 4px 30px rgba(0, 0, 0, 0.6), inset 0 0 20px rgba(0, 243, 255, 0.03) !important;
+}
 
+.temario-progreso-container {
+  background: rgba(2, 2, 6, 0.5) !important;
+  border: 1px solid rgba(0, 243, 255, 0.08) !important;
+}
+
+h1, h2, h3 {
+  font-family: var(--font-title) !important;
+  letter-spacing: 1.5px;
+}
+
+button, input, textarea, select {
+  font-family: var(--font-primary) !important;
+}
 
