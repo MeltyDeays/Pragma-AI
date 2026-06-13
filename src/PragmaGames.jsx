@@ -169,6 +169,12 @@ function LobbyView({ estudiante, backendUrl, onUpdate }) {
 
   return (
     <div className="lobby-panel glass-panel">
+      {/* Esquinas tácticas militares del HUD */}
+      <div className="hud-corner top-left"></div>
+      <div className="hud-corner top-right"></div>
+      <div className="hud-corner bottom-left"></div>
+      <div className="hud-corner bottom-right"></div>
+
       <h2>⚔️ Terminal de Combate Multijugador</h2>
       <p className="panel-desc">Empareja tu código con oponentes del servidor en retos rápidos. Soporte 1v1, 2v2, 4v4 y Todos contra Todos.</p>
 
@@ -186,8 +192,32 @@ function LobbyView({ estudiante, backendUrl, onUpdate }) {
 
       {searching && (
         <div className="searching-container">
-          <div className="radar-scanner"></div>
-          <h3>Buscando oponentes en la red cyberpunk...</h3>
+          {/* Esquinas del panel de radar */}
+          <div className="hud-corner top-left"></div>
+          <div className="hud-corner top-right"></div>
+          <div className="hud-corner bottom-left"></div>
+          <div className="hud-corner bottom-right"></div>
+
+          {/* Radar concéntrico animado SVG */}
+          <svg className="radar-scanner-svg" viewBox="0 0 120 120">
+            <defs>
+              <radialGradient id="sweep-gradient" cx="50%" cy="50%" r="50%" fx="50%" fy="50%">
+                <stop offset="0%" stopColor="#00f3ff" stopOpacity="0.45" />
+                <stop offset="100%" stopColor="#00f3ff" stopOpacity="0" />
+              </radialGradient>
+            </defs>
+            <circle cx="60" cy="60" r="50" className="radar-circle" />
+            <circle cx="60" cy="60" r="35" className="radar-circle" />
+            <circle cx="60" cy="60" r="20" className="radar-circle" />
+            <line x1="10" y1="60" x2="110" y2="60" className="radar-circle" strokeDasharray="2,2" />
+            <line x1="60" y1="10" x2="60" y2="110" className="radar-circle" strokeDasharray="2,2" />
+            <path d="M 60,60 L 60,10 A 50,50 0 0,1 110,60 Z" className="radar-sweep" />
+            <circle cx="90" cy="45" r="4" className="radar-blip" />
+          </svg>
+
+          <h3 className={`telemetry-ticker ${searchTimer % 3 === 0 ? 'glitch-active' : ''}`}>
+            [TELEMETRÍA] BUSCANDO OPONENTES EN LA RED DE PRAGMA AI...
+          </h3>
           <p className="timer">Tiempo transcurrido: {searchTimer}s</p>
           <button className="btn-action btn-cancel-search" style={{ marginTop: '20px', background: '#ff0055', borderColor: '#ff0055' }} onClick={cancelSearch}>
             ❌ Cancelar Búsqueda
@@ -830,6 +860,7 @@ function DefenseView({ estudiante, onUpdate }) {
   const [score, setScore] = useState(0);
   const [firewallHp, setFirewallHp] = useState(100);
   const [fallingLines, setFallingLines] = useState([]);
+  const [shake, setShake] = useState(false);
   const gameLoopRef = useRef(null);
 
   const SNIPPETS_CORRUPTOS = [
@@ -841,11 +872,17 @@ function DefenseView({ estudiante, onUpdate }) {
     { text: "return sum(a,b);", corrupt: false }
   ];
 
+  const triggerShake = () => {
+    setShake(true);
+    setTimeout(() => setShake(false), 400);
+  };
+
   const startGame = () => {
     setGameStarted(true);
     setScore(0);
     setFirewallHp(100);
     setFallingLines([]);
+    setShake(false);
   };
 
   useEffect(() => {
@@ -865,12 +902,16 @@ function DefenseView({ estudiante, onUpdate }) {
         }).filter(Boolean);
 
         if (hitFirewall) {
-          setFirewallHp(hp => Math.max(0, hp - 20));
+          setFirewallHp(hp => {
+            const nextHp = Math.max(0, hp - 20);
+            triggerShake();
+            return nextHp;
+          });
         }
 
         // Generar nueva línea
         if (Math.random() < 0.25 && updated.length < 5) {
-          const randomBase = SNIPPETS_CORRUPTOS[Math.floor(Math.random() * SNIPPETS_CORRUPTOS.length)];
+          const randomBase = SNIPPETS_CORRUPTOS[Math.floor(Math.random() * SNIPPCOS_len(SNIPPETS_CORRUPTOS))];
           updated.push({
             id: Math.random().toString(),
             text: randomBase.text,
@@ -886,6 +927,9 @@ function DefenseView({ estudiante, onUpdate }) {
 
     return () => clearInterval(gameLoopRef.current);
   }, [gameStarted]);
+
+  // Función helper para length aleatorio
+  const SNIPPCOS_len = (arr) => arr.length;
 
   useEffect(() => {
     if (firewallHp <= 0) {
@@ -906,13 +950,23 @@ function DefenseView({ estudiante, onUpdate }) {
     if (corrupt) {
       setScore(s => s + 10);
     } else {
-      setFirewallHp(hp => Math.max(0, hp - 10)); // Castigo por disparar a código limpio
+      setFirewallHp(hp => {
+        const nextHp = Math.max(0, hp - 10);
+        triggerShake();
+        return nextHp;
+      });
     }
     setFallingLines(prev => prev.filter(line => line.id !== id));
   };
 
   return (
     <div className="defense-panel glass-panel">
+      {/* Esquinas tácticas militares del HUD */}
+      <div className="hud-corner top-left"></div>
+      <div className="hud-corner top-right"></div>
+      <div className="hud-corner bottom-left"></div>
+      <div className="hud-corner bottom-right"></div>
+
       <h2>🛡️ Syntax Defense: Firewall de Base de Datos</h2>
       <p className="panel-desc">¡Destruye los fragmentos de código corruptos que caen de la red antes de que comprometan el Firewall!</p>
 
@@ -921,30 +975,46 @@ function DefenseView({ estudiante, onUpdate }) {
           <button className="btn-action start-game-btn" onClick={startGame}>Iniciar Protocolo de Defensa</button>
         </div>
       ) : (
-        <div className="defense-field">
-          {/* Info HUD */}
-          <div className="hud">
-            <span>Score: {score}</span>
-            <span>Firewall Escudo: {firewallHp}%</span>
-          </div>
-
-          {/* Área del juego */}
-          <div className="game-area">
-            {fallingLines.map(line => (
-              <div
-                key={line.id}
-                className="falling-code"
-                style={{ left: `${line.x}%`, top: `${line.y}%` }}
-                onClick={() => dispararLinea(line.id, line.corrupt)}
-              >
-                {line.text}
+        <div className="arcade-hud-wrapper">
+          <div className={`defense-field ${shake ? 'animate-shake-glitch' : ''}`}>
+            {/* Info HUD */}
+            <div className="hud">
+              <span>SCORE: {score}</span>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+                <span>SHIELD: {firewallHp}%</span>
+                <div className="segmented-health-bar">
+                  {Array.from({ length: 10 }).map((_, idx) => {
+                    const segHp = (idx + 1) * 10;
+                    const isLost = firewallHp < segHp;
+                    return (
+                      <div 
+                        key={idx} 
+                        className={`health-segment ${isLost ? 'lost' : ''}`}
+                      />
+                    );
+                  })}
+                </div>
               </div>
-            ))}
-          </div>
+            </div>
 
-          {/* Firewall Visual */}
-          <div className="firewall-bar" style={{ borderColor: firewallHp > 40 ? '#00ffcc' : '#ff0055' }}>
-            🔒 FIREWALL DE DATOS ACTIVO
+            {/* Área del juego */}
+            <div className="game-area">
+              {fallingLines.map(line => (
+                <div
+                  key={line.id}
+                  className="falling-code"
+                  style={{ left: `${line.x}%`, top: `${line.y}%` }}
+                  onClick={() => dispararLinea(line.id, line.corrupt)}
+                >
+                  {line.text}
+                </div>
+              ))}
+            </div>
+
+            {/* Firewall Visual */}
+            <div className="firewall-bar" style={{ borderColor: firewallHp > 40 ? 'var(--neon-cyan)' : 'var(--neon-red)' }}>
+              🔒 FIREWALL DE DATOS ACTIVO
+            </div>
           </div>
         </div>
       )}

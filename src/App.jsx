@@ -237,6 +237,111 @@ const parsearRequisitos = (descripcion) => {
   return [{ numero: 1, texto: descripcion }];
 };
 
+function NebulaCanvas() {
+  const canvasRef = useRef(null);
+  const mouseRef = useRef({ x: 0, y: 0, targetX: 0, targetY: 0 });
+
+  useEffect(() => {
+    const canvas = canvasRef.current;
+    if (!canvas) return;
+    const ctx = canvas.getContext('2d');
+    
+    let animationFrameId;
+    let width = canvas.width = canvas.offsetWidth || 800;
+    let height = canvas.height = canvas.offsetHeight || 600;
+
+    const stars = [];
+    const starCount = 100;
+    for (let i = 0; i < starCount; i++) {
+      stars.push({
+        x: Math.random() * width,
+        y: Math.random() * height,
+        size: Math.random() * 1.5 + 0.5,
+        twinkleSpeed: 0.01 + Math.random() * 0.03,
+        alpha: Math.random(),
+        direction: Math.random() > 0.5 ? 1 : -1
+      });
+    }
+
+    const handleResize = () => {
+      if (!canvas) return;
+      width = canvas.width = canvas.offsetWidth || 800;
+      height = canvas.height = canvas.offsetHeight || 600;
+    };
+
+    window.addEventListener('resize', handleResize);
+
+    const handleMouseMove = (e) => {
+      const rect = canvas.getBoundingClientRect();
+      const x = e.clientX - rect.left;
+      const y = e.clientY - rect.top;
+      mouseRef.current.targetX = x;
+      mouseRef.current.targetY = y;
+    };
+
+    const parent = canvas.parentElement;
+    if (parent) {
+      parent.addEventListener('mousemove', handleMouseMove);
+    }
+
+    const render = () => {
+      ctx.fillStyle = '#020205';
+      ctx.fillRect(0, 0, width, height);
+
+      const mouse = mouseRef.current;
+      mouse.x += (mouse.targetX - mouse.x) * 0.05;
+      mouse.y += (mouse.targetY - mouse.y) * 0.05;
+
+      const gradientX = width / 2 + (mouse.x - width / 2) * 0.15;
+      const gradientY = height / 2 + (mouse.y - height / 2) * 0.15;
+
+      const nebula = ctx.createRadialGradient(
+        gradientX, gradientY, 50,
+        gradientX, gradientY, Math.max(width, height) * 0.7
+      );
+      nebula.addColorStop(0, 'rgba(0, 243, 255, 0.07)');
+      nebula.addColorStop(0.3, 'rgba(124, 58, 237, 0.04)');
+      nebula.addColorStop(1, 'rgba(2, 2, 5, 0)');
+
+      ctx.fillStyle = nebula;
+      ctx.fillRect(0, 0, width, height);
+
+      stars.forEach(star => {
+        star.alpha += star.twinkleSpeed * star.direction;
+        if (star.alpha <= 0.1) {
+          star.alpha = 0.1;
+          star.direction = 1;
+        } else if (star.alpha >= 1) {
+          star.alpha = 1;
+          star.direction = -1;
+        }
+
+        const parallaxX = (mouse.x - width / 2) * (star.size * 0.015);
+        const parallaxY = (mouse.y - height / 2) * (star.size * 0.015);
+
+        ctx.fillStyle = `rgba(0, 243, 255, ${star.alpha * 0.75})`;
+        ctx.beginPath();
+        ctx.arc(star.x + parallaxX, star.y + parallaxY, star.size, 0, Math.PI * 2);
+        ctx.fill();
+      });
+
+      animationFrameId = requestAnimationFrame(render);
+    };
+
+    render();
+
+    return () => {
+      window.removeEventListener('resize', handleResize);
+      if (parent) {
+        parent.removeEventListener('mousemove', handleMouseMove);
+      }
+      cancelAnimationFrame(animationFrameId);
+    };
+  }, []);
+
+  return <canvas ref={canvasRef} className="nebula-canvas-background" />;
+}
+
 function App() {
   const [nombre, setNombre] = useState('');
   const [tecnologia, setTecnologia] = useState('JavaScript');
@@ -2168,6 +2273,7 @@ function App() {
               <div className="skill-tree-container">
                 {/* SVG para dibujar las conexiones */}
                 <div className="skill-tree-map">
+                  <NebulaCanvas />
                   <svg className="skill-tree-connections">
                     {[
                       { id: 0, x: 50, y: 8, dependencias: [] },
@@ -2195,6 +2301,19 @@ function App() {
                           { id: 9, x: 50, y: 92 }
                         ].find(n => n.id === depId);
                         if (!padre) return null;
+
+                        const idxNivel = ['Novato', 'Principiante', 'Intermedio', 'Avanzado', 'Experto', 'Master', 'Arquitecto', 'Leyenda'].indexOf(nivelSkillTree);
+                        const temaActivoIndex = (estudiante ? estudiante.tema_indice : 1) - 1;
+                        const idxPadre = idxNivel * 10 + padre.id;
+                        const idxHijo = idxNivel * 10 + nodo.id;
+                        const padreDominado = idxPadre < temaActivoIndex;
+                        const hijoDominado = idxHijo < temaActivoIndex;
+                        const hijoProgreso = idxHijo === temaActivoIndex;
+
+                        let connClase = 'bloqueado';
+                        if (padreDominado && hijoDominado) connClase = 'dominado';
+                        else if (padreDominado && hijoProgreso) connClase = 'progreso';
+
                         return (
                           <line
                             key={`${padre.id}-${nodo.id}`}
@@ -2202,7 +2321,7 @@ function App() {
                             y1={`${padre.y}%`}
                             x2={`${nodo.x}%`}
                             y2={`${nodo.y}%`}
-                            className="connection-line"
+                            className={`connection-line ${connClase}`}
                           />
                         );
                       });
