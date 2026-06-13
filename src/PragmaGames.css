@@ -1,0 +1,645 @@
+/* Estilos Ciberpunk Premium para Pragma AI */
+
+.pragma-container {
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+  color: #e2e8f0;
+  font-family: 'Outfit', 'Inter', sans-serif;
+  margin-top: 15px;
+}
+
+/* Header Panel */
+.pragma-header-panel {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 15px;
+  background: rgba(10, 15, 30, 0.65);
+  backdrop-filter: blur(12px);
+  border: 1px solid rgba(0, 255, 204, 0.2);
+  border-radius: 12px;
+  padding: 15px 25px;
+  box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.4);
+}
+
+.pragma-user-badge {
+  display: flex;
+  align-items: center;
+  gap: 15px;
+}
+
+.avatar-glowing {
+  width: 50px;
+  height: 50px;
+  border-radius: 50px;
+  border: 2px solid #00ffcc;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  box-shadow: 0 0 15px rgba(0, 255, 204, 0.4);
+  background: rgba(0, 255, 204, 0.1);
+  transition: all 0.3s ease;
+}
+
+.avatar-txt {
+  font-size: 24px;
+}
+
+.rank-badge {
+  font-size: 12px;
+  background: linear-gradient(135deg, #00ffcc, #ff0055);
+  color: #0d1117;
+  padding: 3px 8px;
+  border-radius: 20px;
+  margin-left: 8px;
+  font-weight: bold;
+}
+
+.rank-pts {
+  font-size: 13px;
+  color: #8a99ad;
+}
+
+/* Strip Inventario */
+.pragma-inventory-strip {
+  display: flex;
+  gap: 12px;
+  flex-wrap: wrap;
+}
+
+.inv-item {
+  background: rgba(255, 255, 255, 0.05);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  padding: 5px 12px;
+  border-radius: 8px;
+  font-size: 13px;
+  font-weight: bold;
+  transition: all 0.2s ease;
+}
+
+.inv-item:hover {
+  border-color: rgba(0, 255, 204, 0.5);
+  background: rgba(0, 255, 204, 0.05);
+}
+
+/* Nav Strip */
+.pragma-nav-strip {
+  display: flex;
+  gap: 10px;
+  overflow-x: auto;
+  padding-bottom: 5px;
+}
+
+.pragma-nav-strip button {
+  background: rgba(255, 255, 255, 0.03);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  color: #94a3b8;
+  padding: 8px 16px;
+  border-radius: 8px;
+  font-weight: bold;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  white-space: nowrap;
+}
+
+.pragma-nav-strip button:hover, .pragma-nav-strip button.active {
+  color: #00ffcc;
+  background: rgba(0, 255, 204, 0.08);
+  border-color: #00ffcc;
+  box-shadow: 0 0 12px rgba(0, 255, 204, 0.2);
+}
+
+/* Base Panel */
+.glass-panel {
+  background: rgba(10, 15, 30, 0.55);
+  backdrop-filter: blur(12px);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 12px;
+  padding: 25px;
+  box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.3);
+}
+
+.panel-desc {
+  color: #94a3b8;
+  font-size: 14px;
+  margin-top: 5px;
+  margin-bottom: 20px;
+}
+
+/* Textareas de Código */
+.code-textarea {
+  width: 100%;
+  height: 200px;
+  background: #0d1117;
+  color: #00ff66;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 8px;
+  padding: 12px;
+  font-family: 'Courier New', Courier, monospace;
+  font-size: 13px;
+  resize: none;
+  outline: none;
+}
+
+.code-textarea:focus {
+  border-color: #00ffcc;
+  box-shadow: 0 0 10px rgba(0, 255, 204, 0.15);
+}
+
+/* Botones */
+.btn-action {
+  background: linear-gradient(135deg, #00ffcc, #0099ff);
+  color: #050811;
+  border: none;
+  font-weight: bold;
+  padding: 10px 20px;
+  border-radius: 8px;
+  cursor: pointer;
+  transition: all 0.3s ease;
+}
+
+.btn-action:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 0 15px rgba(0, 255, 204, 0.4);
+}
+
+.btn-glow {
+  background: transparent;
+  border: 1px solid #00ffcc;
+  color: #00ffcc;
+  padding: 10px 20px;
+  border-radius: 8px;
+  cursor: pointer;
+  transition: all 0.3s ease;
+}
+
+.btn-glow:hover, .btn-glow.active {
+  background: rgba(0, 255, 204, 0.1);
+  box-shadow: 0 0 12px rgba(0, 255, 204, 0.3);
+}
+
+.btn-sm {
+  padding: 5px 10px;
+  font-size: 12px;
+}
+
+/* 1. LOBBY MULTIJUGADOR */
+.match-options {
+  display: flex;
+  gap: 10px;
+  margin-bottom: 20px;
+}
+
+.start-match-btn {
+  width: 100%;
+  padding: 15px;
+  font-size: 16px;
+}
+
+.searching-container {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 15px;
+  padding: 40px;
+}
+
+.radar-scanner {
+  width: 80px;
+  height: 80px;
+  border-radius: 50%;
+  border: 2px solid #00ffcc;
+  position: relative;
+  animation: pulseRadar 1.5s infinite ease-in-out;
+}
+
+@keyframes pulseRadar {
+  0% { transform: scale(0.8); opacity: 0.5; box-shadow: 0 0 0 0 rgba(0, 255, 204, 0.4); }
+  50% { opacity: 1; }
+  100% { transform: scale(1.2); opacity: 0; box-shadow: 0 0 30px 10px rgba(0, 255, 204, 0); }
+}
+
+.lobby-players-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+  gap: 15px;
+  margin: 20px 0;
+}
+
+.player-card {
+  background: rgba(255, 255, 255, 0.03);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 8px;
+  padding: 15px;
+  position: relative;
+}
+
+.card-badge {
+  position: absolute;
+  top: 5px;
+  right: 5px;
+  font-size: 9px;
+  background: rgba(255, 255, 255, 0.1);
+  padding: 2px 5px;
+  border-radius: 4px;
+}
+
+/* 2. COPILOTO */
+.copiloto-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 20px;
+}
+
+@media (max-width: 768px) {
+  .copiloto-grid, .taberna-grid, .forja-grid, .dungeon-layout {
+    grid-template-columns: 1fr;
+  }
+}
+
+.just-textarea {
+  width: 100%;
+  height: 100px;
+  background: #0d1117;
+  color: #e2e8f0;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 8px;
+  padding: 10px;
+  font-size: 13px;
+  margin-top: 10px;
+  margin-bottom: 15px;
+}
+
+.terminal-box {
+  background: #050811;
+  border: 1px solid rgba(255, 0, 85, 0.3);
+  border-radius: 8px;
+  padding: 15px;
+  font-family: monospace;
+  font-size: 12px;
+  margin-bottom: 20px;
+}
+
+.term-err { color: #ff0055; }
+.term-info { color: #8a99ad; }
+
+.eval-result-card {
+  padding: 15px;
+  border-radius: 8px;
+  margin-top: 15px;
+}
+
+.eval-result-card.success {
+  background: rgba(0, 255, 102, 0.1);
+  border: 1px solid #00ff66;
+}
+
+.eval-result-card.fail {
+  background: rgba(255, 0, 85, 0.1);
+  border: 1px solid #ff0055;
+}
+
+/* 3. ZEN */
+.zen-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.lofi-player {
+  background: rgba(255, 255, 255, 0.03);
+  padding: 10px 15px;
+  border-radius: 10px;
+  border: 1px solid rgba(255, 255, 255, 0.05);
+  display: flex;
+  align-items: center;
+  gap: 15px;
+}
+
+.audio-visualizer {
+  display: flex;
+  align-items: flex-end;
+  gap: 3px;
+  height: 20px;
+}
+
+.audio-visualizer .bar {
+  width: 3px;
+  height: 100%;
+  background: #00ffcc;
+  animation: bounceBar 0.8s infinite ease-in-out alternate;
+}
+
+.audio-visualizer .bar:nth-child(2) { animation-delay: 0.2s; }
+.audio-visualizer .bar:nth-child(3) { animation-delay: 0.4s; }
+.audio-visualizer .bar:nth-child(4) { animation-delay: 0.1s; }
+
+@keyframes bounceBar {
+  from { height: 20%; }
+  to { height: 100%; }
+}
+
+.zen-workspace {
+  margin-top: 20px;
+}
+
+.zen-textarea {
+  background: #0e121a;
+  border-color: rgba(0, 255, 204, 0.15);
+}
+
+.zen-actions {
+  display: flex;
+  gap: 10px;
+  margin-top: 15px;
+}
+
+/* 4. TABERNA */
+.taberna-grid {
+  display: grid;
+  grid-template-columns: 1.2fr 0.8fr;
+  gap: 20px;
+}
+
+.metrics-box {
+  background: #050811;
+  border: 1px solid rgba(255, 255, 255, 0.05);
+  border-radius: 8px;
+  padding: 15px;
+  display: flex;
+  flex-direction: column;
+  gap: 15px;
+}
+
+.progress-bar-container {
+  height: 8px;
+  background: rgba(255, 255, 255, 0.1);
+  border-radius: 4px;
+  overflow: hidden;
+  margin-top: 5px;
+  margin-bottom: 5px;
+}
+
+.bar-fill {
+  height: 100%;
+  transition: width 0.5s ease;
+}
+
+.font-neon {
+  color: #00ffcc;
+  text-shadow: 0 0 5px rgba(0, 255, 204, 0.5);
+}
+
+/* 5. FORJA */
+.forja-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 20px;
+}
+
+.recipe-card {
+  background: rgba(255, 255, 255, 0.02);
+  border: 1px solid rgba(255, 255, 255, 0.05);
+  border-radius: 8px;
+  padding: 15px;
+  margin-bottom: 12px;
+}
+
+.star-map-3d-box {
+  width: 100%;
+  height: 300px;
+  background: radial-gradient(circle at center, #111a2e 0%, #050914 100%);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 8px;
+  position: relative;
+  overflow: hidden;
+}
+
+.star-map-3d-box.map_fire_skin {
+  background: radial-gradient(circle at center, #3a1515 0%, #080303 100%);
+  border-color: rgba(255, 68, 0, 0.3);
+}
+
+.particles-overlay {
+  position: absolute;
+  top: 0; left: 0; right: 0; bottom: 0;
+  background-image: radial-gradient(rgba(255,255,255,0.15) 1px, transparent 1px);
+  background-size: 15px 15px;
+}
+
+.star-point {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: #fff;
+  box-shadow: 0 0 10px #fff;
+  position: absolute;
+}
+
+.star-a { top: 20%; left: 20%; }
+.star-b { top: 50%; left: 80%; }
+.star-c { top: 80%; left: 50%; }
+
+.connections-svg {
+  position: absolute;
+  top: 0; left: 0; width: 100%; height: 100%;
+}
+
+.preview-label {
+  position: absolute;
+  bottom: 10px;
+  left: 10px;
+  font-size: 11px;
+  color: #8a99ad;
+}
+
+/* 6. RUNAS */
+.runes-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+  gap: 15px;
+}
+
+.rune-card {
+  background: rgba(10, 15, 30, 0.8);
+  border: 1px solid rgba(0, 255, 204, 0.15);
+  border-radius: 10px;
+  padding: 15px;
+  position: relative;
+  overflow: hidden;
+  transition: all 0.3s ease;
+}
+
+.rune-card:hover {
+  transform: scale(1.03);
+  border-color: #00ffcc;
+  box-shadow: 0 0 15px rgba(0, 255, 204, 0.2);
+}
+
+.rune-code {
+  background: #050811;
+  color: #00ff66;
+  font-size: 10px;
+  padding: 10px;
+  border-radius: 6px;
+  overflow-x: auto;
+  margin-top: 10px;
+}
+
+/* 7. TINDER */
+.tinder-layout {
+  display: grid;
+  grid-template-columns: 1.3fr 0.7fr;
+  gap: 20px;
+}
+
+.tinder-card {
+  background: rgba(255, 255, 255, 0.02);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 12px;
+  padding: 25px;
+  position: relative;
+}
+
+.card-timer-bar {
+  position: absolute;
+  top: 0; left: 0;
+  height: 4px;
+  background: #ff0055;
+  transition: width 1s linear;
+}
+
+.lang-tag {
+  background: rgba(0, 255, 204, 0.15);
+  color: #00ffcc;
+  padding: 3px 8px;
+  border-radius: 4px;
+  font-size: 11px;
+  font-weight: bold;
+}
+
+.card-code {
+  background: #0d1117;
+  padding: 15px;
+  border-radius: 8px;
+  margin: 15px 0;
+  font-size: 13px;
+  overflow-x: auto;
+  border: 1px solid rgba(255, 255, 255, 0.03);
+}
+
+.tinder-actions {
+  display: flex;
+  gap: 15px;
+}
+
+.tinder-actions button {
+  flex: 1;
+}
+
+/* 8. SYNTAX DEFENSE */
+.defense-field {
+  background: #050811;
+  border: 1px solid rgba(255, 255, 255, 0.05);
+  border-radius: 8px;
+  height: 400px;
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  overflow: hidden;
+}
+
+.hud {
+  display: flex;
+  justify-content: space-between;
+  background: rgba(255, 255, 255, 0.02);
+  padding: 8px 15px;
+  font-size: 13px;
+  font-weight: bold;
+}
+
+.game-area {
+  flex-grow: 1;
+  position: relative;
+}
+
+.falling-code {
+  position: absolute;
+  background: rgba(0, 255, 204, 0.1);
+  border: 1px solid #00ffcc;
+  color: #00ffcc;
+  padding: 5px 10px;
+  border-radius: 4px;
+  font-family: monospace;
+  font-size: 11px;
+  cursor: pointer;
+  white-space: nowrap;
+  animation: neonGlow 1.5s infinite alternate;
+}
+
+@keyframes neonGlow {
+  from { box-shadow: 0 0 5px rgba(0, 255, 204, 0.3); }
+  to { box-shadow: 0 0 15px rgba(0, 255, 204, 0.6); }
+}
+
+.firewall-bar {
+  background: rgba(255, 0, 85, 0.1);
+  border-top: 2px solid #ff0055;
+  text-align: center;
+  padding: 10px;
+  font-weight: bold;
+  font-size: 12px;
+}
+
+/* 9. SQL DUNGEON */
+.dungeon-layout {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 20px;
+}
+
+.dungeon-grid-visual {
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+  margin: 15px 0;
+}
+
+.grid-row {
+  display: flex;
+  gap: 5px;
+}
+
+.grid-cell {
+  width: 60px;
+  height: 60px;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 4px;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  font-size: 11px;
+  background: rgba(255, 255, 255, 0.02);
+}
+
+.grid-cell.player-here {
+  background: #00ffcc;
+  color: #050811;
+  font-weight: bold;
+  box-shadow: 0 0 15px #00ffcc;
+}
+
+.dungeon-controls {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 5px;
+}
+
+.horizontal-moves {
+  display: flex;
+  gap: 15px;
+}
