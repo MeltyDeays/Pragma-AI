@@ -1,0 +1,441 @@
+/* ESTILOS DE PERFIL Y UNIVERSO CÓSMICO */
+.cosmico-container {
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+}
+
+.cosmico-header h2 {
+  font-family: var(--font-title) !important;
+  color: var(--neon-cyan);
+  text-shadow: 0 0 10px rgba(0, 243, 255, 0.35);
+  margin-bottom: 5px;
+}
+
+.cosmico-header p {
+  color: rgba(0, 243, 255, 0.6);
+  font-size: 0.95rem;
+}
+
+.cosmico-canvas-container {
+  height: 550px !important;
+  position: relative;
+  background: #000000 !important;
+  box-shadow: inset 0 0 50px rgba(0, 243, 255, 0.06) !important;
+  border: 1px solid rgba(0, 255, 204, 0.1) !important;
+  border-radius: 6px;
+  overflow: hidden;
+}
+
+@media (max-width: 1200px) {
+  .cosmico-canvas-container {
+    height: 400px !important;
+  }
+}
+
+/* Soles de Esencia Únicos en 3D */
+.essence-solar-node.star-unique-3d {
+  position: absolute;
+  border-radius: 50% !important;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  perspective: 800px;
+  transform-style: preserve-3d;
+  transition: all 0.5s cubic-bezier(0.16, 1, 0.3, 1);
+  box-sizing: border-box;
+}
+
+.essence-solar-node.star-unique-3d:hover {
+  transform: translate(-50%, -50%) scale(1.2) rotateX(10deg) rotateY(15deg) !important;
+}
+
+/* Núcleo Solar general */
+.solar-core {
+  text-align: center;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  pointer-events: none;
+  font-family: var(--font-hud) !important;
+  text-shadow: 0 1px 6px rgba(0, 0, 0, 0.95);
+  z-index: 10;
+  transform: translateZ(25px); /* Desplazamiento 3D hacia adelante */
+}
+
+.solar-name {
+  font-size: 0.72rem;
+  font-weight: 700;
+  letter-spacing: 0.5px;
+  color: #ffffff;
+  text-transform: uppercase;
+}
+
+.solar-percent {
+  font-size: 0.6rem;
+  opacity: 0.9;
+  color: var(--neon-cyan);
+  margin-top: 1px;
+}
+
+/* Anillos Orbitales en 3D */
+.star-3d-orbit-ring {
+  position: absolute;
+  top: -15%;
+  left: -15%;
+  right: -15%;
+  bottom: -15%;
+  border: 1.5px dashed var(--tech-glow, var(--neon-cyan));
+  border-radius: 50% !important;
+  transform: rotateX(70deg) rotateY(15deg);
+  animation: orbitRotate3d 8s linear infinite;
+  opacity: 0.65;
+  pointer-events: none;
+}
+
+.star-3d-orbit-ring-secondary {
+  position: absolute;
+  top: -25%;
+  left: -25%;
+  right: -25%;
+  bottom: -25%;
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 50% !important;
+  transform: rotateX(60deg) rotateY(-25deg);
+  animation: orbitRotate3dReverse 12s linear infinite;
+  pointer-events: none;
+}
+
+.star-solar-corona {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  border-radius: 50% !important;
+  background: transparent;
+  pointer-events: none;
+  box-shadow: 0 0 20px var(--tech-glow, var(--neon-cyan));
+  animation: coronaPulse 2.5s infinite alternate ease-in-out;
+}
+
+/* Estrellas bloqueadas (atenuadas y misteriosas) */
+.essence-solar-node.star-locked {
+  --tech-glow: rgba(148, 163, 184, 0.2);
+  background: radial-gradient(circle, rgba(15, 23, 42, 0.85) 0%, rgba(2, 6, 23, 0.95) 100%);
+  border: 1px dashed rgba(148, 163, 184, 0.3);
+  box-shadow: 0 0 15px rgba(2, 6, 23, 0.8);
+  opacity: 0.5;
+  filter: grayscale(0.8);
+}
+.essence-solar-node.star-locked:hover {
+  opacity: 0.85;
+  filter: grayscale(0.2);
+  border-color: rgba(0, 255, 204, 0.4);
+  box-shadow: 0 0 25px rgba(0, 255, 204, 0.2);
+}
+.star-locked .solar-percent {
+  color: #64748b;
+}
+
+/* --- LENGUAJES Y SUS DISEÑOS ÚNICOS --- */
+
+/* JavaScript: Nuclear Yellow */
+.essence-solar-node.nuclear-yellow {
+  --tech-glow: rgba(247, 223, 30, 0.85);
+  background: radial-gradient(circle, rgba(247, 223, 30, 0.95) 0%, rgba(10, 10, 0, 0.95) 100%);
+  border: 1.5px solid #f7df1e;
+  box-shadow: 0 0 35px rgba(247, 223, 30, 0.5);
+}
+.nuclear-yellow .star-3d-orbit-ring {
+  border-color: rgba(247, 223, 30, 0.5);
+}
+.nuclear-yellow .solar-percent {
+  color: #f7df1e;
+}
+
+/* React: Quantum Cyan */
+.essence-solar-node.quantum-cyan {
+  --tech-glow: rgba(0, 243, 255, 0.9);
+  background: radial-gradient(circle, rgba(0, 243, 255, 0.95) 0%, rgba(0, 10, 20, 0.95) 100%);
+  border: 2px solid var(--neon-cyan);
+  box-shadow: 0 0 40px rgba(0, 243, 255, 0.6);
+}
+.quantum-cyan .star-3d-orbit-ring {
+  border: 1.5px solid rgba(0, 243, 255, 0.6);
+  transform: rotateX(45deg) rotateY(45deg);
+  animation: orbitRotate3d 5s linear infinite;
+}
+.quantum-cyan .star-3d-orbit-ring-secondary {
+  border: 1.5px solid rgba(0, 243, 255, 0.4);
+  transform: rotateX(45deg) rotateY(-45deg);
+  animation: orbitRotate3dReverse 6s linear infinite;
+}
+
+/* HTML: Plasma Orange */
+.essence-solar-node.plasma-orange {
+  --tech-glow: rgba(227, 79, 38, 0.85);
+  background: radial-gradient(circle, rgba(227, 79, 38, 0.95) 0%, rgba(20, 5, 0, 0.95) 100%);
+  border: 1.5px solid #e34f26;
+  box-shadow: 0 0 30px rgba(227, 79, 38, 0.55);
+}
+.plasma-orange .star-3d-orbit-ring {
+  border-color: rgba(227, 79, 38, 0.5);
+  transform: rotateX(80deg) rotateY(10deg);
+}
+.plasma-orange .solar-percent {
+  color: #e34f26;
+}
+
+/* CSS: Nebula Blue */
+.essence-solar-node.nebula-blue {
+  --tech-glow: rgba(21, 114, 182, 0.85);
+  background: radial-gradient(circle, rgba(21, 114, 182, 0.95) 0%, rgba(0, 5, 20, 0.95) 100%);
+  border: 1.5px solid #1572b6;
+  box-shadow: 0 0 30px rgba(21, 114, 182, 0.55);
+}
+.nebula-blue .star-3d-orbit-ring {
+  border-color: rgba(21, 114, 182, 0.5);
+  transform: rotateX(30deg) rotateY(50deg);
+}
+.nebula-blue .solar-percent {
+  color: #1572b6;
+}
+
+/* Node.js: Emerald Flow */
+.essence-solar-node.emerald-flow {
+  --tech-glow: rgba(51, 153, 51, 0.9);
+  background: radial-gradient(circle, rgba(51, 153, 51, 0.95) 0%, rgba(0, 20, 5, 0.95) 100%);
+  border: 2px solid #339933;
+  box-shadow: 0 0 35px rgba(51, 153, 51, 0.6);
+}
+.emerald-flow .star-3d-orbit-ring {
+  border-color: rgba(51, 153, 51, 0.6);
+  transform: rotateX(90deg) rotateY(0deg);
+  animation: orbitRotate3d 9s linear infinite;
+}
+.emerald-flow .solar-percent {
+  color: #339933;
+}
+
+/* Supabase: Volt Green */
+.essence-solar-node.volt-green {
+  --tech-glow: rgba(62, 207, 142, 0.95);
+  background: radial-gradient(circle, rgba(62, 207, 142, 0.95) 0%, rgba(0, 20, 10, 0.95) 100%);
+  border: 2px solid #3ecf8e;
+  box-shadow: 0 0 45px rgba(62, 207, 142, 0.7);
+}
+.volt-green .star-3d-orbit-ring {
+  border-color: rgba(62, 207, 142, 0.7);
+  transform: rotateX(15deg) rotateY(75deg);
+}
+.volt-green .solar-percent {
+  color: #3ecf8e;
+}
+
+/* Python: Dual Snake */
+.essence-solar-node.dual-snake {
+  --tech-glow: rgba(55, 118, 171, 0.85);
+  background: radial-gradient(circle, rgba(55, 118, 171, 0.95) 0%, rgba(0, 10, 20, 0.95) 100%);
+  border: 1.5px solid #3776ab;
+  box-shadow: 0 0 35px rgba(55, 118, 171, 0.55);
+}
+.dual-snake .star-3d-orbit-ring {
+  border-color: rgba(55, 118, 171, 0.6);
+  transform: rotateX(75deg) rotateY(20deg);
+}
+.dual-snake .star-3d-orbit-ring-secondary {
+  border-color: rgba(255, 212, 59, 0.4);
+  transform: rotateX(75deg) rotateY(-20deg);
+}
+.dual-snake .solar-percent {
+  color: #3776ab;
+}
+
+/* Java: Solar Gold */
+.essence-solar-node.solar-gold {
+  --tech-glow: rgba(248, 152, 32, 0.95);
+  background: radial-gradient(circle, rgba(248, 152, 32, 0.95) 0%, rgba(20, 10, 0, 0.95) 100%);
+  border: 2px solid #f89820;
+  box-shadow: 0 0 45px rgba(248, 152, 32, 0.75);
+}
+.solar-gold .star-3d-orbit-ring {
+  border-color: rgba(248, 152, 32, 0.7);
+  transform: rotateX(65deg) rotateY(15deg);
+  animation: orbitRotate3d 4s linear infinite;
+}
+.solar-gold .solar-percent {
+  color: #f89820;
+}
+
+/* C++: Dark Pulsar */
+.essence-solar-node.dark-pulsar {
+  --tech-glow: rgba(0, 89, 156, 0.9);
+  background: radial-gradient(circle, rgba(0, 89, 156, 0.95) 0%, rgba(0, 5, 15, 0.95) 100%);
+  border: 1.5px solid #00599c;
+  box-shadow: 0 0 35px rgba(0, 89, 156, 0.6);
+}
+.dark-pulsar .star-3d-orbit-ring {
+  border-color: rgba(0, 89, 156, 0.6);
+  transform: rotateX(45deg) rotateY(80deg);
+}
+.dark-pulsar .solar-percent {
+  color: #00599c;
+}
+
+/* Contenedor del Avatar Holográfico militar */
+.avatar-hologram-container {
+  position: relative;
+  width: 90px;
+  height: 90px;
+  margin: 12px auto;
+  border-radius: 50%;
+  background: radial-gradient(circle, rgba(0, 255, 204, 0.08) 0%, rgba(0, 5, 15, 0.85) 100%);
+  border: 2px solid rgba(0, 255, 204, 0.3);
+  box-shadow: 0 0 25px rgba(0, 255, 204, 0.15), inset 0 0 12px rgba(0, 255, 204, 0.1);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  overflow: hidden;
+  flex-shrink: 0;
+}
+
+.avatar-hologram-glow {
+  position: absolute;
+  inset: 0;
+  border-radius: 50%;
+  box-shadow: inset 0 0 15px rgba(0, 255, 204, 0.4);
+  animation: hologramGlow 4s ease-in-out infinite alternate;
+}
+
+.avatar-hologram-scanline {
+  position: absolute;
+  width: 100%;
+  height: 3px;
+  background: linear-gradient(90deg, transparent, rgba(0, 255, 204, 0.5), transparent);
+  box-shadow: 0 0 6px rgba(0, 255, 204, 0.6);
+  top: 0;
+  animation: scanlineMove 2.5s linear infinite;
+  pointer-events: none;
+}
+
+.avatar-image-fallback {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 100%;
+  height: 100%;
+}
+
+@keyframes hologramGlow {
+  0% { opacity: 0.3; }
+  100% { opacity: 0.8; }
+}
+
+@keyframes scanlineMove {
+  0% { top: 0%; }
+  100% { top: 100%; }
+}
+
+.profile-military-specs {
+  display: flex;
+  flex-direction: column;
+  gap: 7px;
+  margin-top: 14px;
+  border-top: 1px solid rgba(0, 255, 204, 0.08);
+  padding-top: 12px;
+}
+
+.spec-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  font-size: 0.68rem;
+  letter-spacing: 0.4px;
+  padding: 3px 0;
+}
+
+.spec-label {
+  color: #475569;
+  font-weight: 600;
+  font-family: monospace;
+  text-transform: uppercase;
+  font-size: 0.6rem;
+}
+
+.spec-val {
+  text-align: right;
+  font-family: 'Outfit', sans-serif;
+}
+
+/* Panel HUD Táctico */
+.hud-panel-spec {
+  position: relative !important;
+  background: rgba(2, 2, 8, 0.65) !important;
+  backdrop-filter: blur(20px) !important;
+  border: 1px solid rgba(0, 243, 255, 0.12) !important;
+  border-radius: 0px !important;
+  box-shadow: inset 0 0 25px rgba(0, 243, 255, 0.04) !important;
+}
+
+.hud-panel-spec::before, .hud-panel-spec::after {
+  content: "";
+  position: absolute;
+  width: 12px;
+  height: 12px;
+  border-color: var(--neon-cyan);
+  border-style: solid;
+  pointer-events: none;
+  opacity: 0.85;
+  z-index: 10;
+}
+.hud-panel-spec::before { top: -1px; left: -1px; border-width: 2px 0 0 2px; }
+.hud-panel-spec::after { top: -1px; right: -1px; border-width: 2px 2px 0 0; }
+
+.panel-header-spec {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  border-bottom: 1px solid rgba(0, 243, 255, 0.12);
+  padding: 10px 14px;
+}
+
+.panel-header-spec h3 {
+  font-size: 0.72rem;
+  font-weight: 700;
+  color: #ffffff;
+  letter-spacing: 1px;
+  margin: 0;
+  text-transform: uppercase;
+}
+
+/* Animaciones 3D */
+@keyframes orbitRotate3d {
+  0% { transform: rotateX(70deg) rotateY(15deg) rotateZ(0deg); }
+  100% { transform: rotateX(70deg) rotateY(15deg) rotateZ(360deg); }
+}
+
+@keyframes orbitRotate3dReverse {
+  0% { transform: rotateX(60deg) rotateY(-25deg) rotateZ(360deg); }
+  100% { transform: rotateX(60deg) rotateY(-25deg) rotateZ(0deg); }
+}
+
+@keyframes coronaPulse {
+  0% { transform: scale(1.0); opacity: 0.7; }
+  100% { transform: scale(1.08); opacity: 0.95; }
+}
+
+.section-divider-spec {
+  font-family: monospace;
+  font-size: 0.58rem;
+  color: var(--neon-cyan);
+  opacity: 0.5;
+  letter-spacing: 1.5px;
+  border-bottom: 1px solid rgba(0, 243, 255, 0.08);
+  padding-bottom: 4px;
+  margin-top: 14px;
+  margin-bottom: 8px;
+  text-transform: uppercase;
+}
