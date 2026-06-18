@@ -1,4 +1,8 @@
 import React, { useState, useEffect, useRef } from 'react';
+import { 
+  Users, UserPlus, Trash2, ShieldAlert, Check, X, 
+  Settings, Gamepad2, Award, Zap, Code, Shield, HelpCircle, Swords, Play, Trophy
+} from 'lucide-react';
 import './PragmaGames.css';
 
 // Audios Lo-Fi públicos libres de copyright
@@ -8,7 +12,7 @@ const LOFI_TRACKS = [
   { title: "Binary Lullaby", url: "https://www.soundhelix.com/examples/mp3/SoundHelix-Song-3.mp3" }
 ];
 
-export default function PragmaGames({ estudiante, onUpdateEstudiante, backendUrl }) {
+export default function PragmaGames({ estudiante, onUpdateEstudiante, backendUrl, listaAmigos }) {
   const [selectedSubTab, setSelectedSubTab] = useState('lobby'); // lobby, copiloto, runas, zen, taberna, forja, tinder, defense, dungeon
   const pragmaProfile = estudiante?.pragma_profile || {
     rank_points: 0,
@@ -67,7 +71,7 @@ export default function PragmaGames({ estudiante, onUpdateEstudiante, backendUrl
 
       {/* Pantalla Activa */}
       <div className="pragma-game-screen">
-        {selectedSubTab === 'lobby' && <LobbyView estudiante={estudiante} backendUrl={backendUrl} onUpdate={syncProfile} />}
+        {selectedSubTab === 'lobby' && <LobbyView estudiante={estudiante} backendUrl={backendUrl} onUpdate={syncProfile} listaAmigos={listaAmigos} />}
         {selectedSubTab === 'copiloto' && <CopilotoView estudiante={estudiante} backendUrl={backendUrl} onUpdate={syncProfile} />}
         {selectedSubTab === 'zen' && <ZenView estudiante={estudiante} backendUrl={backendUrl} onUpdate={syncProfile} />}
         {selectedSubTab === 'taberna' && <TabernaView estudiante={estudiante} backendUrl={backendUrl} onUpdate={syncProfile} />}
@@ -84,129 +88,650 @@ export default function PragmaGames({ estudiante, onUpdateEstudiante, backendUrl
 /* ==========================================
    1. LOBBY MULTIJUGADOR COMPETITIVO
    ========================================== */
-function LobbyView({ estudiante, backendUrl, onUpdate }) {
+function LobbyView({ estudiante, backendUrl, onUpdate, listaAmigos = [] }) {
   const [matchType, setMatchType] = useState('1v1');
-  const [searching, setSearching] = useState(false);
-  const [searchTimer, setSearchTimer] = useState(0);
-  const [battleResult, setBattleResult] = useState(null);
-  const [lobbyPlayers, setLobbyPlayers] = useState([]);
-  const intervalRef = useRef(null);
-  const pollingRef = useRef(null);
+  const [showInviteModal, setShowInviteModal] = useState(false);
+  const [friendSearchQuery, setFriendSearchQuery] = useState('');
+  
+  // Slots estáticos para Naranja y Azul (4 slots cada uno por defecto)
+  const [orangeSlots, setOrangeSlots] = useState([
+    { type: 'master', name: estudiante.nombre },
+    null,
+    null,
+    null
+  ]);
+  const [blueSlots, setBlueSlots] = useState([
+    null,
+    null,
+    null,
+    null
+  ]);
+  const [inviteTarget, setInviteTarget] = useState({ team: 'orange', index: 1 });
 
-  // Jugadores simulados para llenar el lobby como la Imagen 5
-  const ORANGE_TEAM_MOCK = [
-    { nombre: "K1NET1C", rank: "S", level: 92, avatar: "🛸", color: "#ff9900" },
-    { nombre: "DR3ADBLADE", rank: "A+", level: 78, avatar: "💀", color: "#ff0055" },
-    { nombre: "SHADOW_FX", rank: "A", level: 64, avatar: "👤", color: "#ffaa00" },
-    { nombre: "VOID_RUNNER", rank: "B+", level: 50, avatar: "🏃", color: "#ff5500" }
-  ];
+  const swapTeam = (fromTeam, index) => {
+    const maxSlots = matchType === '2v2' ? 2 : 4;
+    if (fromTeam === 'orange') {
+      const player = orangeSlots[index];
+      if (!player) return;
 
-  const BLUE_TEAM_MOCK = [
-    { nombre: "CYBER_PUNK", rank: "S", level: 95, avatar: "🕶️", color: "#00f3ff" },
-    { nombre: "NIGHT_OWL", rank: "A+", level: 82, avatar: "🦉", color: "#00aaff" },
-    { nombre: "NEON_HACK", rank: "A", level: 68, avatar: "💻", color: "#00ffaa" },
-    { nombre: "MATRIX_01", rank: "B+", level: 45, avatar: "🤖", color: "#00ff66" }
-  ];
-
-  const startSearch = async () => {
-    setSearching(true);
-    setSearchTimer(0);
-    setBattleResult(null);
-    setLobbyPlayers([]);
-
-    // Simular que los jugadores se unen a la cola uno a uno
-    let step = 0;
-    const intervalPlayers = setInterval(() => {
-      step++;
-      if (step === 1) {
-        setLobbyPlayers([{ ...ORANGE_TEAM_MOCK[0], team: 'orange' }]);
-      } else if (step === 2) {
-        setLobbyPlayers(prev => [...prev, { ...BLUE_TEAM_MOCK[0], team: 'blue' }]);
-      } else if (step === 3) {
-        setLobbyPlayers(prev => [...prev, { ...ORANGE_TEAM_MOCK[1], team: 'orange' }, { ...BLUE_TEAM_MOCK[1], team: 'blue' }]);
-      } else if (step === 4) {
-        setLobbyPlayers(prev => [...prev, { ...ORANGE_TEAM_MOCK[2], team: 'orange' }, { ...BLUE_TEAM_MOCK[2], team: 'blue' }]);
-      } else if (step === 5) {
-        setLobbyPlayers(prev => [...prev, { ...ORANGE_TEAM_MOCK[3], team: 'orange' }, { ...BLUE_TEAM_MOCK[3], team: 'blue' }]);
-        clearInterval(intervalPlayers);
-      }
-    }, 800);
-
-    try {
-      await fetch(`${backendUrl}/api/pragma/multiplayer/match/join`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ estudiante_id: estudiante.id, tipo_match: matchType })
-      });
-
-      intervalRef.current = setInterval(() => {
-        setSearchTimer(prev => prev + 1);
-      }, 1000);
-
-      pollingRef.current = setInterval(async () => {
-        try {
-          const statusRes = await fetch(`${backendUrl}/api/pragma/multiplayer/match/status/${estudiante.id}`);
-          const statusData = await statusRes.json();
-
-          if (statusData.status === 'completado') {
-            clearInterval(intervalRef.current);
-            clearInterval(pollingRef.current);
-            clearInterval(intervalPlayers);
-            setSearching(false);
-            setBattleResult(statusData.matchResult);
-
-            const res = statusData.matchResult;
-            const profileCopy = { ...estudiante.pragma_profile };
-            if (res.victoria) {
-              profileCopy.rank_points += res.rankGanado || 15;
-              profileCopy.inventory.silicon_shards += 3;
-            } else {
-              profileCopy.rank_points += 10;
-              profileCopy.inventory.silicon_shards += 3;
-            }
-            onUpdate(profileCopy);
-          }
-        } catch (e) {
-          console.error(e);
+      let targetIndex = -1;
+      for (let i = 0; i < maxSlots; i++) {
+        if (blueSlots[i] === null) {
+          targetIndex = i;
+          break;
         }
-      }, 1500);
+      }
 
-    } catch (err) {
-      console.error(err);
-      setSearching(false);
-      clearInterval(intervalPlayers);
+      const nextOrange = [...orangeSlots];
+      const nextBlue = [...blueSlots];
+
+      if (targetIndex !== -1) {
+        nextBlue[targetIndex] = player;
+        nextOrange[index] = null;
+      } else {
+        // Swap con el primer slot si todo está lleno
+        const temp = blueSlots[0];
+        nextBlue[0] = player;
+        nextOrange[index] = temp;
+      }
+      setOrangeSlots(nextOrange);
+      setBlueSlots(nextBlue);
+    } else {
+      const player = blueSlots[index];
+      if (!player) return;
+
+      let targetIndex = -1;
+      for (let i = 0; i < maxSlots; i++) {
+        if (orangeSlots[i] === null) {
+          targetIndex = i;
+          break;
+        }
+      }
+
+      const nextOrange = [...orangeSlots];
+      const nextBlue = [...blueSlots];
+
+      if (targetIndex !== -1) {
+        nextOrange[targetIndex] = player;
+        nextBlue[index] = null;
+      } else {
+        const temp = orangeSlots[0];
+        nextOrange[0] = player;
+        nextBlue[index] = temp;
+      }
+      setOrangeSlots(nextOrange);
+      setBlueSlots(nextBlue);
     }
   };
 
-  const cancelSearch = async () => {
-    clearInterval(intervalRef.current);
-    clearInterval(pollingRef.current);
-    setSearching(false);
+  // Estados de configuración de matchmaking del Master
+  const [showMasterConfig, setShowMasterConfig] = useState(false);
+  const [challengeCategory, setChallengeCategory] = useState('mixed'); // 'mixed', 'pragma', 'arcade'
+  const [difficulty, setDifficulty] = useState('intermedio'); // 'novato', 'intermedio', 'experto'
+
+  // Estados de Matchmaking y Partida Activa
+  const [searching, setSearching] = useState(false);
+  const [searchTimer, setSearchTimer] = useState(0);
+  const [activeMatch, setActiveMatch] = useState(null);
+  const [battleResult, setBattleResult] = useState(null);
+
+  // Referencias para timers
+  const timerRef = useRef(null);
+  const matchIntervalRef = useRef(null);
+
+  // Retos disponibles en la simulación
+  const RETOS_MULTIPLAYER = {
+    arcade: [
+      {
+        id: 'trivia_1',
+        tipo: 'trivia',
+        titulo: 'Complejidad Computacional',
+        pregunta: '¿Cuál es la complejidad temporal promedio de búsqueda en un Map/Set bien balanceado?',
+        opciones: ['O(N)', 'O(log N)', 'O(1)', 'O(N log N)'],
+        correcta: 2,
+        explicacion: 'Las tablas Hash permiten acceso en O(1) promedio gracias a su función hash.'
+      },
+      {
+        id: 'trivia_2',
+        tipo: 'trivia',
+        titulo: 'React Hooks',
+        pregunta: '¿Qué Hook de React se utiliza para memorizar una función costosa y evitar recrearla en cada render?',
+        opciones: ['useMemo', 'useCallback', 'useRef', 'useEffect'],
+        correcta: 1,
+        explicacion: 'useCallback memoriza una función en lugar de su valor de retorno.'
+      },
+      {
+        id: 'trivia_3',
+        tipo: 'trivia',
+        titulo: 'Event Loop',
+        pregunta: '¿En qué orden se procesan las Microtareas (promesas) en comparación con las Macrotareas (setTimeout) en JS?',
+        opciones: [
+          'Se ejecutan después de las macrotareas',
+          'Tienen prioridad y se ejecutan antes del siguiente ciclo de macrotareas',
+          'Se ejecutan en paralelo en diferentes hilos',
+          'El navegador decide aleatoriamente'
+        ],
+        correcta: 1,
+        explicacion: 'La cola de microtareas se vacía por completo antes de ejecutar la siguiente macrotarea.'
+      }
+    ],
+    pragma: [
+      {
+        id: 'zen_1',
+        tipo: 'zen',
+        titulo: 'Recursión Segura',
+        descripcion: 'Completa la línea de control del caso base recursivo para evitar que un número negativo cause un Stack Overflow.',
+        codigoInicial: `function factorial(n) {
+  // Escribe aquí la validación correcta del parámetro n (n <= 0 o similar)
+  if (______) return 1;
+  return n * factorial(n - 1);
+}`,
+        validador: (codigo) => codigo.includes('n <= 0') || codigo.includes('n < 1') || codigo.includes('n <= 1'),
+        guia: 'Ejemplo de entrada: n <= 0'
+      },
+      {
+        id: 'tinder_1',
+        tipo: 'tinder',
+        titulo: 'Centrado Flexible',
+        descripcion: 'Escribe la propiedad CSS correcta para centrar verticalmente elementos dentro de un contenedor flexible con dirección de columna.',
+        codigoInicial: `.cyber-container {
+  display: flex;
+  flex-direction: column;
+  /* Centrar verticalmente en flex-direction: column */
+  justify-content: ______;
+}`,
+        validador: (codigo) => codigo.includes('center') && codigo.includes('justify-content'),
+        guia: 'Ejemplo de entrada: justify-content: center;'
+      }
+    ]
+  };
+
+  const inviteFriend = (friend, team, slotIndex) => {
+    setShowInviteModal(false);
+    const setSlots = team === 'orange' ? setOrangeSlots : setBlueSlots;
+    
+    // Cambiar estado del slot a enviando
+    setSlots(prev => {
+      const next = [...prev];
+      next[slotIndex] = { type: 'inviting', status: 'sending', name: friend.nombre };
+      return next;
+    });
+
+    setTimeout(() => {
+      // 80% de probabilidad de aceptar
+      const acepta = Math.random() < 0.80;
+      
+      setSlots(prev => {
+        const next = [...prev];
+        if (next[slotIndex] && next[slotIndex].type === 'inviting') {
+          next[slotIndex] = { 
+            type: 'inviting',
+            status: acepta ? 'accepted' : 'rejected', 
+            name: friend.nombre 
+          };
+        }
+        return next;
+      });
+
+      if (acepta) {
+        setTimeout(() => {
+          setSlots(prev => {
+            const next = [...prev];
+            next[slotIndex] = { 
+              type: 'friend', 
+              name: friend.nombre, 
+              tech: friend.tecnologia_actual || 'JavaScript',
+              friendObj: friend 
+            };
+            return next;
+          });
+        }, 1200);
+      } else {
+        setTimeout(() => {
+          setSlots(prev => {
+            const next = [...prev];
+            next[slotIndex] = null;
+            return next;
+          });
+        }, 2200);
+      }
+    }, 1800);
+  };
+
+  const removeFriend = (team, slotIndex) => {
+    const setSlots = team === 'orange' ? setOrangeSlots : setBlueSlots;
+    setSlots(prev => {
+      const next = [...prev];
+      next[slotIndex] = null;
+      return next;
+    });
+  };
+
+  const startMatchmaking = () => {
+    setShowMasterConfig(true);
+  };
+
+  const confirmAndSearch = () => {
+    setShowMasterConfig(false);
+    setSearching(true);
+    setSearchTimer(0);
+    setBattleResult(null);
+
+    let sec = 0;
+    timerRef.current = setInterval(() => {
+      sec++;
+      setSearchTimer(sec);
+
+      // Encontrar partida después de 4 segundos
+      if (sec >= 4) {
+        clearInterval(timerRef.current);
+        setSearching(false);
+        initiateActiveMatch();
+      }
+    }, 1000);
+  };
+
+  const initiateActiveMatch = () => {
+    // Escoger los retos según la configuración del Master
+    let retosElegidos = [];
+    if (challengeCategory === 'arcade') {
+      retosElegidos = [...RETOS_MULTIPLAYER.arcade];
+    } else if (challengeCategory === 'pragma') {
+      retosElegidos = [...RETOS_MULTIPLAYER.pragma];
+    } else {
+      retosElegidos = [...RETOS_MULTIPLAYER.arcade.slice(0, 2), RETOS_MULTIPLAYER.pragma[0]];
+    }
+
+    let finalPlayers = [];
+    const maxSlots = matchType === '2v2' ? 2 : 4;
+
+    if (matchType === '1v1') {
+      const isMasterOrange = orangeSlots.some(s => s?.type === 'master');
+      const masterTeam = isMasterOrange ? 'orange' : 'blue';
+      const rivalTeam = masterTeam === 'orange' ? 'blue' : 'orange';
+      finalPlayers = [
+        { id: 'self', nombre: estudiante.nombre, avatar: '⚡', team: masterTeam, isSelf: true, progress: 0, errors: 0, finished: false, time: null },
+        { id: 'rival1', nombre: 'CYBER_PUNK', avatar: '🕶️', team: rivalTeam, isSelf: false, progress: 0, errors: 0, finished: false, time: null }
+      ];
+    } else {
+      const orangePlayers = [];
+      const bluePlayers = [];
+
+      for (let i = 0; i < maxSlots; i++) {
+        const oSlot = orangeSlots[i];
+        if (oSlot) {
+          if (oSlot.type === 'master') {
+            orangePlayers.push({ id: 'self', nombre: estudiante.nombre, avatar: '⚡', team: 'orange', isSelf: true, progress: 0, errors: 0, finished: false, time: null });
+          } else {
+            orangePlayers.push({ id: `orange_friend_${i}`, nombre: oSlot.name, avatar: '👽', team: 'orange', isSelf: false, progress: 0, errors: 0, finished: false, time: null });
+          }
+        } else {
+          orangePlayers.push({ id: `orange_bot_${i}`, nombre: `PRAGMA_BOT_O${i + 1}`, avatar: '🤖', team: 'orange', isSelf: false, progress: 0, errors: 0, finished: false, time: null });
+        }
+
+        const bSlot = blueSlots[i];
+        if (bSlot) {
+          if (bSlot.type === 'master') {
+            bluePlayers.push({ id: 'self', nombre: estudiante.nombre, avatar: '⚡', team: 'blue', isSelf: true, progress: 0, errors: 0, finished: false, time: null });
+          } else {
+            bluePlayers.push({ id: `blue_friend_${i}`, nombre: bSlot.name, avatar: '🧬', team: 'blue', isSelf: false, progress: 0, errors: 0, finished: false, time: null });
+          }
+        } else {
+          bluePlayers.push({ id: `blue_bot_${i}`, nombre: `PRAGMA_BOT_B${i + 1}`, avatar: '🤖', team: 'blue', isSelf: false, progress: 0, errors: 0, finished: false, time: null });
+        }
+      }
+
+      finalPlayers = [...orangePlayers, ...bluePlayers];
+    }
+
+    const matchState = {
+      retos: retosElegidos,
+      retoActualIndice: 0,
+      userTriviaRespuestas: {},
+      userCodigoInput: retosElegidos[0].tipo !== 'trivia' ? retosElegidos[0].codigoInicial : '',
+      userProgress: 0,
+      userErrors: 0,
+      userFinished: false,
+      userTime: 0,
+      timeLeft: 60,
+      players: finalPlayers
+    };
+
+    setActiveMatch(matchState);
+
+    // Iniciar el loop de simulación de progreso en tiempo real
+    matchIntervalRef.current = setInterval(() => {
+      setActiveMatch(prev => {
+        if (!prev) return null;
+
+        // Decrementar tiempo
+        const nextTimeLeft = prev.timeLeft - 1;
+        if (nextTimeLeft <= 0) {
+          clearInterval(matchIntervalRef.current);
+          calculateFinalResult(prev);
+          return null;
+        }
+
+        // Simular progreso de otros jugadores
+        const updatedPlayers = prev.players.map(p => {
+          if (p.isSelf) {
+            // Actualizar tiempo acumulado si no ha terminado
+            return {
+              ...p,
+              progress: prev.userProgress,
+              errors: prev.userErrors,
+              finished: prev.userFinished,
+              time: prev.userFinished ? p.time : (p.time || 0) + 1
+            };
+          }
+
+          if (p.finished) return p;
+
+          // Incremento aleatorio de progreso
+          const randIncrement = Math.floor(Math.random() * 8) + 4;
+          const nextProgress = Math.min(p.progress + randIncrement, 100);
+          const finished = nextProgress >= 100;
+          
+          // Posible error aleatorio (10% de probabilidad por segundo)
+          const hadError = Math.random() < 0.1;
+          const nextErrors = p.errors + (hadError ? 1 : 0);
+
+          return {
+            ...p,
+            progress: nextProgress,
+            errors: nextErrors,
+            finished: finished,
+            time: finished ? (p.time || prev.userTime + 1) : null
+          };
+        });
+
+        // Verificar si todos terminaron
+        const allFinished = updatedPlayers.every(p => p.finished);
+        if (allFinished) {
+          clearInterval(matchIntervalRef.current);
+          // Retraso pequeño para mostrar finalización
+          setTimeout(() => calculateFinalResult({ ...prev, players: updatedPlayers, timeLeft: nextTimeLeft }), 500);
+        }
+
+        // Actualizar el código input al cambiar de reto si es código
+        const currentChallenge = prev.retos[prev.retoActualIndice];
+
+        return {
+          ...prev,
+          timeLeft: nextTimeLeft,
+          players: updatedPlayers,
+          userTime: prev.userFinished ? prev.userTime : prev.userTime + 1
+        };
+      });
+    }, 1000);
+  };
+
+  // Enviar respuesta en Trivia
+  const handleTriviaAnswer = (opcionIndex) => {
+    setActiveMatch(prev => {
+      if (!prev) return null;
+      const currentChallenge = prev.retos[prev.retoActualIndice];
+      const esCorrecta = opcionIndex === currentChallenge.correcta;
+
+      let nextErrors = prev.userErrors;
+      let progressIncrement = 0;
+      let nextFinished = false;
+
+      if (esCorrecta) {
+        progressIncrement = Math.ceil(100 / prev.retos.length);
+      } else {
+        nextErrors += 1;
+      }
+
+      const nextUserProgress = Math.min(prev.userProgress + (esCorrecta ? progressIncrement : 0), 100);
+      const isLastChallenge = prev.retoActualIndice === prev.retos.length - 1;
+
+      // Si es correcta avanzamos de reto
+      let nextChallengeIndex = prev.retoActualIndice;
+      if (esCorrecta) {
+        if (isLastChallenge) {
+          nextFinished = true;
+        } else {
+          nextChallengeIndex += 1;
+        }
+      }
+
+      const nextChallenge = prev.retos[nextChallengeIndex];
+
+      return {
+        ...prev,
+        userProgress: nextUserProgress,
+        userErrors: nextErrors,
+        retoActualIndice: nextChallengeIndex,
+        userFinished: nextFinished,
+        userCodigoInput: nextChallenge && nextChallenge.tipo !== 'trivia' ? nextChallenge.codigoInicial : ''
+      };
+    });
+  };
+
+  // Enviar validación de código en Zen/Tinder
+  const handleCodeSubmit = () => {
+    setActiveMatch(prev => {
+      if (!prev) return null;
+      const currentChallenge = prev.retos[prev.retoActualIndice];
+      const esValido = currentChallenge.validador(prev.userCodigoInput);
+
+      let nextErrors = prev.userErrors;
+      let progressIncrement = 0;
+      let nextFinished = false;
+
+      if (esValido) {
+        progressIncrement = Math.ceil(100 / prev.retos.length);
+      } else {
+        nextErrors += 1;
+      }
+
+      const nextUserProgress = Math.min(prev.userProgress + (esValido ? progressIncrement : 0), 100);
+      const isLastChallenge = prev.retoActualIndice === prev.retos.length - 1;
+
+      let nextChallengeIndex = prev.retoActualIndice;
+      if (esValido) {
+        if (isLastChallenge) {
+          nextFinished = true;
+        } else {
+          nextChallengeIndex += 1;
+        }
+      }
+
+      const nextChallenge = prev.retos[nextChallengeIndex];
+
+      return {
+        ...prev,
+        userProgress: nextUserProgress,
+        userErrors: nextErrors,
+        retoActualIndice: nextChallengeIndex,
+        userFinished: nextFinished,
+        userCodigoInput: nextChallenge && nextChallenge.tipo !== 'trivia' ? nextChallenge.codigoInicial : ''
+      };
+    });
+  };
+
+  // Cálculo de Puntuaciones y Ganador
+  const calculateFinalResult = (finalState) => {
+    clearInterval(matchIntervalRef.current);
+
+    // Calcular puntaje de cada jugador
+    const finalPlayers = finalState.players.map(p => {
+      const completionScore = p.progress * 10;
+      const errorPenalty = p.errors * 15;
+      const timePenalty = (p.time || 60) * 2;
+      const finalScore = Math.max(0, completionScore - errorPenalty - timePenalty);
+
+      return {
+        ...p,
+        score: Math.round(finalScore)
+      };
+    });
+
+    // Ordenar de mayor a menor puntuación
+    finalPlayers.sort((a, b) => b.score - a.score);
+
+    // Calcular puntaje total del equipo
+    const orangeTeamScore = finalPlayers.filter(p => p.team === 'orange').reduce((acc, curr) => acc + curr.score, 0);
+    const blueTeamScore = finalPlayers.filter(p => p.team === 'blue').reduce((acc, curr) => acc + curr.score, 0);
+
+    const victoria = orangeTeamScore >= blueTeamScore;
+    const rankPointsGained = victoria ? 25 : 10;
+    const shardsGained = victoria ? 10 : 3;
+
+    // Actualizar perfil del estudiante
+    const profileCopy = { ...estudiante.pragma_profile };
+    profileCopy.rank_points = (profileCopy.rank_points || 0) + rankPointsGained;
+    profileCopy.inventory = profileCopy.inventory || {};
+    profileCopy.inventory.silicon_shards = (profileCopy.inventory.silicon_shards || 0) + shardsGained;
+    onUpdate(profileCopy);
+
+    // Guardar estadísticas globales en Firestore
     try {
-      await fetch(`${backendUrl}/api/pragma/multiplayer/match/cancel`, {
+      fetch(`${backendUrl}/api/estudiantes/${estudiante.id}/stats`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ estudiante_id: estudiante.id })
+        body: JSON.stringify({
+          ganada: victoria,
+          lenguaje: estudiante.tecnologia_actual || 'JavaScript'
+        })
       });
     } catch (err) {
       console.error(err);
     }
+
+    setBattleResult({
+      victoria,
+      mensaje: victoria 
+        ? `¡Victoria del Equipo Naranja! Tu escuadrón dominó la simulación por velocidad y limpieza de código.` 
+        : `Derrota. El Escuadrón Azul resolvió los retos de forma más óptima y limpia.`,
+      scoreDetalle: finalPlayers,
+      orangeTeamScore,
+      blueTeamScore,
+      rankGanado: rankPointsGained,
+      shardsGanado: shardsGained
+    });
+
+    setActiveMatch(null);
+  };
+
+  const cancelSearch = () => {
+    clearInterval(timerRef.current);
+    setSearching(false);
   };
 
   useEffect(() => {
     return () => {
-      clearInterval(intervalRef.current);
-      clearInterval(pollingRef.current);
+      clearInterval(timerRef.current);
+      clearInterval(matchIntervalRef.current);
     };
   }, []);
 
+  const renderSlot = (team, slotIndex) => {
+    const slot = team === 'orange' ? orangeSlots[slotIndex] : blueSlots[slotIndex];
+
+    if (!slot) {
+      return (
+        <div key={`${team}-${slotIndex}`} className="lobby-player-slot empty">
+          <button 
+            className="invite-slot-btn" 
+            onClick={() => {
+              setInviteTarget({ team, index: slotIndex });
+              setShowInviteModal(true);
+            }}
+          >
+            <UserPlus size={16} className="mb-1 text-[#00ffcc]" />
+            <span>INVITAR AMIGO</span>
+          </button>
+        </div>
+      );
+    }
+
+    if (slot.type === 'master') {
+      return (
+        <div key={`${team}-${slotIndex}`} className="lobby-player-slot master active">
+          <div className="slot-avatar">⚡</div>
+          <div className="slot-info">
+            <span className="slot-name">{slot.name}</span>
+            <span className="slot-role">LÍDER DE SALA</span>
+          </div>
+          <button className="swap-slot-btn" onClick={() => swapTeam(team, slotIndex)} title="Intercambiar equipo">
+            ⇄ INTERCAMBIAR
+          </button>
+        </div>
+      );
+    }
+
+    if (slot.type === 'inviting') {
+      if (slot.status === 'sending') {
+        return (
+          <div key={`${team}-${slotIndex}`} className="lobby-player-slot active inviting border-cyan-500 bg-cyan-950/20">
+            <div className="slot-spinner animate-spin w-5 h-5 border-2 border-[#00ffcc] border-t-transparent rounded-full mb-2"></div>
+            <div className="slot-info">
+              <span className="slot-name text-slate-400">Enviando enlace...</span>
+              <span className="slot-role text-[9px] text-[#00ffcc] animate-pulse">{slot.name}</span>
+            </div>
+            <button className="swap-slot-btn" onClick={() => swapTeam(team, slotIndex)} title="Intercambiar equipo">
+              ⇄ INTERCAMBIAR
+            </button>
+          </div>
+        );
+      } else if (slot.status === 'accepted') {
+        return (
+          <div key={`${team}-${slotIndex}`} className="lobby-player-slot active accepted border-emerald-500 bg-emerald-950/20">
+            <div className="slot-avatar text-emerald-400">✔️</div>
+            <div className="slot-info">
+              <span className="slot-name text-emerald-400">¡Aceptado!</span>
+              <span className="slot-role text-emerald-400">{slot.name}</span>
+            </div>
+            <button className="swap-slot-btn" onClick={() => swapTeam(team, slotIndex)} title="Intercambiar equipo">
+              ⇄ INTERCAMBIAR
+            </button>
+          </div>
+        );
+      } else {
+        return (
+          <div key={`${team}-${slotIndex}`} className="lobby-player-slot active rejected border-rose-500 bg-rose-950/20">
+            <div className="slot-avatar text-rose-500">❌</div>
+            <div className="slot-info">
+              <span className="slot-name text-rose-500">Ocupado</span>
+              <span className="slot-role text-rose-400">{slot.name}</span>
+            </div>
+            <button className="swap-slot-btn" onClick={() => swapTeam(team, slotIndex)} title="Intercambiar equipo">
+              ⇄ INTERCAMBIAR
+            </button>
+          </div>
+        );
+      }
+    }
+
+    return (
+      <div key={`${team}-${slotIndex}`} className="lobby-player-slot active">
+        <div className="slot-avatar">👽</div>
+        <div className="slot-info">
+          <span className="slot-name">{slot.name}</span>
+          <span className="slot-role">{slot.tech}</span>
+        </div>
+        <div className="slot-actions flex gap-1 items-center">
+          <button className="swap-slot-btn" onClick={() => swapTeam(team, slotIndex)} title="Intercambiar equipo">
+            ⇄ INTERCAMBIAR
+          </button>
+          <button className="kick-slot-btn" onClick={() => removeFriend(team, slotIndex)}>
+            <Trash2 size={13} />
+          </button>
+        </div>
+      </div>
+    );
+  };
+
   return (
-    <div className="lobby-panel glass-panel codewars-arena-panel">
+    <div className="lobby-panel glass-panel codewars-arena-panel crt-overlay">
       <div className="hud-corner top-left"></div>
       <div className="hud-corner top-right"></div>
       <div className="hud-corner bottom-left"></div>
       <div className="hud-corner bottom-right"></div>
 
+      {/* CABECERA MULTIJUGADOR */}
       <div className="arena-header">
         <div>
           <h2 className="arena-title">CODEWARS: MULTIPLAYER ARENA</h2>
@@ -219,14 +744,16 @@ function LobbyView({ estudiante, backendUrl, onUpdate }) {
         {searching && (
           <div className="queue-timer-badge">
             <span className="pulse-dot"></span>
-            MATCHMAKING QUEUE: Active - {matchType} | {Math.floor(searchTimer / 60).toString().padStart(2, '0')}:{(searchTimer % 60).toString().padStart(2, '0')}
+            COLA ACTIVA: {matchType} | {Math.floor(searchTimer / 60).toString().padStart(2, '0')}:{(searchTimer % 60).toString().padStart(2, '0')}
           </div>
         )}
       </div>
 
-      {!searching && !battleResult && (
+      {/* 1. SECCIÓN DE CREACIÓN DE LOBBY / GRUPO */}
+      {!searching && !activeMatch && !battleResult && !showMasterConfig && (
         <div className="setup-container-spec">
           <p className="panel-desc">Empareja tu código con oponentes en tiempo real. Configura el modo de simulación táctica:</p>
+          
           <div className="match-options-spec">
             <button className={`mode-card-btn duel ${matchType === '1v1' ? 'active' : ''}`} onClick={() => setMatchType('1v1')}>
               <span className="mode-title">1v1</span>
@@ -241,108 +768,397 @@ function LobbyView({ estudiante, backendUrl, onUpdate }) {
               <span className="mode-sub">SQUAD BATTLE</span>
             </button>
           </div>
-          <button className="btn-action-hud start-search-btn-hud" onClick={startSearch}>INICIALIZAR MATCHMAKING</button>
+
+          {/* RENDERIZAR LOBBY DEL EQUIPO (SÓLO SI ES 2v2 o 4v4) */}
+          {(matchType === '2v2' || matchType === '4v4') && (
+            <div className="lobby-squad-container-vs w-full max-w-[950px] mt-6">
+              <div className="lobby-vs-arena-layout">
+                {/* LADO IZQUIERDO: EQUIPO NARANJA */}
+                <div className="vs-team-column orange-team-column">
+                  <div className="vs-team-header orange">
+                    <span className="team-glow-text">🛡️ ESCUADRÓN NARANJA</span>
+                    <span className="team-size-counter font-mono">
+                      {orangeSlots.filter((s, idx) => s !== null && idx < (matchType === '2v2' ? 2 : 4)).length} / {matchType === '2v2' ? 2 : 4}
+                    </span>
+                  </div>
+                  <div className="vs-slots-list">
+                    {(matchType === '2v2' ? [0, 1] : [0, 1, 2, 3]).map(idx => renderSlot('orange', idx))}
+                  </div>
+                </div>
+
+                {/* CENTRO: VS DIVIDER */}
+                <div className="vs-center-divider">
+                  <div className="vs-glow-badge">
+                    <span className="vs-text-glow">VS</span>
+                  </div>
+                </div>
+
+                {/* LADO DERECHO: EQUIPO AZUL */}
+                <div className="vs-team-column blue-team-column">
+                  <div className="vs-team-header blue">
+                    <span className="team-glow-text text-cyan">🔮 ESCUADRÓN AZUL</span>
+                    <span className="team-size-counter font-mono">
+                      {blueSlots.filter((s, idx) => s !== null && idx < (matchType === '2v2' ? 2 : 4)).length} / {matchType === '2v2' ? 2 : 4}
+                    </span>
+                  </div>
+                  <div className="vs-slots-list">
+                    {(matchType === '2v2' ? [0, 1] : [0, 1, 2, 3]).map(idx => renderSlot('blue', idx))}
+                  </div>
+                </div>
+              </div>
+            </div>
+          )}
+
+          <button className="btn-action-hud start-search-btn-hud mt-6" onClick={startMatchmaking}>
+            INICIALIZAR MATCHMAKING
+          </button>
         </div>
       )}
 
+      {/* MODAL / SECTOR DE INVITACIÓN DE AMIGOS */}
+      {showInviteModal && (
+        <div className="cyber-modal-overlay">
+          <div className="cyber-modal hud-panel-spec">
+            <div className="panel-header-spec justify-between flex items-center mb-3">
+              <h3 className="text-[#00ffcc] font-mono font-bold text-xs tracking-wider">🌐 PROTOCOLO DE CONEXIÓN SOCIAL</h3>
+              <button 
+                onClick={() => {
+                  setShowInviteModal(false);
+                  setFriendSearchQuery('');
+                }} 
+                className="text-rose-500 hover:text-rose-400 p-1"
+              >
+                <X size={16} />
+              </button>
+            </div>
+
+            {/* BARRA DE BÚSQUEDA CYBERPUNK */}
+            <div className="search-bar-container mb-4">
+              <input 
+                type="text" 
+                placeholder="BUSCAR OPERADOR SOCIAL POR NOMBRE O TECNOLOGÍA..." 
+                value={friendSearchQuery}
+                onChange={(e) => setFriendSearchQuery(e.target.value)}
+                className="cyber-input font-mono text-xs w-full p-2.5 rounded bg-slate-950 border border-slate-800 text-white focus:border-[#00ffcc] outline-none"
+              />
+            </div>
+
+            <div className="modal-friends-list flex flex-col gap-2 max-h-[300px] overflow-y-auto">
+              {listaAmigos.filter(amigo => 
+                amigo.nombre.toLowerCase().includes(friendSearchQuery.toLowerCase()) ||
+                (amigo.tecnologia_actual && amigo.tecnologia_actual.toLowerCase().includes(friendSearchQuery.toLowerCase()))
+              ).length === 0 ? (
+                <p className="text-xs text-slate-500 text-center py-8 font-mono">No se encontraron operadores disponibles.</p>
+              ) : (
+                listaAmigos.filter(amigo => 
+                  amigo.nombre.toLowerCase().includes(friendSearchQuery.toLowerCase()) ||
+                  (amigo.tecnologia_actual && amigo.tecnologia_actual.toLowerCase().includes(friendSearchQuery.toLowerCase()))
+                ).map((amigo) => {
+                  const yaInvitado = 
+                    orangeSlots.some(s => s && s.type === 'friend' && s.friendObj?.id === amigo.id) ||
+                    blueSlots.some(s => s && s.type === 'friend' && s.friendObj?.id === amigo.id);
+                  const inicial = amigo.nombre.charAt(0).toUpperCase();
+                  
+                  return (
+                    <div key={amigo.id} className="friend-invite-row flex justify-between items-center p-3 rounded">
+                      <div className="flex items-center gap-3">
+                        <div className="friend-avatar-circle">
+                          {inicial}
+                        </div>
+                        <div className="friend-details">
+                          <span className="friend-name-text">{amigo.nombre}</span>
+                          <span className="friend-tech-badge">
+                            {amigo.tecnologia_actual || 'JavaScript'}
+                          </span>
+                        </div>
+                      </div>
+                      <button 
+                        disabled={yaInvitado}
+                        onClick={() => {
+                          inviteFriend(amigo, inviteTarget.team, inviteTarget.index);
+                          setFriendSearchQuery('');
+                        }}
+                        className={`hud-btn-action accept p-1.5 px-4 text-[10px] rounded font-mono font-bold uppercase transition ${
+                          yaInvitado ? 'opacity-40 cursor-not-allowed' : ''
+                        }`}
+                      >
+                        {yaInvitado ? 'INVITADO' : 'INVITAR'}
+                      </button>
+                    </div>
+                  );
+                })
+              )}
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* 2. CONFIGURACIÓN DEL MASTER DE LA SALA */}
+      {showMasterConfig && (
+        <div className="setup-container-spec master-config-panel-hud">
+          <h3 className="text-lg font-mono text-[#00ffcc] tracking-widest text-shadow mb-1">
+            CONFIGURACIÓN DEL LÍDER DE ESCUADRÓN
+          </h3>
+          <p className="text-xs text-slate-400 font-mono mb-6">
+            Selecciona el entorno de simulación que se sincronizará para todos los operadores en la partida:
+          </p>
+
+          <div className="config-grid-sections w-full max-w-[700px] flex flex-col gap-6">
+            {/* Categoría de Retos */}
+            <div className="config-group">
+              <span className="text-[10px] text-[#00ffcc] font-mono font-bold tracking-wider block mb-2">MODO DE SIMULACIÓN / JUEGOS:</span>
+              <div className="config-options-grid">
+                <button 
+                  className={`config-card-btn p-4 border text-left font-mono ${challengeCategory === 'mixed' ? 'border-[#00ffcc] text-[#00ffcc] bg-[#00ffcc]/5' : 'border-slate-800 text-slate-400'}`} 
+                  onClick={() => setChallengeCategory('mixed')}
+                >
+                  <div className="config-btn-content">
+                    <span className="config-btn-title">🌐 TODO (MIXTO)</span>
+                    <span className="config-btn-desc">Mezcla de minijuegos clásicos y Santuario Pragma AI.</span>
+                  </div>
+                </button>
+                <button 
+                  className={`config-card-btn p-4 border text-left font-mono ${challengeCategory === 'pragma' ? 'border-[#00ffcc] text-[#00ffcc] bg-[#00ffcc]/5' : 'border-slate-800 text-slate-400'}`} 
+                  onClick={() => setChallengeCategory('pragma')}
+                >
+                  <div className="config-btn-content">
+                    <span className="config-btn-title">🧪 NUEVOS MODOS</span>
+                    <span className="config-btn-desc">Acertijos del Santuario Zen y Tinder de CSS.</span>
+                  </div>
+                </button>
+                <button 
+                  className={`config-card-btn p-4 border text-left font-mono ${challengeCategory === 'arcade' ? 'border-[#00ffcc] text-[#00ffcc] bg-[#00ffcc]/5' : 'border-slate-800 text-slate-400'}`} 
+                  onClick={() => setChallengeCategory('arcade')}
+                >
+                  <div className="config-btn-content">
+                    <span className="config-btn-title">🕹️ CLÁSICOS ARCADE</span>
+                    <span className="config-btn-desc">Preguntas de trivia técnica y refactorización.</span>
+                  </div>
+                </button>
+              </div>
+            </div>
+
+            {/* Dificultad */}
+            <div className="config-group">
+              <span className="text-[10px] text-[#00ffcc] font-mono font-bold tracking-wider block mb-2">DIFICULTAD DEL PROBLEMA:</span>
+              <div className="difficulty-grid">
+                {['novato', 'intermedio', 'experto'].map((diff) => (
+                  <button 
+                    key={diff}
+                    className={`config-card-btn p-3 border text-center font-mono uppercase text-xs ${difficulty === diff ? 'border-amber-500 text-amber-500 bg-amber-500/5' : 'border-slate-800 text-slate-400'}`} 
+                    onClick={() => setDifficulty(diff)}
+                  >
+                    {diff}
+                  </button>
+                ))}
+              </div>
+            </div>
+          </div>
+
+          <div className="flex gap-4 mt-8 w-full max-w-[400px]">
+            <button className="hud-btn bg-slate-900 border border-slate-800 text-slate-400 py-2.5 px-4 text-xs flex-1" onClick={() => setShowMasterConfig(false)}>
+              Volver
+            </button>
+            <button className="hud-btn bg-[#00ffcc] border border-[#00ffcc] text-slate-950 font-bold py-2.5 px-4 text-xs flex-1 flex items-center justify-center gap-2" onClick={confirmAndSearch}>
+              <Play size={14} /> BUSCAR RIVALES
+            </button>
+          </div>
+        </div>
+      )}
+
+      {/* 3. BUSCANDO PARTIDA (MATCHMAKING) */}
       {searching && (
         <div className="arena-searching-layout">
-          {/* Fila superior de telemetría y radar */}
           <div className="arena-searching-top">
-            <div className="radar-tactical-container">
-              <svg className="radar-vectorial animate-spin" viewBox="0 0 200 200">
+            <div className="radar-tactical-container hud-panel-spec">
+              <svg className="radar-vectorial animate-spin" style={{ animationDuration: '5s' }} viewBox="0 0 200 200">
                 <circle cx="100" cy="100" r="90" fill="none" stroke="rgba(0, 243, 255, 0.15)" strokeWidth="1" />
                 <circle cx="100" cy="100" r="60" fill="none" stroke="rgba(0, 243, 255, 0.2)" strokeWidth="1" />
-                <circle cx="100" cy="100" r="30" fill="none" stroke="rgba(0, 243, 255, 0.3)" strokeWidth="1" />
-                <line x1="100" y1="10" x2="100" y2="190" stroke="rgba(0, 243, 255, 0.2)" strokeWidth="1" />
-                <line x1="10" y1="100" x2="190" y2="100" stroke="rgba(0, 243, 255, 0.2)" strokeWidth="1" />
-                <path d="M100,100 L100,10 A90,90 0 0,1 190,100 Z" fill="url(#radar-glow)" opacity="0.45" />
+                <circle cx="100" cy="100" r="30" fill="none" stroke="rgba(0, 243, 255, 0.25)" strokeWidth="1" />
+                <line x1="100" y1="10" x2="100" y2="190" stroke="rgba(0, 243, 255, 0.15)" strokeWidth="1" />
+                <line x1="10" y1="100" x2="190" y2="100" stroke="rgba(0, 243, 255, 0.15)" strokeWidth="1" />
+                <path d="M100,100 L100,10 A90,90 0 0,1 190,100 Z" fill="url(#radar-gradient-spec)" opacity="0.35" />
                 <defs>
-                  <linearGradient id="radar-glow" x1="0%" y1="0%" x2="100%" y2="100%">
+                  <linearGradient id="radar-gradient-spec" x1="0%" y1="0%" x2="100%" y2="100%">
                     <stop offset="0%" stopColor="var(--neon-cyan)" stopOpacity="1" />
                     <stop offset="100%" stopColor="var(--neon-cyan)" stopOpacity="0" />
                   </linearGradient>
                 </defs>
               </svg>
-              <div className="radar-ping-dot" />
+              <div className="radar-ping-dot animate-ping" />
             </div>
 
-            <div className="telemetry-logs-side">
-              <div className="hud-corner top-left"></div>
-              <div className="hud-corner top-right"></div>
-              <div className="hud-corner bottom-left"></div>
-              <div className="hud-corner bottom-right"></div>
-              <p className="log-line green">[OK] CAPA COGNITIVA ACTIVA</p>
-              <p className="log-line cyan">[SCAN] ANALIZANDO PUERTOS DE CONEXIÓN EN MÓDULO 1...</p>
-              <p className="log-line gold">[WARN] LATENCIA DE ENRUTAMIENTO: 14MS</p>
-              <p className="log-line cyan">[SCAN] BUSCANDO OPONENTES DE SIMILAR RANGO (NOVATO)...</p>
-              <p className="log-line green">[SUCCESS] {lobbyPlayers.length} NODOS DE COMBATE ENCONTRADOS</p>
+            <div className="telemetry-logs-side hud-panel-spec font-mono text-xs text-cyan-400">
+              <p className="log-line opacity-90">[INFO] SINCRONIZANDO CONFIGURACIÓN DE RETOS...</p>
+              <p className="log-line opacity-75">[MODE] {challengeCategory.toUpperCase()} | DIFICULTAD: {difficulty.toUpperCase()}</p>
+              <p className="log-line text-amber-400 animate-pulse">[SCAN] BUSCANDO OPONENTES DE TAMAÑO {matchType}...</p>
+              <p className="log-line opacity-85">[SUCCESS] SERVIDORES LISTOS - CREANDO ESCENARIO COGNITIVO COMPARTIDO</p>
             </div>
           </div>
 
-          {/* Grilla de dos equipos (Naranja vs Azul) */}
-          <div className="matchmaking-teams-view">
-            <div className="team-column orange">
-              <h3 className="team-title orange-text">ORANGE TEAM</h3>
-              <div className="team-cards-grid">
-                {ORANGE_TEAM_MOCK.map((player, idx) => {
-                  const isActive = lobbyPlayers.some(p => p.nombre === player.nombre);
-                  return (
-                    <div key={idx} className={`player-card-spec orange-theme ${isActive ? 'active' : 'placeholder'}`}>
-                      <div className="avatar-glitch">{isActive ? player.avatar : "❓"}</div>
-                      <div className="player-info-spec">
-                        <span className="player-name">{isActive ? player.nombre : "BUSCANDO..."}</span>
-                        <span className="player-rank">Rank {isActive ? player.rank : "--"}</span>
-                      </div>
-                    </div>
-                  );
-                })}
-              </div>
-            </div>
-
-            <div className="team-divider-vs">
-              <span className="vs-badge">VS</span>
-            </div>
-
-            <div className="team-column blue">
-              <h3 className="team-title blue-text">BLUE TEAM</h3>
-              <div className="team-cards-grid">
-                {BLUE_TEAM_MOCK.map((player, idx) => {
-                  const isActive = lobbyPlayers.some(p => p.nombre === player.nombre);
-                  return (
-                    <div key={idx} className={`player-card-spec blue-theme ${isActive ? 'active' : 'placeholder'}`}>
-                      <div className="avatar-glitch">{isActive ? player.avatar : "❓"}</div>
-                      <div className="player-info-spec">
-                        <span className="player-name">{isActive ? player.nombre : "BUSCANDO..."}</span>
-                        <span className="player-rank">Rank {isActive ? player.rank : "--"}</span>
-                      </div>
-                    </div>
-                  );
-                })}
-              </div>
-            </div>
-          </div>
-
-          {/* Barra de estado inferior y ondas sonoras */}
           <div className="searching-bottom-controls">
             <div className="audio-waveforms">
               <div className="wave-bar animate-wave-short"></div>
               <div className="wave-bar animate-wave-tall"></div>
+              <span className="audio-label">EN COLA MULTIJUGADOR</span>
               <div className="wave-bar animate-wave-medium"></div>
-              <div className="wave-bar animate-wave-short"></div>
-              <div className="wave-bar animate-wave-tall"></div>
-              <span className="audio-label">QUEUE ACTIVE</span>
-              <div className="wave-bar animate-wave-short"></div>
-              <div className="wave-bar animate-wave-medium"></div>
-              <div className="wave-bar animate-wave-tall"></div>
               <div className="wave-bar animate-wave-short"></div>
             </div>
 
-            <button className="btn-hud-cancel" onClick={cancelSearch}>LEAVE QUEUE</button>
+            <button className="btn-hud-cancel" onClick={cancelSearch}>CANCELAR</button>
           </div>
         </div>
       )}
 
+      {/* 4. PANTALLA DE JUEGO ACTIVO (RETOS COMPARTIDOS) */}
+      {activeMatch && (
+        <div className="active-match-grid animate-scale-in">
+          {/* LADO IZQUIERDO: EL ESPACIO DE RETO */}
+          <div className="challenge-workspace-panel hud-panel-spec bg-slate-950/80 p-5 relative">
+            <div className="flex justify-between items-center mb-4 border-b border-slate-800 pb-3">
+              <div>
+                <span className="text-[10px] text-amber-400 font-mono tracking-widest block uppercase">RETO COMPARTIDO ACTIVO</span>
+                <h3 className="text-base text-white font-bold font-mono">
+                  {activeMatch.retos[activeMatch.retoActualIndice].titulo}
+                </h3>
+              </div>
+              <div className="timer-countdown font-mono text-rose-500 font-bold px-3 py-1 border border-rose-500/20 bg-rose-500/5 text-sm animate-pulse">
+                ⏱️ {activeMatch.timeLeft}s
+              </div>
+            </div>
+
+            {/* RENDERIZADO SI EL RETO ACTUAL ES TRIVIA */}
+            {activeMatch.retos[activeMatch.retoActualIndice].tipo === 'trivia' && (
+              <div className="trivia-interactive-game">
+                <p className="trivia-question">
+                  {activeMatch.retos[activeMatch.retoActualIndice].pregunta}
+                </p>
+                <div className="trivia-options-grid">
+                  {activeMatch.retos[activeMatch.retoActualIndice].opciones.map((opcion, idx) => (
+                    <button 
+                      key={idx}
+                      onClick={() => handleTriviaAnswer(idx)}
+                      className="trivia-option-card"
+                    >
+                      <span className="option-badge">
+                        {String.fromCharCode(65 + idx)}
+                      </span>
+                      <span className="option-text">{opcion}</span>
+                    </button>
+                  ))}
+                </div>
+              </div>
+            )}
+
+            {/* RENDERIZADO SI EL RETO ACTUAL ES ZEN O TINDER */}
+            {(activeMatch.retos[activeMatch.retoActualIndice].tipo === 'zen' || activeMatch.retos[activeMatch.retoActualIndice].tipo === 'tinder') && (
+              <div className="code-interactive-game">
+                <p className="text-xs text-slate-400 mb-3 font-mono">
+                  {activeMatch.retos[activeMatch.retoActualIndice].descripcion}
+                </p>
+                
+                <textarea
+                  className="code-textarea font-mono text-xs w-full h-[220px] bg-slate-900 border border-slate-800 text-emerald-400 p-3 mb-4 rounded"
+                  value={activeMatch.userCodigoInput}
+                  onChange={(e) => setActiveMatch(prev => ({ ...prev, userCodigoInput: e.target.value }))}
+                />
+
+                <div className="flex justify-between items-center">
+                  <span className="text-[10px] text-amber-500 font-mono">
+                    {activeMatch.retos[activeMatch.retoActualIndice].guia}
+                  </span>
+                  <button 
+                    onClick={handleCodeSubmit}
+                    className="hud-btn bg-emerald-600 hover:bg-emerald-500 text-white font-bold py-2 px-6 text-xs"
+                  >
+                    COMPILAR Y ENVIAR CÓDIGO
+                  </button>
+                </div>
+              </div>
+            )}
+
+            {activeMatch.userFinished && (
+              <div className="finished-overlay absolute inset-0 bg-slate-950/90 flex flex-col items-center justify-center text-center p-6 z-10">
+                <Award size={48} className="text-[#00ffcc] animate-bounce mb-3" />
+                <h3 className="text-white font-mono font-bold text-lg">RETOS COMPLETADOS</h3>
+                <p className="text-xs text-slate-400 max-w-xs mt-1">
+                  Has resuelto todos los desafíos de la simulación. Esperando a que el resto de los escuadrones finalicen sus respuestas...
+                </p>
+                <div className="spinner-hud mt-4 animate-spin w-6 h-6 border-2 border-t-[#00ffcc] border-slate-800 rounded-full" />
+              </div>
+            )}
+          </div>
+
+          {/* LADO DERECHO: TELEMETRÍA Y PROGRESO DE LOS ESCUADRONES EN TIEMPO REAL */}
+          <div className="match-squads-telemetry flex flex-col gap-4">
+            {/* ESCUADRÓN NARANJA (TU EQUIPO) */}
+            <div className="hud-panel-spec p-4 bg-[#ff9900]/5 border-[#ff9900]/20 rounded-lg">
+              <span className="text-[10px] text-[#ff9900] font-bold font-mono block mb-3 tracking-widest">
+                ESCUADRÓN NARANJA (ALIADOS)
+              </span>
+
+              <div className="flex flex-col gap-3">
+                {activeMatch.players.filter(p => p.team === 'orange').map(player => (
+                  <div key={player.id} className="player-progress-bar-spec font-mono">
+                    <div className="flex justify-between items-center text-[10px] mb-1">
+                      <span className="text-white font-bold flex items-center gap-1">
+                        {player.avatar} {player.nombre} {player.isSelf && <span className="text-[9px] text-[#00ffcc]">(Tú)</span>}
+                      </span>
+                      <span className={player.errors > 0 ? 'text-rose-500' : 'text-slate-400'}>
+                        {player.errors > 0 ? `⚠️ ${player.errors} err` : 'Limpio'}
+                      </span>
+                    </div>
+                    <div className="progress-track bg-slate-900 border border-slate-800 h-2.5 rounded-full overflow-hidden flex">
+                      <div 
+                        className="progress-fill bg-[#ff9900] h-full transition-all duration-300"
+                        style={{ width: `${player.progress}%` }}
+                      />
+                    </div>
+                    <div className="flex justify-between text-[8px] text-slate-500 mt-0.5">
+                      <span>Progreso: {player.progress}%</span>
+                      <span>{player.finished ? '¡TERMINÓ!' : 'Resolviendo...'}</span>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </div>
+
+            {/* ESCUADRÓN AZUL (ENEMIGOS) */}
+            <div className="hud-panel-spec p-4 bg-[#00f3ff]/5 border-[#00f3ff]/20 rounded-lg">
+              <span className="text-[10px] text-[#00f3ff] font-bold font-mono block mb-3 tracking-widest">
+                ESCUADRÓN AZUL (RIVALES)
+              </span>
+
+              <div className="flex flex-col gap-3">
+                {activeMatch.players.filter(p => p.team === 'blue').map(player => (
+                  <div key={player.id} className="player-progress-bar-spec font-mono">
+                    <div className="flex justify-between items-center text-[10px] mb-1">
+                      <span className="text-white font-bold">
+                        {player.avatar} {player.nombre}
+                      </span>
+                      <span className={player.errors > 0 ? 'text-rose-500' : 'text-slate-400'}>
+                        {player.errors > 0 ? `⚠️ ${player.errors} err` : 'Limpio'}
+                      </span>
+                    </div>
+                    <div className="progress-track bg-slate-900 border border-slate-800 h-2.5 rounded-full overflow-hidden flex">
+                      <div 
+                        className="progress-fill bg-[#00f3ff] h-full transition-all duration-300"
+                        style={{ width: `${player.progress}%` }}
+                      />
+                    </div>
+                    <div className="flex justify-between text-[8px] text-slate-500 mt-0.5">
+                      <span>Progreso: {player.progress}%</span>
+                      <span>{player.finished ? '¡TERMINÓ!' : 'Resolviendo...'}</span>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* 5. TABLA DE RESULTADOS DE BATTLE DE ESCUADRONES */}
       {battleResult && (
         <div className="battle-result-container spec-battle-result">
           <div className="hud-corner top-left"></div>
@@ -351,34 +1167,78 @@ function LobbyView({ estudiante, backendUrl, onUpdate }) {
           <div className="hud-corner bottom-right"></div>
 
           <div className={`result-header-spec ${battleResult.victoria ? 'win' : 'lose'}`}>
-            {battleResult.victoria ? '🏆 DECRIPCIÓN EXITOSA' : '💀 FALLO EN EL FIREWALL'}
+            {battleResult.victoria ? '🏆 SIMULACIÓN COMPLETADA CON ÉXITO' : '💀 FALLO EN EL FIREWALL'}
           </div>
-          <p className="desc-spec">{battleResult.mensaje}</p>
+          <p className="desc-spec text-sm font-mono text-slate-300 mt-2 max-w-[600px] mx-auto">
+            {battleResult.mensaje}
+          </p>
 
-          <div className="battle-stats-summary">
+          <div className="battle-stats-summary my-6">
             <div className="stat-box">
-              <span className="stat-num">{battleResult.victoria ? `+${battleResult.rankGanado || 15}` : '+10'}</span>
+              <span className="stat-num">+{battleResult.rankGanado}</span>
               <span className="stat-lbl">RANK POINTS</span>
             </div>
             <div className="stat-box">
-              <span className="stat-num">+3</span>
+              <span className="stat-num">+{battleResult.shardsGanado}</span>
               <span className="stat-lbl">SILICON SHARDS</span>
             </div>
-            {battleResult.victoria && (
-              <div className="stat-box">
-                <span className="stat-num">+{battleResult.xpGanada || 20}</span>
-                <span className="stat-lbl">XP COGNITIVA</span>
-              </div>
-            )}
+            <div className="stat-box">
+              <span className="stat-num">{battleResult.orangeTeamScore} vs {battleResult.blueTeamScore}</span>
+              <span className="stat-lbl">PUNTUACIÓN TOTAL</span>
+            </div>
           </div>
 
-          <button className="btn-action-hud" style={{ marginTop: '20px' }} onClick={() => setBattleResult(null)}>REGRESAR AL LOBBY</button>
+          {/* TABLA DETALLADA DE POSICIONES */}
+          <div className="detailed-scoreboard-hud text-left mt-6 max-w-[800px] mx-auto">
+            <span className="text-[10px] text-[#00ffcc] font-mono tracking-widest block mb-3 text-center">TABLA TÁCTICA DE OPERADORES</span>
+            <div className="scoreboard-grid flex flex-col gap-2">
+              {battleResult.scoreDetalle.map((player, idx) => (
+                <div 
+                  key={player.id} 
+                  className={`scoreboard-row ${
+                    player.isSelf 
+                      ? 'self-row' 
+                      : player.team === 'orange'
+                      ? 'orange-row'
+                      : 'blue-row'
+                  }`}
+                >
+                  <span className="row-rank">{idx + 1}°</span>
+                  <div className="row-identity">
+                    <span className="player-avatar">{player.avatar}</span>
+                    <span className="player-name">{player.nombre}</span>
+                    {player.isSelf && <span className="self-badge">(TÚ)</span>}
+                  </div>
+                  <div className="row-team">
+                    <span className={`team-tag ${player.team}`}>
+                      {player.team === 'orange' ? 'ESC. NARANJA' : 'ESC. AZUL'}
+                    </span>
+                  </div>
+                  <span className="row-stat progress-stat">
+                    ⚡ {player.progress}% prog
+                  </span>
+                  <span className={`row-stat error-stat ${player.errors === 0 ? 'clean' : 'has-errors'}`}>
+                    ⚠️ {player.errors} err
+                  </span>
+                  <span className="row-stat time-stat">
+                    ⏱️ {player.time ? `${player.time}s` : '--'}
+                  </span>
+                  <span className="row-score">
+                    {player.score} pts
+                  </span>
+                </div>
+              ))}
+            </div>
+          </div>
+
+          <button className="btn-action-hud mt-8" onClick={() => setBattleResult(null)}>
+            REGRESAR AL LOBBY
+          </button>
         </div>
       )}
     </div>
   );
 }
-
 
 /* ==========================================
    2. COPILOTO DE DEPURACIÓN

@@ -1,330 +1,30 @@
-import { useState, useEffect, useCallback, useRef } from 'react';
-import { BookOpen, Award, Download, CheckCircle2, AlertTriangle, Play, RefreshCw, Send, Code, Sparkles, User, LogOut, Check, ChevronRight, Gamepad2, Zap, Brain, Trophy, Target, Shuffle, GitFork, Lock, Unlock, Keyboard, Eye, Filter } from 'lucide-react';
+import React, { useState, useEffect, useCallback, useRef } from 'react';
+import { BookOpen, Award, Download, CheckCircle2, AlertTriangle, Play, RefreshCw, Send, Code, Sparkles, User, LogOut, Check, ChevronRight, Gamepad2, Zap, Brain, Trophy, Target, Shuffle, GitFork, Lock, Unlock, Keyboard, Eye, Filter, Globe, UserPlus, Users, Copy, X, Swords, Trash2, MessageSquare } from 'lucide-react';
 import './App.css';
 import PragmaGames from './PragmaGames';
 
+// Módulos e Importaciones Modularizadas
+import NebulaCanvas from './core/vistas/NebulaCanvas';
+import { parsearInlineMarkdown, parsearMarkdownMentor, parsearRequisitos } from './core/controladores/markdown';
+import { LISTA_LOGROS } from './logros/modelos/logrosModel';
+import LogrosPanel from './logros/vistas/LogrosPanel';
+import ArbolDeLaVidaCanvas from './cosmico/vistas/ArbolDeLaVidaCanvas';
+import { obtenerPosicionesProcedurales } from './cosmico/controladores/posicionamiento';
+import PerfilCosmico from './cosmico/vistas/PerfilCosmico';
+import HabilidadesRoadmap from './habilidades/vistas/HabilidadesRoadmap';
+import DashboardRuta from './ruta/vistas/DashboardRuta';
+import MentorChat from './mentor/vistas/MentorChat';
+import AmigosPanel from './amigos/vistas/AmigosPanel';
+
+// Estilos de los Módulos
+import './logros/estilos/logros.css';
+import './cosmico/estilos/cosmico.css';
+import './habilidades/estilos/habilidades.css';
+import './ruta/estilos/ruta.css';
+import './mentor/estilos/mentor.css';
+import './amigos/estilos/amigos.css';
 
 const API_BASE = import.meta.env.VITE_API_BASE || 'http://localhost:5000';
-
-const LISTA_LOGROS = [
-  // Bronce (1-4)
-  { id: 'primer_juego', titulo: '🏆 EL DESPERTAR DEL INICIADO', desc: 'Completa con éxito cualquier minijuego de la Zona de Juegos.', xp: 15, tipo: 'bronce' },
-  { id: 'retos_3', titulo: '🏆 TRIPLE ALIANZA DEL CÓDIGO', desc: 'Has completado 3 minijuegos. ¡El impulso es real!', xp: 20, tipo: 'bronce' },
-  { id: 'retos_5', titulo: '🏆 GLADIADOR EN ENTRENAMIENTO', desc: 'Has completado 5 minijuegos con destreza e intelecto.', xp: 25, tipo: 'bronce' },
-  { id: 'retos_10', titulo: '🏆 GUERRERO DEL COMPILADOR', desc: 'Has completado 10 minijuegos. ¡Dominas la arena!', xp: 30, tipo: 'bronce' },
-  
-  // Fuego (5-8)
-  { id: 'racha_flashcard', titulo: '🔥 LLAMAS DE MEMORIA IMPERECEDERA', desc: 'Consigue una racha de 3 aciertos consecutivos en Flashcards.', xp: 25, tipo: 'fuego' },
-  { id: 'racha_flashcard_5', titulo: '🔥 FÉNIX DEL APRENDIZAJE RÁPIDO', desc: 'Consigue una racha de 5 aciertos consecutivos en Flashcards.', xp: 35, tipo: 'fuego' },
-  { id: 'racha_flashcard_8', titulo: '🔥 VOLCÁN COGNITIVO ACTIVO', desc: 'Consigue una racha de 8 aciertos consecutivos en Flashcards.', xp: 45, tipo: 'fuego' },
-  { id: 'racha_flashcard_10', titulo: '🔥 INFERNO DE CONOCIMIENTO ABSOLUTO', desc: 'Consigue una racha de 10 aciertos en Flashcards. ¡Fuego mental puro!', xp: 60, tipo: 'fuego' },
-  
-  // Celestial (9-12)
-  { id: 'precis_typer', titulo: '👼 AUREOLA DEL MECANÓGRAFO', desc: 'Escribe la línea de código en el Typer con 100% de precisión.', xp: 30, tipo: 'celestial' },
-  { id: 'typer_veloz', titulo: '👼 ALAS DEL VIENTO DE SILICIO', desc: 'Supera una velocidad de escritura de 80 WPM en el Code Typer.', xp: 35, tipo: 'celestial' },
-  { id: 'typer_supersound', titulo: '👼 BARRERA DEL SONIDO CRUJIENTE', desc: 'Supera una velocidad de escritura de 100 WPM en el Code Typer.', xp: 50, tipo: 'celestial' },
-  { id: 'typer_dios', titulo: '👼 DEIDAD DE LA ESCRITURA SAGRADA', desc: 'Logra 100% de precisión a una velocidad de más de 90 WPM.', xp: 60, tipo: 'celestial' },
-  
-  // Acuático (13-16)
-  { id: 'trivias_correct', titulo: '💧 GOTA DE SABIDURÍA ANCESTRAL', desc: 'Responde correctamente una trivia técnica adaptada por la IA.', xp: 25, tipo: 'acuatico' },
-  { id: 'trivias_3', titulo: '💧 TRIDENTE DE LA VERDAD TÉCNICA', desc: 'Responde correctamente 3 trivias técnicas.', xp: 30, tipo: 'acuatico' },
-  { id: 'trivias_5', titulo: '💧 MAREA ALTA DE RESPUESTAS', desc: 'Responde correctamente 5 trivias técnicas.', xp: 40, tipo: 'acuatico' },
-  { id: 'trivias_10', titulo: '💧 POSEIDÓN DEL DESARROLLO', desc: 'Responde correctamente 10 trivias técnicas. ¡El océano de código te obedece!', xp: 60, tipo: 'acuatico' },
-  
-  // Mecha (17-19)
-  { id: 'memory_perfecto', titulo: '🤖 INTERFAZ NEURONAL OPTIMIZADA', desc: 'Completa el juego de Memory Match con 0 errores.', xp: 30, tipo: 'mecha' },
-  { id: 'memory_rapido', titulo: '🤖 PROCESADOR DE HILO CUÁNTICO', desc: 'Completa el Memory Match en menos de 10 segundos.', xp: 35, tipo: 'mecha' },
-  { id: 'memory_dios', titulo: '🤖 NÚCLEO DE IA AUTO-EVOLUTIVO', desc: 'Completa el Memory Match en menos de 6 segundos.', xp: 50, tipo: 'mecha' },
-  
-  // Esmeralda (20-27)
-  { id: 'xp_10', titulo: '🟢 CHISPA DE ESMERALDA', desc: 'Acumula un total de 10 XP en tu perfil de estudiante.', xp: 10, tipo: 'esmeralda' },
-  { id: 'xp_25', titulo: '🟢 CRISTALIZACIÓN EN PROGRESO', desc: 'Acumula un total de 25 XP en tu perfil de estudiante.', xp: 15, tipo: 'esmeralda' },
-  { id: 'xp_50', titulo: '🟢 GEMAS DE EXPERIENCIA', desc: 'Acumula un total de 50 XP en tu perfil de estudiante.', xp: 20, tipo: 'esmeralda' },
-  { id: 'xp_100', titulo: '🟢 RESPLANDOR ESMERALDA', desc: 'Acumula un total de 100 XP en tu perfil de estudiante.', xp: 45, tipo: 'esmeralda' },
-  { id: 'xp_200', titulo: '🟢 PODER DE LA TIERRA VERDE', desc: 'Acumula un total de 200 XP en tu perfil de estudiante.', xp: 55, tipo: 'esmeralda' },
-  { id: 'xp_300', titulo: '🟢 CORAZÓN DEL VALLE DE LA IA', desc: 'Acumula un total de 300 XP en tu perfil de estudiante.', xp: 65, tipo: 'esmeralda' },
-  { id: 'xp_500', titulo: '🟢 LEYENDA ECOLOGISTA DE SOFTWARE', desc: 'Acumula un total de 500 XP en tu perfil de estudiante.', xp: 80, tipo: 'esmeralda' },
-  { id: 'xp_1000', titulo: '🟢 DIOS DE LA ESMERALDA INFINITA', desc: 'Acumula un total de 1000 XP en tu perfil de estudiante.', xp: 150, tipo: 'esmeralda' },
-  
-  // Anime/Manga (28-31)
-  { id: 'primer_mentor', titulo: '🌸 DIARIO DE UNA NUEVA AVENTURA', desc: 'Conéctate con tu Mentor IA para iniciar tu primer plan de proyecto.', xp: 20, tipo: 'anime' },
-  { id: 'chat_mentor_5', titulo: '🌸 CONVERSACIONES BAJO EL CEREZO', desc: 'Envía 5 mensajes en el chat del Mentor para resolver tus dudas.', xp: 25, tipo: 'anime' },
-  { id: 'chat_mentor_10', titulo: '🌸 VÍNCULO SENSEI-ALUMNO ACTIVO', desc: 'Envía 10 mensajes en el chat del Mentor.', xp: 35, tipo: 'anime' },
-  { id: 'chat_mentor_20', titulo: '🌸 TRASPASANDO LÍMITES (PLUS ULTRA)', desc: 'Envía 20 mensajes en el chat del Mentor. ¡Supera tu propio límite!', xp: 50, tipo: 'anime' },
-  
-  // Diamante (32-37)
-  { id: 'calif_100', titulo: '💎 ARQUITECTO DE DIAMANTE', desc: 'Obtén una calificación perfecta de 100 puntos en una entrega calificada por la IA.', xp: 50, tipo: 'diamante' },
-  { id: 'calif_95', titulo: '💎 BRILLO IMPECABLE EN ENTREGAS', desc: 'Obtén una calificación superior o igual a 95 en una entrega.', xp: 40, tipo: 'diamante' },
-  { id: 'calif_90', titulo: '💎 CRISTAL DE EXCELENCIA', desc: 'Obtén una calificación superior o igual a 90 en una entrega.', xp: 30, tipo: 'diamante' },
-  { id: 'entrega_1', titulo: '💎 CÓDIGO SUBIDO AL REPOSITORIO', desc: 'Realiza 1 entrega de tarea evaluada por la IA.', xp: 20, tipo: 'diamante' },
-  { id: 'entrega_3', titulo: '💎 MAESTRO DE LOS COMMITS', desc: 'Realiza 3 entregas de tarea.', xp: 30, tipo: 'diamante' },
-  { id: 'entrega_5', titulo: '💎 DESPLEGANDO EN PRODUCCIÓN', desc: 'Realiza 5 entregas de tarea.', xp: 45, tipo: 'diamante' },
-  
-  // Rubí (38-40)
-  { id: 'cambio_ruta', titulo: '🔴 CANALIZACIÓN DE RUBÍ BRUTAL', desc: 'Cambia tu tecnología actual en el selector para aprender un nuevo lenguaje.', xp: 15, tipo: 'rubi' },
-  { id: 'cambio_ruta_3', titulo: '🔴 POLÍGLOTA DIVINO DEL CÓDIGO', desc: 'Cambia de ruta tecnológica 3 veces para ampliar tus horizontes.', xp: 30, tipo: 'rubi' },
-  { id: 'cambio_ruta_5', titulo: '🔴 MAESTRO MULTI-PARADIGMA', desc: 'Cambia de ruta tecnológica 5 veces.', xp: 45, tipo: 'rubi' },
-  
-  // Cósmico (41-47)
-  { id: 'rpg_2', titulo: '🌌 ÓRBITA GEOCÉNTRICA ALCANZADA', desc: 'Alcanza el nivel RPG 2 en la plataforma.', xp: 20, tipo: 'cosmico' },
-  { id: 'rpg_3', titulo: '🌌 VIAJE A LA NUBE DE OORT', desc: 'Alcanza el nivel RPG 3 en la plataforma.', xp: 30, tipo: 'cosmico' },
-  { id: 'rpg_4', titulo: '🌌 CONSTELACIÓN DE ALTA ENERGÍA', desc: 'Alcanza el nivel RPG 4 en la plataforma.', xp: 40, tipo: 'cosmico' },
-  { id: 'rpg_5', titulo: '🌌 SINGULARIDAD ESPACIAL DETECTADA', desc: 'Alcanza el nivel RPG 5. ¡Eres un maestro consumado!', xp: 50, tipo: 'cosmico' },
-  { id: 'rpg_6', titulo: '🌌 SUPERNOVA DE LA INGENIERÍA', desc: 'Alcanza el nivel RPG 6.', xp: 60, tipo: 'cosmico' },
-  { id: 'rpg_7', titulo: '🌌 AGUJERO DE GUSANO COGNITIVO', desc: 'Alcanza el nivel RPG 7.', xp: 80, tipo: 'cosmico' },
-  { id: 'rpg_8', titulo: '🌌 DIOS EMPERADOR DEL COSMOS', desc: 'Alcanza el nivel RPG 8. ¡Poder y control cósmico absoluto!', xp: 150, tipo: 'cosmico' },
-  
-  // Obsidiana (48-50)
-  { id: 'click_perfil', titulo: '🔮 ACCESO A LA MATRIX NEGRA', desc: 'Visita tu perfil de estudiante calificado.', xp: 10, tipo: 'obsidiana' },
-  { id: 'click_logros', titulo: '🔮 INSPECCIÓN DEL COFRE DEL TESORO', desc: 'Abre la pestaña de medallero de logros.', xp: 10, tipo: 'obsidiana' },
-  { id: 'click_temario', titulo: '🔮 MAPA DEL LABERINTO CREADO', desc: 'Visita la pestaña del temario de aprendizaje.', xp: 10, tipo: 'obsidiana' }
-];
-
-const parsearInlineMarkdown = (text) => {
-  if (!text) return text;
-  const parts = [];
-  let remaining = text;
-  let keyIdx = 0;
-
-  while (remaining.length > 0) {
-    const boldMatch = remaining.match(/\*\*(.+?)\*\*/);
-    const italicMatch = remaining.match(/(?<!\*)\*(?!\*)(.+?)(?<!\*)\*(?!\*)/);
-    const codeMatch = remaining.match(/`([^`]+)`/);
-    const linkMatch = remaining.match(/\[([^\]]+)\]\(([^)]+)\)/);
-
-    let earliest = null;
-    let earliestIdx = remaining.length;
-
-    if (boldMatch && boldMatch.index < earliestIdx) { earliest = 'bold'; earliestIdx = boldMatch.index; }
-    if (codeMatch && codeMatch.index < earliestIdx) { earliest = 'code'; earliestIdx = codeMatch.index; }
-    if (linkMatch && linkMatch.index < earliestIdx) { earliest = 'link'; earliestIdx = linkMatch.index; }
-    if (!earliest && italicMatch && italicMatch.index < earliestIdx) { earliest = 'italic'; earliestIdx = italicMatch.index; }
-
-    if (!earliest) {
-      parts.push(remaining);
-      break;
-    }
-
-    if (earliestIdx > 0) {
-      parts.push(remaining.substring(0, earliestIdx));
-    }
-
-    if (earliest === 'bold') {
-      parts.push(<strong key={`b${keyIdx++}`}>{boldMatch[1]}</strong>);
-      remaining = remaining.substring(earliestIdx + boldMatch[0].length);
-    } else if (earliest === 'italic') {
-      parts.push(<em key={`i${keyIdx++}`}>{italicMatch[1]}</em>);
-      remaining = remaining.substring(earliestIdx + italicMatch[0].length);
-    } else if (earliest === 'code') {
-      parts.push(<code key={`c${keyIdx++}`} className="inline-code-mentor">{codeMatch[1]}</code>);
-      remaining = remaining.substring(earliestIdx + codeMatch[0].length);
-    } else if (earliest === 'link') {
-      parts.push(<a key={`l${keyIdx++}`} href={linkMatch[2]} target="_blank" rel="noopener noreferrer" className="mentor-link">{linkMatch[1]}</a>);
-      remaining = remaining.substring(earliestIdx + linkMatch[0].length);
-    }
-  }
-
-  return parts.length === 1 && typeof parts[0] === 'string' ? parts[0] : parts;
-};
-
-const parsearMarkdownMentor = (md) => {
-  if (!md) return null;
-  
-  const lines = md.split('\n');
-  const elements = [];
-  let inCodeBlock = false;
-  let codeBlockContent = [];
-  let codeBlockLang = '';
-
-  for (let i = 0; i < lines.length; i++) {
-    const line = lines[i];
-    
-    if (line.trim().startsWith('```')) {
-      if (inCodeBlock) {
-        inCodeBlock = false;
-        const codeText = codeBlockContent.join('\n');
-        const lang = codeBlockLang;
-        elements.push(
-          <div key={`code-${i}`} className="mentor-code-wrapper">
-            <div className="code-block-header">
-              <span className="code-lang-label">{lang ? lang.toUpperCase() : 'CODE'}</span>
-              <button
-                type="button"
-                className="btn-copy-code"
-                onClick={(e) => {
-                  navigator.clipboard.writeText(codeText);
-                  const btn = e.currentTarget;
-                  btn.textContent = '✓ Copiado';
-                  btn.classList.add('copied');
-                  setTimeout(() => { btn.textContent = 'Copiar'; btn.classList.remove('copied'); }, 2000);
-                }}
-              >Copiar</button>
-            </div>
-            <pre className="mentor-code-block">
-              <code>{codeText}</code>
-            </pre>
-          </div>
-        );
-        codeBlockContent = [];
-        codeBlockLang = '';
-      } else {
-        inCodeBlock = true;
-        codeBlockLang = line.trim().replace('```', '').trim();
-      }
-      continue;
-    }
-
-    if (inCodeBlock) {
-      codeBlockContent.push(line);
-      continue;
-    }
-
-    const trimmed = line.trim();
-
-    if (trimmed === '---' || trimmed === '***') {
-      elements.push(<hr key={i} className="mentor-hr" />);
-    } else if (trimmed.startsWith('####')) {
-      elements.push(<h5 key={i}>{parsearInlineMarkdown(trimmed.replace('####', '').trim())}</h5>);
-    } else if (trimmed.startsWith('###')) {
-      elements.push(<h4 key={i}>{parsearInlineMarkdown(trimmed.replace('###', '').trim())}</h4>);
-    } else if (trimmed.startsWith('##')) {
-      elements.push(<h3 key={i}>{parsearInlineMarkdown(trimmed.replace('##', '').trim())}</h3>);
-    } else if (trimmed.startsWith('#')) {
-      elements.push(<h2 key={i}>{parsearInlineMarkdown(trimmed.replace('#', '').trim())}</h2>);
-    } else if (/^\d+\.\s+/.test(trimmed)) {
-      const numMatch = trimmed.match(/^(\d+)\.\s+(.*)/);
-      elements.push(
-        <div key={i} className="numbered-item-mentor">
-          <span className="numbered-item-num">{numMatch[1]}</span>
-          <span className="numbered-item-text">{parsearInlineMarkdown(numMatch[2])}</span>
-        </div>
-      );
-    } else if (trimmed.startsWith('- ') || trimmed.startsWith('* ')) {
-      elements.push(<li key={i} className="bullet-li-mentor">{parsearInlineMarkdown(trimmed.substring(2).trim())}</li>);
-    } else if (trimmed.length === 0) {
-      elements.push(<div key={i} className="md-spacing" />);
-    } else {
-      elements.push(<p key={i}>{parsearInlineMarkdown(line)}</p>);
-    }
-  }
-
-  return elements;
-};
-
-const parsearRequisitos = (descripcion) => {
-  if (!descripcion) return [];
-  const regexPasos = /(?:\d+\.\s+)(.*?)(?=\s*\d+\.\s+|$)/gs;
-  const matches = [...descripcion.matchAll(regexPasos)];
-  
-  if (matches.length > 0) {
-    return matches.map((m, idx) => ({
-      numero: idx + 1,
-      texto: m[1].trim()
-    }));
-  }
-  
-  const lineas = descripcion.split(/\r?\n/).filter(linea => linea.trim().length > 0);
-  if (lineas.length > 1) {
-    return lineas.map((linea, idx) => {
-      const textoLimpio = linea.replace(/^\s*\d+[\.\)-]\s*/, '').trim();
-      return {
-        numero: idx + 1,
-        texto: textoLimpio
-      };
-    });
-  }
-  
-  return [{ numero: 1, texto: descripcion }];
-};
-
-function NebulaCanvas() {
-  const canvasRef = useRef(null);
-
-  useEffect(() => {
-    const canvas = canvasRef.current;
-    if (!canvas) return;
-    const ctx = canvas.getContext('2d');
-    let animationFrameId;
-
-    const resizeCanvas = () => {
-      if (!canvas.parentElement) return;
-      canvas.width = canvas.parentElement.clientWidth;
-      canvas.height = canvas.parentElement.clientHeight;
-    };
-    resizeCanvas();
-    window.addEventListener('resize', resizeCanvas);
-
-    // Inicialización de partículas de estrellas fijas con efecto parallax
-    const stars = Array.from({ length: 80 }, () => ({
-      x: Math.random() * (canvas.width || 800),
-      y: Math.random() * (canvas.height || 600),
-      radius: Math.random() * 1.5,
-      alpha: Math.random(),
-      speed: 0.01 + Math.random() * 0.02
-    }));
-
-    // Seguir el mouse para un gradiente interactivo
-    let mouseX = canvas.width / 2;
-    let mouseY = canvas.height / 2;
-    const handleMouseMove = (e) => {
-      const rect = canvas.getBoundingClientRect();
-      mouseX = e.clientX - rect.left;
-      mouseY = e.clientY - rect.top;
-    };
-
-    const parent = canvas.parentElement;
-    if (parent) {
-      parent.addEventListener('mousemove', handleMouseMove);
-    }
-
-    const render = () => {
-      ctx.fillStyle = '#000000';
-      ctx.fillRect(0, 0, canvas.width, canvas.height);
-
-      // Dibujar la nebulosa interactiva de fondo
-      const nebula = ctx.createRadialGradient(
-        mouseX, mouseY, 50,
-        mouseX, mouseY, Math.max(canvas.width, canvas.height) * 0.7
-      );
-      nebula.addColorStop(0, 'rgba(0, 243, 255, 0.08)');
-      nebula.addColorStop(0.3, 'rgba(124, 58, 237, 0.04)');
-      nebula.addColorStop(1, 'rgba(0, 0, 0, 0)');
-      ctx.fillStyle = nebula;
-      ctx.fillRect(0, 0, canvas.width, canvas.height);
-
-      // Dibujo del Twinkle Effect de estrellas
-      stars.forEach(star => {
-        star.alpha += star.speed;
-        if (star.alpha > 1 || star.alpha < 0) star.speed = -star.speed;
-        ctx.globalAlpha = Math.abs(star.alpha);
-        ctx.fillStyle = '#ffffff';
-        ctx.beginPath();
-        ctx.arc(star.x, star.y, star.radius, 0, Math.PI * 2);
-        ctx.fill();
-      });
-
-      ctx.globalAlpha = 1.0;
-      animationFrameId = requestAnimationFrame(render);
-    };
-    render();
-
-    return () => {
-      cancelAnimationFrame(animationFrameId);
-      window.removeEventListener('resize', resizeCanvas);
-      if (parent) {
-        parent.removeEventListener('mousemove', handleMouseMove);
-      }
-    };
-  }, []);
-
-  return (
-    <canvas 
-      ref={canvasRef} 
-      className="absolute top-0 left-0 w-full h-full pointer-events-none" 
-      style={{ zIndex: 0 }}
-    />
-  );
-}
 
 function App() {
   const [nombre, setNombre] = useState('');
@@ -340,6 +40,31 @@ function App() {
   const [codigoEntregado, setCodigoEntregado] = useState('');
   const [mensaje, setMensaje] = useState({ texto: '', tipo: '' });
   const [mostrarTodoTemario, setMostrarTodoTemario] = useState(false);
+
+  // Estados de Amistad / Social (Firebase + Postgres)
+  const [listaAmigos, setListaAmigos] = useState([]);
+  const [solicitudesPendientes, setSolicitudesPendientes] = useState([]);
+  const [inputIdAmigo, setInputIdAmigo] = useState('');
+  const [mensajeAmistad, setMensajeAmistad] = useState({ texto: '', tipo: '' });
+  const [loadingAmigos, setLoadingAmigos] = useState(false);
+  const [mostrarSocialDropdown, setMostrarSocialDropdown] = useState(false);
+  const [solicitudesVistas, setSolicitudesVistas] = useState(() => {
+    try {
+      return JSON.parse(localStorage.getItem('solicitudes_vistas') || '[]');
+    } catch (e) {
+      return [];
+    }
+  });
+  const [dueloActivo, setDueloActivo] = useState(null); // { oponenteNombre: string, cargando: boolean, mision: string } o null
+  const [amigoChatActivo, setAmigoChatActivo] = useState(null);
+  const [mensajesChat, setMensajesChat] = useState([]);
+  const [nuevoMensaje, setNuevoMensaje] = useState('');
+  const [loadingChat, setLoadingChat] = useState(false);
+  const [retarAmigoActivo, setRetarAmigoActivo] = useState(null);
+  const [tipoMatchDuelo, setTipoMatchDuelo] = useState('1v1');
+  const [modosDueloSeleccionados, setModosDueloSeleccionados] = useState(['algoritmia']);
+  const [duelosRecibidos, setDuelosRecibidos] = useState([]);
+  const [dueloEnviadoActivo, setDueloEnviadoActivo] = useState(null);
 
   // Estados para el Asistente de Proyectos (Mentor)
   const [vistaActiva, setVistaActiva] = useState('ruta'); // 'ruta' | 'mentor' | 'juegos' | 'habilidades'
@@ -361,6 +86,7 @@ function App() {
 
   // Estados de Gamificación
   const [juegoActivo, setJuegoActivo] = useState(null);
+  const [modoJuego, setModoJuego] = useState('pragma'); // 'pragma' o 'arcade'
   const [juegoData, setJuegoData] = useState(null);
   const [juegoLoading, setJuegoLoading] = useState(false);
   const [juegoResultado, setJuegoResultado] = useState(null);
@@ -386,8 +112,15 @@ function App() {
   // Estados del sistema de logros
   const [logrosDesbloqueados, setLogrosDesbloqueados] = useState([]);
   const logrosRef = useRef([]);
+  const chatEndRef = useRef(null);
   const [logroNotificado, setLogroNotificado] = useState(null);
   const [filtroLogros, setFiltroLogros] = useState('todos');
+
+  useEffect(() => {
+    if (chatEndRef.current) {
+      chatEndRef.current.scrollIntoView({ behavior: 'smooth' });
+    }
+  }, [mensajesChat]);
 
   // Cargar sesión guardada en localStorage al iniciar
   useEffect(() => {
@@ -398,6 +131,77 @@ function App() {
       cargarEstado(parsed.id);
     }
   }, []);
+
+  // Polling para actualizar amigos y solicitudes entrantes cada 12 segundos
+  useEffect(() => {
+    if (!estudiante) return;
+    const interval = setInterval(() => {
+      cargarAmigosYSolicitudes(estudiante.id);
+    }, 12000);
+    return () => clearInterval(interval);
+  }, [estudiante]);
+
+  // Polling para actualizar chats activos cada 4 segundos
+  useEffect(() => {
+    if (!estudiante || !amigoChatActivo) return;
+    cargarMensajesChat(amigoChatActivo.id);
+    const interval = setInterval(() => {
+      cargarMensajesChat(amigoChatActivo.id);
+    }, 4000);
+    return () => clearInterval(interval);
+  }, [estudiante, amigoChatActivo]);
+
+  // Polling para duelos pendientes recibidos cada 8 segundos
+  useEffect(() => {
+    if (!estudiante) return;
+    cargarDuelosPendientes(estudiante.id);
+    const interval = setInterval(() => {
+      cargarDuelosPendientes(estudiante.id);
+    }, 8000);
+    return () => clearInterval(interval);
+  }, [estudiante]);
+
+  // Ping de presencia online cada 15 segundos
+  useEffect(() => {
+    if (!estudiante) return;
+    const ping = () => {
+      fetch(`${API_BASE}/api/estudiantes/${estudiante.id}/ping`, { method: 'POST' }).catch(() => {});
+    };
+    ping();
+    const interval = setInterval(ping, 15000);
+    return () => clearInterval(interval);
+  }, [estudiante]);
+
+  // Polling para monitorear aceptación de invitaciones de duelo enviadas (cada 3 segundos)
+  useEffect(() => {
+    if (!estudiante || !dueloEnviadoActivo) return;
+    const interval = setInterval(async () => {
+      try {
+        const res = await fetch(`${API_BASE}/api/duelos/estado/${dueloEnviadoActivo.id}`);
+        if (res.ok) {
+          const data = await res.json();
+          if (data.estado === 'aceptado') {
+            clearInterval(interval);
+            mostrarMensaje(`¡${dueloEnviadoActivo.retado_nombre} ha aceptado tu duelo!`, 'success');
+            setDueloEnviadoActivo(null);
+            setDueloActivo({
+              oponenteNombre: dueloEnviadoActivo.retado_nombre,
+              cargando: false,
+              mision: `Duelo de Combate (${dueloEnviadoActivo.tipo_match.toUpperCase()}) - Modos: ${Array.isArray(dueloEnviadoActivo.modos) ? dueloEnviadoActivo.modos.join(', ').toUpperCase() : dueloEnviadoActivo.modos.toUpperCase()}`
+            });
+            setMostrarSocialDropdown(false);
+          } else if (data.estado === 'rechazado') {
+            clearInterval(interval);
+            mostrarMensaje(`${dueloEnviadoActivo.retado_nombre} rechazó tu invitación de duelo.`, 'error');
+            setDueloEnviadoActivo(null);
+          }
+        }
+      } catch (err) {
+        console.error(err);
+      }
+    }, 3000);
+    return () => clearInterval(interval);
+  }, [estudiante, dueloEnviadoActivo]);
 
   // Temporizador para Trivia
   useEffect(() => {
@@ -554,7 +358,7 @@ function App() {
   const irAVista = async (vista) => {
     setVistaActiva(vista);
     if (!estudiante) return;
-    if (vista === 'habilidades') {
+    if (vista === 'habilidades' || vista === 'cosmico') {
       const count = parseInt(localStorage.getItem(`ia_profesor_click_temario_${estudiante.id}`) || '0', 10) + 1;
       localStorage.setItem(`ia_profesor_click_temario_${estudiante.id}`, count.toString());
       await evaluarLogros();
@@ -575,6 +379,7 @@ function App() {
         setTemario(data.temario);
         await cargarPlanesMentor(id);
         await cargarLogros(id);
+        await cargarAmigosYSolicitudes(id);
       } else {
         mostrarMensaje(data.error || 'Error al cargar el estado', 'error');
       }
@@ -582,6 +387,247 @@ function App() {
       console.error(err);
       mostrarMensaje('No se pudo conectar con el servidor backend', 'error');
     }
+  };
+
+  const cargarAmigosYSolicitudes = async (id) => {
+    try {
+      const [amigosRes, pendientesRes] = await Promise.all([
+        fetch(`${API_BASE}/api/amistades/listar/${id}`),
+        fetch(`${API_BASE}/api/amistades/pendientes/${id}`)
+      ]);
+      if (amigosRes.ok) {
+        const amigosData = await amigosRes.json();
+        setListaAmigos(amigosData);
+      }
+      if (pendientesRes.ok) {
+        const pendientesData = await pendientesRes.json();
+        setSolicitudesPendientes(pendientesData);
+        const pendientesIds = pendientesData.map(r => r.id);
+        setSolicitudesVistas(prev => {
+          const filtrados = prev.filter(id => pendientesIds.includes(id));
+          localStorage.setItem('solicitudes_vistas', JSON.stringify(filtrados));
+          return filtrados;
+        });
+      }
+    } catch (err) {
+      console.error('Error al cargar amigos/solicitudes:', err);
+    }
+  };
+
+  const enviarSolicitudAmistad = async (e) => {
+    e.preventDefault();
+    if (!inputIdAmigo.trim() || !estudiante) return;
+    setLoadingAmigos(true);
+    setMensajeAmistad({ texto: '', tipo: '' });
+    try {
+      const res = await fetch(`${API_BASE}/api/amistades/enviar`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ solicitante_id: estudiante.id, receptor_id: inputIdAmigo.trim() })
+      });
+      const data = await res.json();
+      if (res.ok) {
+        setMensajeAmistad({ texto: data.mensaje, tipo: 'success' });
+        setInputIdAmigo('');
+        cargarAmigosYSolicitudes(estudiante.id);
+      } else {
+        setMensajeAmistad({ texto: data.error || 'Error al enviar solicitud.', tipo: 'error' });
+      }
+    } catch (err) {
+      console.error(err);
+      setMensajeAmistad({ texto: 'Error de red al enviar la solicitud.', tipo: 'error' });
+    } finally {
+      setLoadingAmigos(false);
+    }
+  };
+
+  const responderSolicitudAmistad = async (solicitudId, accion) => {
+    if (!estudiante) return;
+    try {
+      const res = await fetch(`${API_BASE}/api/amistades/responder`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ solicitud_id: solicitudId, accion })
+      });
+      const data = await res.json();
+      if (res.ok) {
+        mostrarMensaje(data.mensaje, 'success');
+        cargarAmigosYSolicitudes(estudiante.id);
+      } else {
+        mostrarMensaje(data.error || 'Error al responder la solicitud.', 'error');
+      }
+    } catch (err) {
+      console.error(err);
+      mostrarMensaje('Error de red al responder.', 'error');
+    }
+  };
+
+  const eliminarAmigo = async (amigoId) => {
+    if (!estudiante) return;
+    if (!confirm('¿Estás seguro de que deseas eliminar a este amigo de tu lista táctica social?')) return;
+    try {
+      const res = await fetch(`${API_BASE}/api/amistades/eliminar`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ estudiante_id: estudiante.id, amigo_id: amigoId })
+      });
+      const data = await res.json();
+      if (res.ok) {
+        mostrarMensaje(data.mensaje, 'success');
+        cargarAmigosYSolicitudes(estudiante.id);
+      } else {
+        mostrarMensaje(data.error || 'Error al eliminar amigo.', 'error');
+      }
+    } catch (err) {
+      console.error(err);
+      mostrarMensaje('Error de red al eliminar amigo.', 'error');
+    }
+  };
+
+  const cargarMensajesChat = async (amigoId) => {
+    if (!estudiante) return;
+    try {
+      const res = await fetch(`${API_BASE}/api/chats/listar/${estudiante.id}/${amigoId}`);
+      if (res.ok) {
+        const data = await res.json();
+        setMensajesChat(data);
+      }
+    } catch (err) {
+      console.error("Error al cargar mensajes de chat:", err);
+    }
+  };
+
+  const enviarMensajeChat = async (e) => {
+    e.preventDefault();
+    if (!nuevoMensaje.trim() || !estudiante || !amigoChatActivo) return;
+    setLoadingChat(true);
+    try {
+      const res = await fetch(`${API_BASE}/api/chats/enviar`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          remitente_id: estudiante.id,
+          remitente_nombre: estudiante.nombre,
+          destinatario_id: amigoChatActivo.id,
+          destinatario_nombre: amigoChatActivo.nombre,
+          mensaje: nuevoMensaje.trim()
+        })
+      });
+      if (res.ok) {
+        setNuevoMensaje('');
+        await cargarMensajesChat(amigoChatActivo.id);
+      }
+    } catch (err) {
+      console.error(err);
+      mostrarMensaje('Error al enviar mensaje.', 'error');
+    } finally {
+      setLoadingChat(false);
+    }
+  };
+
+  const enviarInvitacionDuelo = async () => {
+    if (!estudiante || !retarAmigoActivo) return;
+    try {
+      const res = await fetch(`${API_BASE}/api/duelos/invitar`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          retador_id: estudiante.id,
+          retador_nombre: estudiante.nombre,
+          retado_id: retarAmigoActivo.id,
+          retado_nombre: retarAmigoActivo.nombre,
+          tipo_match: tipoMatchDuelo,
+          modos: modosDueloSeleccionados
+        })
+      });
+      const data = await res.json();
+      if (res.ok) {
+        mostrarMensaje(`Invitación de duelo enviada a ${retarAmigoActivo.nombre}`, 'success');
+        setDueloEnviadoActivo(data.duelo);
+        setRetarAmigoActivo(null);
+      } else {
+        mostrarMensaje(data.error || 'Error al enviar invitación.', 'error');
+      }
+    } catch (err) {
+      console.error(err);
+      mostrarMensaje('Error al enviar la invitación.', 'error');
+    }
+  };
+
+  const cargarDuelosPendientes = async (id) => {
+    try {
+      const res = await fetch(`${API_BASE}/api/duelos/pendientes/${id}`);
+      if (res.ok) {
+        const data = await res.json();
+        setDuelosRecibidos(data);
+      }
+    } catch (err) {
+      console.error("Error al obtener duelos pendientes:", err);
+    }
+  };
+
+  const responderDuelo = async (dueloId, accion) => {
+    try {
+      const res = await fetch(`${API_BASE}/api/duelos/responder`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ duelo_id: dueloId, accion })
+      });
+      if (res.ok) {
+        mostrarMensaje(`Duelo ${accion === 'aceptar' ? 'aceptado' : 'rechazado'}.`, 'success');
+        if (accion === 'aceptar') {
+          const duelo = duelosRecibidos.find(d => d.id === dueloId);
+          if (duelo) {
+            setDueloActivo({
+              oponenteNombre: duelo.retador_nombre,
+              cargando: false,
+              mision: `Duelo de Combate (${duelo.tipo_match.toUpperCase()}) - Modos: ${Array.isArray(duelo.modos) ? duelo.modos.join(', ').toUpperCase() : duelo.modos.toUpperCase()}`
+            });
+            setMostrarSocialDropdown(false);
+          }
+        }
+        if (estudiante) cargarDuelosPendientes(estudiante.id);
+      }
+    } catch (err) {
+      console.error(err);
+    }
+  };
+
+  const desafiarAmigo1vs1 = (amigo) => {
+    setRetarAmigoActivo(amigo);
+  };
+
+  const registrarPartidaOnline = async (ganada = false) => {
+    if (!estudiante) return;
+    try {
+      const pJugadas = (estudiante.partidas_jugadas || 0) + 1;
+      const pGanadas = (estudiante.partidas_ganadas || 0) + (ganada ? 1 : 0);
+      
+      const res = await fetch(`${API_BASE}/api/estudiantes/${estudiante.id}/stats`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          partidas_jugadas: pJugadas,
+          partidas_ganadas: pGanadas,
+          lenguaje_mas_dominado: estudiante.tecnologia_actual || 'JavaScript'
+        })
+      });
+      if (res.ok) {
+        setEstudiante(prev => ({
+          ...prev,
+          partidas_jugadas: pJugadas,
+          partidas_ganadas: pGanadas
+        }));
+      }
+    } catch (err) {
+      console.error("Error al registrar partida online:", err);
+    }
+  };
+
+  const estaOnline = (ultimaConexion) => {
+    if (!ultimaConexion) return false;
+    const diff = Date.now() - new Date(ultimaConexion).getTime();
+    return diff < 30000;
   };
 
   const iniciarSesion = async (e) => {
@@ -1054,6 +1100,8 @@ function App() {
         // 1. Incrementar total de juegos completados
         const juegos = parseInt(localStorage.getItem(`ia_profesor_juegos_completados_${estudiante.id}`) || '0', 10) + 1;
         localStorage.setItem(`ia_profesor_juegos_completados_${estudiante.id}`, juegos.toString());
+        
+        await registrarPartidaOnline(true);
 
         // 2. Incrementar trivias correctas si es trivia
         if (tipoReto === 'trivia') {
@@ -1311,6 +1359,18 @@ function App() {
   const indiceTemaActual = estudiante ? estudiante.tema_indice : 1;
   const temaNombreActual = temario[indiceTemaActual - 1] || 'Finalizado';
 
+  const nuevasSolicitudes = solicitudesPendientes.filter(req => !solicitudesVistas.includes(req.id));
+  const nuevasSolicitudesCount = nuevasSolicitudes.length;
+
+  const abrirSocialModal = () => {
+    setMostrarSocialDropdown(true);
+    if (solicitudesPendientes.length > 0) {
+      const nuevosIdsVistos = [...new Set([...solicitudesVistas, ...solicitudesPendientes.map(r => r.id)])];
+      setSolicitudesVistas(nuevosIdsVistos);
+      localStorage.setItem('solicitudes_vistas', JSON.stringify(nuevosIdsVistos));
+    }
+  };
+
   return (
     <div className="container-app">
       <header className="header-app">
@@ -1320,9 +1380,389 @@ function App() {
         </div>
         {estudiante && (
           <div className="header-profile">
-            <span className="profile-badge" onClick={() => { irAVista('habilidades'); desbloquearLogro('click_perfil'); }} style={{ cursor: 'pointer' }} title="Ver mi Perfil y Habilidades">
+            <span className="profile-badge" onClick={() => { irAVista('cosmico'); desbloquearLogro('click_perfil'); }} style={{ cursor: 'pointer' }} title="Ver mi Perfil y Habilidades">
               <User className="icon-user" /> {estudiante.nombre}
             </span>
+            
+            <div className="relative flex items-center">
+              <button 
+                className={`btn-social-header ${mostrarSocialDropdown ? 'active' : ''}`}
+                onClick={abrirSocialModal}
+                title="Red Social / Amigos"
+              >
+                <Users size={16} />
+                {nuevasSolicitudesCount > 0 && (
+                  <span className="social-notification-dot">
+                    {nuevasSolicitudesCount}
+                  </span>
+                )}
+              </button>
+              
+              {mostrarSocialDropdown && (
+                <div className="social-modal-overlay animate-fade-in" style={{ zIndex: 300 }}>
+                  <div className="social-modal-card">
+                    <div className="social-modal-header">
+                      <div className="flex items-center gap-2">
+                        <Users size={18} className="text-[#00ffcc]" />
+                        <span>REGISTRO COGNITIVO SOCIAL (RED MILITAR DE COGNICIÓN)</span>
+                      </div>
+                      <button className="close-modal-btn" onClick={() => setMostrarSocialDropdown(false)}>
+                        <X size={18} />
+                      </button>
+                    </div>
+                    <div className="social-modal-body-columns">
+                      {/* Columna Izquierda: Identidad militar, invitación y solicitudes entrantes */}
+                      <div className="social-modal-col-left">
+                        <div className="social-modal-section">
+                          <h4 className="text-[#00ffcc] font-bold text-xs tracking-wider mb-2 font-mono uppercase">TU IDENTIFICACIÓN NEURONAL</h4>
+                          <div className="student-id-display flex items-center justify-between font-mono text-xs bg-slate-950 border border-slate-800/80 rounded px-3 py-2 text-[#00ffcc] mb-3">
+                            <span className="truncate max-w-[220px]">{estudiante.id}</span>
+                            <button 
+                              onClick={() => {
+                                navigator.clipboard.writeText(estudiante.id || '');
+                                mostrarMensaje('¡ID copiado al portapapeles!', 'success');
+                              }}
+                              className="copy-btn hover:text-white transition p-1"
+                              title="Copiar ID"
+                            >
+                              <Copy size={14} />
+                            </button>
+                          </div>
+                        </div>
+
+                        <div className="social-modal-section">
+                          <h4 className="text-[#00ffcc] font-bold text-xs tracking-wider mb-2 font-mono uppercase">VINCULAR NUEVO OPERADOR</h4>
+                          <form onSubmit={enviarSolicitudAmistad} className="flex gap-2">
+                            <input 
+                              type="text" 
+                              placeholder="Ingresar ID del operador..."
+                              value={inputIdAmigo}
+                              onChange={(e) => setInputIdAmigo(e.target.value)}
+                              className="hud-input font-mono text-xs py-2 px-3 border border-slate-800/80 rounded flex-1"
+                            />
+                            <button 
+                              type="submit" 
+                              disabled={loadingAmigos} 
+                              className="hud-btn py-2 px-4 text-xs flex items-center justify-center gap-1.5"
+                            >
+                              {loadingAmigos ? <RefreshCw className="animate-spin" size={14} /> : <UserPlus size={14} />}
+                              Enviar
+                            </button>
+                          </form>
+
+                          {mensajeAmistad.texto && (
+                            <div className={`alert-toast-mini text-[10px] mt-2 p-2 rounded ${mensajeAmistad.tipo === 'success' ? 'bg-emerald-950/80 border border-emerald-500/30 text-emerald-400' : 'bg-rose-950/80 border border-rose-500/30 text-rose-400'}`}>
+                              {mensajeAmistad.texto}
+                            </div>
+                          )}
+                        </div>
+
+                        {/* Solicitudes Pendientes */}
+                        {solicitudesPendientes.length > 0 && (
+                          <div className="social-modal-section border-t border-slate-800/80 pt-4 mt-2">
+                            <h4 className="text-amber-400 font-bold text-xs tracking-wider mb-2 font-mono uppercase">SOLICITUDES ENTRANTES PENDIENTES</h4>
+                            <div className="solicitudes-container">
+                              {solicitudesPendientes.map((req) => {
+                                const inicial = req.solicitante_nombre ? req.solicitante_nombre.charAt(0).toUpperCase() : 'O';
+                                return (
+                                  <div key={req.id} className="solicitud-pendiente-card">
+                                    <div className="solicitud-info">
+                                      <div className="solicitud-avatar">{inicial}</div>
+                                      <span className="solicitud-nombre">{req.solicitante_nombre}</span>
+                                    </div>
+                                    <div className="solicitud-acciones">
+                                      <button 
+                                        onClick={() => responderSolicitudAmistad(req.id, 'aceptar')}
+                                        className="solicitud-btn solicitud-btn-aceptar"
+                                      >
+                                        <Check size={12} /> Aceptar
+                                      </button>
+                                      <button 
+                                        onClick={() => responderSolicitudAmistad(req.id, 'rechazar')}
+                                        className="solicitud-btn solicitud-btn-rechazar"
+                                      >
+                                        <X size={12} /> Rechazar
+                                      </button>
+                                    </div>
+                                  </div>
+                                );
+                              })}
+                            </div>
+                          </div>
+                        )}
+
+                        {/* Invitaciones de Duelo Entrantes */}
+                        {duelosRecibidos.length > 0 && (
+                          <div className="social-modal-section border-t border-slate-800/80 pt-4 mt-2">
+                            <h4 className="text-cyan-400 font-bold text-xs tracking-wider mb-2 font-mono uppercase flex items-center gap-1">
+                              <Swords size={12} className="animate-pulse" /> COMBATES PENDIENTES
+                            </h4>
+                            <div className="flex flex-col gap-2 max-h-[180px] overflow-y-auto pr-1">
+                              {duelosRecibidos.map((duelo) => (
+                                <div key={duelo.id} className="bg-cyan-950/30 border border-cyan-500/25 p-2 rounded flex flex-col gap-1.5">
+                                  <div className="flex flex-col">
+                                    <span className="font-bold text-[11px] text-slate-100">{duelo.retador_nombre} te desafía</span>
+                                    <span className="text-[9px] text-[#00ffcc] font-mono">Modo: {duelo.tipo_match.toUpperCase()} | Arenas: {Array.isArray(duelo.modos) ? duelo.modos.join(', ').toUpperCase() : duelo.modos.toUpperCase()}</span>
+                                  </div>
+                                  <div className="flex gap-2 justify-end">
+                                    <button 
+                                      onClick={() => responderDuelo(duelo.id, 'aceptar')}
+                                      className="bg-[#00ffcc] hover:bg-[#00ffcc]/80 text-slate-950 px-2 py-0.5 rounded text-[9px] font-bold transition flex items-center gap-0.5"
+                                    >
+                                      <Check size={10} /> Aceptar
+                                    </button>
+                                    <button 
+                                      onClick={() => responderDuelo(duelo.id, 'rechazar')}
+                                      className="bg-rose-950 border border-rose-500/30 text-[#fb7185] hover:bg-rose-900 px-2 py-0.5 rounded text-[9px] font-bold transition flex items-center gap-0.5"
+                                    >
+                                      <X size={10} /> Rechazar
+                                    </button>
+                                  </div>
+                                </div>
+                              ))}
+                            </div>
+                          </div>
+                        )}
+                      </div>
+
+                      {/* Columna Derecha: Lista de amigos vinculados O Chat privado */}
+                      <div className="social-modal-col-right">
+                        {amigoChatActivo ? (
+                          <div className="chat-privado-container animate-fade-in">
+                            <div className="chat-header">
+                              <div className="chat-header-user">
+                                <div className="status-dot-container">
+                                  <div className="amigo-avatar">
+                                    {amigoChatActivo.nombre ? amigoChatActivo.nombre.charAt(0).toUpperCase() : 'U'}
+                                  </div>
+                                  <span className={`status-dot ${estaOnline(amigoChatActivo.ultima_conexion) ? 'status-online' : 'status-offline'}`} />
+                                </div>
+                                <div className="chat-header-info">
+                                  <span className="chat-header-name">{amigoChatActivo.nombre}</span>
+                                  <span className="chat-header-status">
+                                    {estaOnline(amigoChatActivo.ultima_conexion) ? '● En línea' : '○ Desconectado'} — {amigoChatActivo.nivel_actual}
+                                  </span>
+                                </div>
+                              </div>
+                              <button 
+                                onClick={() => {
+                                  setAmigoChatActivo(null);
+                                  setMensajesChat([]);
+                                }}
+                                className="chat-btn-volver"
+                              >
+                                <ChevronRight size={14} className="rotate-180" /> Volver
+                              </button>
+                            </div>
+
+                            <div className="chat-mensajes-area">
+                              {mensajesChat.length === 0 ? (
+                                <div className="chat-empty-state">
+                                  <MessageSquare size={20} className="chat-empty-icon" />
+                                  <span>Sin transmisiones registradas. Envía un mensaje para iniciar.</span>
+                                </div>
+                              ) : (
+                                mensajesChat.map((msg) => {
+                                  const esMio = msg.remitente_id === estudiante.id;
+                                  const hora = msg.creado_en 
+                                    ? new Date(msg.creado_en).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) 
+                                    : '--:--';
+                                  return (
+                                    <div 
+                                      key={msg.id} 
+                                      className={`chat-burbuja ${esMio ? 'chat-burbuja-mio' : 'chat-burbuja-otro'}`}
+                                    >
+                                      <span className="chat-msg-sender">
+                                        {esMio ? 'TÚ' : msg.remitente_nombre}
+                                      </span>
+                                      <span className="chat-msg-text">{msg.mensaje}</span>
+                                      <span className="chat-msg-time">{hora}</span>
+                                    </div>
+                                  );
+                                })
+                              )}
+                              <div ref={chatEndRef} />
+                            </div>
+
+                            <form onSubmit={enviarMensajeChat} className="chat-input-form">
+                              <input 
+                                type="text"
+                                placeholder="Escribe un mensaje neuronal..."
+                                value={nuevoMensaje}
+                                onChange={(e) => setNuevoMensaje(e.target.value)}
+                                className="chat-input-field"
+                                disabled={loadingChat}
+                              />
+                              <button 
+                                type="submit"
+                                disabled={loadingChat || !nuevoMensaje.trim()}
+                                className="chat-btn-enviar"
+                              >
+                                {loadingChat ? <RefreshCw className="animate-spin" size={14} /> : <Send size={14} />}
+                              </button>
+                            </form>
+                          </div>
+                        ) : (
+                          <>
+                            <h4 className="text-[#00ffcc] font-bold text-xs tracking-wider mb-2 font-mono uppercase">AMIGOS VINCULADOS EN LA RED ({listaAmigos.length})</h4>
+                            {listaAmigos.length === 0 ? (
+                              <div className="text-center py-12 text-slate-500 text-xs font-mono">
+                                No tienes operarios en tu red militar social. ¡Comparte tu ID para conectarte!
+                              </div>
+                            ) : (
+                              <div className="amigos-container">
+                                {listaAmigos.map((amigo) => {
+                                  const inicial = amigo.nombre ? amigo.nombre.charAt(0).toUpperCase() : 'O';
+                                  const onlineAmigo = estaOnline(amigo.ultima_conexion);
+                                  return (
+                                    <div key={amigo.id} className="amigo-card">
+                                      <div className="amigo-header">
+                                        <div className="status-dot-container">
+                                          <div className="amigo-avatar">{inicial}</div>
+                                          <span className={`status-dot ${onlineAmigo ? 'status-online' : 'status-offline'}`} />
+                                        </div>
+                                        <div className="amigo-meta">
+                                          <div className="amigo-nombre-line">
+                                            <span className="amigo-nombre">{amigo.nombre}</span>
+                                            <span className="amigo-rango">{amigo.nivel_actual}</span>
+                                          </div>
+                                          <span className="amigo-progreso-texto">
+                                            {onlineAmigo ? '● En línea' : '○ Offline'} — {amigo.tecnologia_actual} - Módulo {amigo.tema_indice}
+                                          </span>
+                                        </div>
+                                      </div>
+                                      <div className="amigo-footer">
+                                        <button 
+                                          onClick={() => setAmigoChatActivo(amigo)}
+                                          className="bg-slate-900 hover:bg-slate-800 border border-slate-800 text-slate-300 hover:text-white px-2 py-1 rounded text-[10px] flex items-center gap-1 font-semibold transition"
+                                          title="Chatear con este amigo"
+                                        >
+                                          <MessageSquare size={12} /> Chat
+                                        </button>
+                                        <button 
+                                          onClick={() => desafiarAmigo1vs1(amigo)}
+                                          className="amigo-btn-desafiar"
+                                          title="Retar a un duelo"
+                                        >
+                                          <Swords size={12} /> Retar
+                                        </button>
+                                        <button 
+                                          onClick={() => eliminarAmigo(amigo.id)}
+                                          className="amigo-btn-eliminar"
+                                          title="Eliminar amistad"
+                                        >
+                                          <Trash2 size={12} />
+                                        </button>
+                                      </div>
+                                    </div>
+                                  );
+                                })}
+                              </div>
+                            )}
+                          </>
+                        )}
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              )}
+
+              {/* Modal de Configuración de Duelo */}
+              {retarAmigoActivo && (
+                <div className="social-modal-overlay animate-fade-in" style={{ zIndex: 400 }}>
+                  <div className="social-modal-card max-w-[450px]">
+                    <div className="social-modal-header" style={{ borderBottomColor: 'rgba(0, 255, 204, 0.4)' }}>
+                      <div className="flex items-center gap-2">
+                        <Swords size={18} className="text-[#00ffcc] animate-pulse" />
+                        <span>CONFIGURACIÓN DE COMBATE HOLOGRÁFICO</span>
+                      </div>
+                      <button className="close-modal-btn" onClick={() => setRetarAmigoActivo(null)}>
+                        <X size={18} />
+                      </button>
+                    </div>
+                    <div className="p-4 flex flex-col gap-4 font-mono text-xs text-slate-100">
+                      <div className="bg-slate-950/80 border border-slate-800 p-2.5 rounded text-center">
+                        <span className="text-slate-400">COMBATIENTE OBJETIVO: </span>
+                        <span className="text-[#00ffcc] font-bold">{retarAmigoActivo.nombre}</span>
+                      </div>
+
+                      <div className="flex flex-col gap-2">
+                        <label className="text-[#00ffcc] font-bold text-[10px] uppercase tracking-wider">TAMAÑO DEL ENCUENTRO</label>
+                        <div className="grid grid-cols-2 gap-2">
+                          {[
+                            { id: '1v1', label: '1vs1 (Duelo)' },
+                            { id: '2v2', label: '2vs2 (Dúo)' },
+                            { id: '4v4', label: '4vs4 (Escuadra)' },
+                            { id: 'todos_vs_todos', label: 'Todos vs Todos' }
+                          ].map((t) => (
+                            <button
+                              key={t.id}
+                              type="button"
+                              onClick={() => setTipoMatchDuelo(t.id)}
+                              className={`p-2 rounded border text-center transition text-[10px] ${
+                                tipoMatchDuelo === t.id
+                                  ? 'bg-[#00ffcc]/15 border-[#00ffcc] text-[#00ffcc] font-bold'
+                                  : 'bg-slate-900 border-slate-800 text-slate-400 hover:border-slate-700'
+                              }`}
+                            >
+                              {t.label}
+                            </button>
+                          ))}
+                        </div>
+                      </div>
+
+                      <div className="flex flex-col gap-2">
+                        <label className="text-[#00ffcc] font-bold text-[10px] uppercase tracking-wider">MODOS / ARENAS DE COMBATE</label>
+                        <div className="flex flex-col gap-2 bg-slate-950/40 p-2.5 rounded border border-slate-900">
+                          {[
+                            { id: 'algoritmia', label: 'Algoritmia Extrema (Optimización)' },
+                            { id: 'refactorizacion', label: 'Refactorización Quantum' },
+                            { id: 'sql', label: 'Alineamiento de Base de Datos (SQL)' },
+                            { id: 'seguridad', label: 'Seguridad Ciberpunk (CSP & XSS)' }
+                          ].map((modo) => {
+                            const seleccionado = modosDueloSeleccionados.includes(modo.id);
+                            return (
+                              <label key={modo.id} className="flex items-center gap-2 cursor-pointer p-1 hover:bg-slate-900/60 rounded transition">
+                                <input
+                                  type="checkbox"
+                                  checked={seleccionado}
+                                  onChange={() => {
+                                    if (seleccionado) {
+                                      if (modosDueloSeleccionados.length > 1) {
+                                        setModosDueloSeleccionados(prev => prev.filter(m => m !== modo.id));
+                                      }
+                                    } else {
+                                      setModosDueloSeleccionados(prev => [...prev, modo.id]);
+                                    }
+                                  }}
+                                  className="accent-[#00ffcc]"
+                                />
+                                <span className={seleccionado ? 'text-[#00ffcc] font-semibold' : 'text-slate-400'}>{modo.label}</span>
+                              </label>
+                            );
+                          })}
+                        </div>
+                      </div>
+
+                      <div className="flex gap-2 mt-2">
+                        <button
+                          onClick={enviarInvitacionDuelo}
+                          className="hud-btn flex-1 py-2 text-[10px] font-bold uppercase tracking-widest flex items-center justify-center gap-1.5"
+                        >
+                          <Swords size={12} /> ENVIAR DESAFÍO
+                        </button>
+                        <button
+                          onClick={() => setRetarAmigoActivo(null)}
+                          className="bg-slate-900 hover:bg-slate-800 border border-slate-800 text-slate-300 px-3 py-2 rounded text-[10px] transition uppercase font-semibold"
+                        >
+                          Abortar
+                        </button>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              )}
+            </div>
             <div className="profile-badge level-badge dropdown-badge">
               <span className="badge-text-label">Ruta:</span>
               <select
@@ -1458,1052 +1898,545 @@ function App() {
             </div>
 
             {vistaActiva === 'ruta' ? (
-              <div className="dashboard-grid">
-            {/* Panel Principal de la Tarea Activa */}
-            <section className="dashboard-panel active-task-panel">
-              {/* Progreso del Temario */}
-              <div className="temario-progreso-container">
-                <div className="progreso-header">
-                  <span>PLAN DE ESTUDIOS</span>
-                  <span>Módulo {indiceTemaActual} de {temario.length}</span>
-                </div>
-                <div className="progreso-bar">
-                  <div 
-                    className="progreso-bar-fill"
-                    style={{ width: `${Math.min(100, (indiceTemaActual / temario.length) * 100)}%` }}
-                  ></div>
-                </div>
-                <div className="progreso-tema-nombre">
-                  <strong>Tema Actual:</strong> {temaNombreActual}
-                </div>
-              </div>
-
-              {tareaActiva ? (
-                <div className="task-detail-card">
-                  <div className="card-header">
-                    <span className="badge-tech">{tareaActiva.tema}</span>
-                    <span className="badge-level">{tareaActiva.nivel}</span>
-                  </div>
-
-                  <h2>{tareaActiva.titulo}</h2>
-
-                  <div className="task-desc">
-                    <h3>Requisitos Técnicos del Módulo</h3>
-                    <div className="requirements-list">
-                      {parsearRequisitos(tareaActiva.descripcion).map((req) => (
-                        <div key={req.numero} className="requirement-item">
-                          <div className="requirement-num">{req.numero}</div>
-                          <p className="requirement-text">{req.texto}</p>
-                        </div>
-                      ))}
-                    </div>
-                  </div>
-
-                  <div className="download-area">
-                    <div className="download-info">
-                      <BookOpen className="icon-doc" />
-                      <div>
-                        <h4>Guía Conceptual y Tarea</h4>
-                        <p>Descarga el documento de Word con explicaciones, retos expertos y buenas prácticas.</p>
-                      </div>
-                    </div>
-                    <div className="action-buttons-wrapper">
-                      <a
-                        href={tareaActiva.word_url ? `${API_BASE}${tareaActiva.word_url}` : '#'}
-                        download
-                        className="btn-download"
-                        target="_blank"
-                        rel="noopener noreferrer"
-                      >
-                        <Download size={18} /> Descargar Word
-                      </a>
-                      <button
-                        onClick={handleRegenerar}
-                        disabled={isRegenerating}
-                        className="btn-regenerar"
-                      >
-                        <RefreshCw size={18} className={isRegenerating ? 'animate-spin' : ''} />
-                        {isRegenerating ? 'Regenerando...' : 'Regenerar Guía'}
-                      </button>
-                    </div>
-                  </div>
-
-                  {/* Historial de Intentos de Evaluación y Rúbricas */}
-                  {tareaActiva.entregas && tareaActiva.entregas.length > 0 && (() => {
-                    const ultimaEntrega = tareaActiva.entregas[0];
-                    const infoObs = parseObservaciones(ultimaEntrega.observaciones);
-
-                    return (
-                      <div className="attempts-history">
-                        <h3>Última Evaluación de Pragma AI</h3>
-                        <div className="attempt-card failed">
-                          <div className="attempt-header">
-                            <span className={`attempt-score ${ultimaEntrega.puntaje < 90 ? 'attempt-score-fail' : ''}`}>Calificación: {ultimaEntrega.puntaje}/100</span>
-                            <span className="attempt-date">Intento del {new Date(ultimaEntrega.fecha_entrega).toLocaleDateString()}</span>
-                          </div>
-
-                          {infoObs.esEstructurado && (
-                            <div className="rubrica-desglose">
-                              <h4>Desglose de Rúbrica de Producción</h4>
-                              <div className="rubrica-items">
-                                <div className="rubrica-item">
-                                  <div className="rubrica-item-header">
-                                    <span>Funcionalidad (Máx 40)</span>
-                                    <strong>{infoObs.desglose.funcionalidad} pts</strong>
-                                  </div>
-                                  <div className="rubrica-item-bar"><div className="rubrica-item-fill functionality" style={{ width: `${(infoObs.desglose.funcionalidad / 40) * 100}%` }}></div></div>
-                                </div>
-                                <div className="rubrica-item">
-                                  <div className="rubrica-item-header">
-                                    <span>Diseño y Limpieza (Máx 20)</span>
-                                    <strong>{infoObs.desglose.diseno} pts</strong>
-                                  </div>
-                                  <div className="rubrica-item-bar"><div className="rubrica-item-fill design" style={{ width: `${(infoObs.desglose.diseno / 20) * 100}%` }}></div></div>
-                                </div>
-                                <div className="rubrica-item">
-                                  <div className="rubrica-item-header">
-                                    <span>Seguridad y Excepciones (Máx 20)</span>
-                                    <strong>{infoObs.desglose.seguridad} pts</strong>
-                                  </div>
-                                  <div className="rubrica-item-bar"><div className="rubrica-item-fill security" style={{ width: `${(infoObs.desglose.seguridad / 20) * 100}%` }}></div></div>
-                                </div>
-                                <div className="rubrica-item">
-                                  <div className="rubrica-item-header">
-                                    <span>Optimización y Big O (Máx 20)</span>
-                                    <strong>{infoObs.desglose.rendimiento} pts</strong>
-                                  </div>
-                                  <div className="rubrica-item-bar"><div className="rubrica-item-fill performance" style={{ width: `${(infoObs.desglose.rendimiento / 20) * 100}%` }}></div></div>
-                                </div>
-                              </div>
-                            </div>
-                          )}
-
-                          <div className="attempt-body">
-                <p><strong>Observaciones:</strong> {infoObs.comentarios}</p>
-                            <p className="recom-box"><strong>Instrucciones de Mejora:</strong> {ultimaEntrega.recomendaciones}</p>
-                          </div>
-                        </div>
-                      </div>
-                    );
-                  })()}
-
-                  {/* Formulario de Entrega */}
-                  <form onSubmit={(e) => enviarEntrega(e, tareaActiva.id)} className="delivery-form">
-                    <h3>Entregar Solución del Módulo</h3>
-                    
-                    {/* Selector de tipo de entrega */}
-                    <div className="delivery-tabs">
-                      <button
-                        type="button"
-                        onClick={() => setTipoEntrega('codigo')}
-                        className={`btn-tab ${tipoEntrega === 'codigo' ? 'active' : ''}`}
-                      >
-                        Pegar Código Solución
-                      </button>
-                      <button
-                        type="button"
-                        onClick={() => setTipoEntrega('github')}
-                        className={`btn-tab ${tipoEntrega === 'github' ? 'active' : ''}`}
-                      >
-                        Enviar Repo GitHub
-                      </button>
-                    </div>
-
-                    {tipoEntrega === 'codigo' ? (
-                      <div className="codigo-submission-area" style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
-                        <p style={{ color: 'var(--color-text-muted)', fontSize: '13px' }}>Escribe o pega directamente el código fuente de tu solución en el editor inferior.</p>
-                        <textarea
-                          placeholder="// Pega tu código de solución aquí..."
-                          value={codigoEntregado}
-                          onChange={(e) => setCodigoEntregado(e.target.value)}
-                          required
-                          disabled={evaluating}
-                          style={{
-                            width: '100%',
-                            minHeight: '260px',
-                            background: 'var(--bg-input)',
-                            color: '#a855f7',
-                            fontFamily: 'Consolas, monospace',
-                            fontSize: '14px',
-                            padding: '16px',
-                            border: '1px solid var(--border-light)',
-                            borderRadius: '12px',
-                            outline: 'none',
-                            resize: 'vertical',
-                            boxSizing: 'border-box'
-                          }}
-                        />
-                        <button type="submit" className="btn-submit-delivery" disabled={evaluating} style={{ width: '100%', padding: '14px' }}>
-                          {evaluating ? (
-                            <>
-                              <RefreshCw className="spinner" /> Analizando Código...
-                            </>
-                          ) : (
-                            <>
-                              <Send /> Evaluar Código Pegado
-                            </>
-                          )}
-                        </button>
-                      </div>
-                    ) : (
-                      <div className="github-submission-area">
-                        <p style={{ color: 'var(--color-text-muted)', fontSize: '13px', marginBottom: '12px' }}>Sube tus correcciones a GitHub y envía el enlace público de tu repositorio.</p>
-                        <div className="input-group">
-                          <Code className="icon-input-git" />
-                          <input
-                            type="url"
-                            placeholder="https://github.com/tu-usuario/tu-repositorio"
-                            value={githubUrl}
-                            onChange={(e) => setGithubUrl(e.target.value)}
-                            required
-                            disabled={evaluating}
-                          />
-                          <button type="submit" className="btn-submit-delivery" disabled={evaluating}>
-                            {evaluating ? (
-                              <>
-                                <RefreshCw className="spinner" /> Analizando Código...
-                              </>
-                            ) : (
-                              <>
-                                <Send /> Enviar a Calificar
-                              </>
-                            )}
-                          </button>
-                        </div>
-                      </div>
-                    )}
-                  </form>
-                </div>
-              ) : (
-                tareasDeTecnologia.length === 0 ? (
-                  <div className="no-task-card welcome-card">
-                    <Target className="icon-award-celebrate animate-bounce" />
-                    <h2>¡Comienza tu Ruta de Aprendizaje!</h2>
-                    <p>Aún no has iniciado tu primer módulo en {estudiante ? estudiante.tecnologia_actual : 'esta tecnología'}. Pragma AI generará una lección teórica, requisitos y una tarea práctica adaptada a tu nivel.</p>
-                    <button onClick={generarNuevaTarea} disabled={loading} className="btn-primary btn-generate-next animate-glow">
-                      {loading ? 'Generando...' : 'Comenzar Primer Módulo'}
-                    </button>
-                  </div>
-                ) : (
-                  <div className="no-task-card">
-                    <Award className="icon-award-celebrate" />
-                    <h2>¡Excelente Trabajo! Módulo Completado.</h2>
-                    <p>Has aprobado tu tarea del plan de estudios con una calificación satisfactoria. Desbloquea la siguiente lección teórica y práctica.</p>
-                    <button onClick={generarNuevaTarea} disabled={loading} className="btn-primary btn-generate-next animate-glow">
-                      {loading ? 'Generando...' : 'Generar Siguiente Módulo'}
-                    </button>
-                  </div>
-                )
-              )}
-            </section>
-
-            {/* Listado del Temario Completo y Progreso */}
-            <section className="dashboard-panel history-panel">
-              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1rem' }}>
-                <h2 style={{ margin: 0 }}>Ruta de Aprendizaje</h2>
-                {temario.length > 5 && (
-                  <span className="profile-badge level-badge" style={{ fontSize: '0.75rem', padding: '0.25rem 0.60rem' }}>
-                    Tema {indiceTemaActual} / {temario.length}
-                  </span>
-                )}
-              </div>
-              <div className="temario-list">
-                {!mostrarTodoTemario && temario.length > 5 && indiceTemaActual > 3 && (
-                  <div className="temario-list-ellipsis">
-                    <span>• • •</span>
-                  </div>
-                )}
-                {temario.map((t, idx) => {
-                  const numTema = idx + 1;
-                  const esCompletado = numTema < indiceTemaActual;
-                  const esActivo = numTema === indiceTemaActual;
-
-                  // Ocultar temas lejanos al activo si no se muestra todo
-                  const lejano = Math.abs(numTema - indiceTemaActual) > 2;
-                  if (!mostrarTodoTemario && temario.length > 5 && lejano) {
-                    return null;
-                  }
-
-                  return (
-                    <div 
-                      key={idx} 
-                      className={`temario-list-item ${esCompletado ? 'completed' : ''} ${esActivo ? 'active' : ''}`}
-                    >
-                      <div className="item-indicator">
-                        {esCompletado ? <Check size={14} className="icon-check-done" /> : <span>{numTema}</span>}
-                      </div>
-                      <span className="item-name">{t}</span>
-                    </div>
-                  );
-                })}
-                {!mostrarTodoTemario && temario.length > 5 && indiceTemaActual < temario.length - 2 && (
-                  <div className="temario-list-ellipsis">
-                    <span>• • •</span>
-                  </div>
-                )}
-              </div>
-              
-              {temario.length > 5 && (
-                <button 
-                  onClick={() => setMostrarTodoTemario(!mostrarTodoTemario)} 
-                  className="btn-show-more-temario"
-                >
-                  <RefreshCw size={14} className={mostrarTodoTemario ? 'rotated-icon' : ''} />
-                  {mostrarTodoTemario ? 'Colapsar ruta de aprendizaje' : `Ver temario completo (${temario.length} temas)`}
-                </button>
-              )}
-            </section>
-          </div>
+              <DashboardRuta
+                indiceTemaActual={indiceTemaActual}
+                temario={temario}
+                temaNombreActual={temaNombreActual}
+                tareaActiva={tareaActiva}
+                handleRegenerar={handleRegenerar}
+                isRegenerating={isRegenerating}
+                API_BASE={API_BASE}
+                parseObservaciones={parseObservaciones}
+                enviarEntrega={enviarEntrega}
+                tipoEntrega={tipoEntrega}
+                setTipoEntrega={setTipoEntrega}
+                codigoEntregado={codigoEntregado}
+                setCodigoEntregado={setCodigoEntregado}
+                evaluating={evaluating}
+                githubUrl={githubUrl}
+                setGithubUrl={setGithubUrl}
+                tareasDeTecnologia={tareasDeTecnologia}
+                generarNuevaTarea={generarNuevaTarea}
+                loading={loading}
+                mostrarTodoTemario={mostrarTodoTemario}
+                setMostrarTodoTemario={setMostrarTodoTemario}
+                estudiante={estudiante}
+              />
           ) : vistaActiva === 'mentor' ? (
-            <div className="mentor-workspace">
-              <div className="mentor-sidebar">
-                <div className="mentor-sidebar-header">
-                  <h3>Mis Proyectos</h3>
-                  <a
-                    href={`${API_BASE}/api/mentor/second-brain/${estudiante.id}`}
-                    download
-                    className="btn-export-second-brain"
-                    title="Exportar bitácora estructurada de aprendizaje para NotebookLM / RAG"
-                  >
-                    🧠 Exportar Second Brain
-                  </a>
-                </div>
-                <div className="mentor-sidebar-list">
-                  <button 
-                    type="button"
-                    className={`mentor-project-item new-project-btn ${!planActivo ? 'active' : ''}`}
-                    onClick={() => setPlanActivo(null)}
-                  >
-                    <Sparkles size={16} /> + Proponer Idea Nueva
-                  </button>
-                  {planesMentor.map((p) => (
-                    <button
-                      key={p.id}
-                      type="button"
-                      className={`mentor-project-item ${planActivo?.id === p.id ? 'active' : ''}`}
-                      onClick={() => setPlanActivo(p)}
-                    >
-                      <div className="project-item-title">{p.titulo}</div>
-                      <div className="project-item-date">{new Date(p.creado_en).toLocaleDateString()}</div>
-                    </button>
-                  ))}
-                </div>
+            <MentorChat
+              estudiante={estudiante}
+              API_BASE={API_BASE}
+              planActivo={planActivo}
+              setPlanActivo={setPlanActivo}
+              planesMentor={planesMentor}
+              ideaProyecto={ideaProyecto}
+              setIdeaProyecto={setIdeaProyecto}
+              githubUrlMentor={githubUrlMentor}
+              setGithubUrlMentor={setGithubUrlMentor}
+              crearPlanMentor={crearPlanMentor}
+              mentorLoading={mentorLoading}
+              tabMentorColumn={tabMentorColumn}
+              setTabMentorColumn={setTabMentorColumn}
+              guiasAyuda={guiasAyuda}
+              guiaAyudaSeleccionada={guiaAyudaSeleccionada}
+              setGuiaAyudaSeleccionada={setGuiaAyudaSeleccionada}
+              regenerarGuiaAyuda={regenerarGuiaAyuda}
+              regeneratingGuiaId={regeneratingGuiaId}
+              perfilCognitivoExpandido={perfilCognitivoExpandido}
+              setPerfilCognitivoExpandido={setPerfilCognitivoExpandido}
+              chatLoading={chatLoading}
+              personalidadMentor={personalidadMentor}
+              setPersonalidadMentor={setPersonalidadMentor}
+              mensajeChatMentor={mensajeChatMentor}
+              setMensajeChatMentor={setMensajeChatMentor}
+              enviarMensajeMentor={enviarMensajeMentor}
+            />
+          ) : vistaActiva === 'habilidades' ? (
+            <HabilidadesRoadmap
+              nivelSkillTree={nivelSkillTree}
+              setNivelSkillTree={setNivelSkillTree}
+              estudiante={estudiante}
+              temario={temario}
+              habilidadSeleccionada={habilidadSeleccionada}
+              setHabilidadSeleccionada={setHabilidadSeleccionada}
+              setVistaActiva={setVistaActiva}
+              setMensajeChatMentor={setMensajeChatMentor}
+            />
+          ) : vistaActiva === 'juegos' ? (
+            <div className="juegos-seccion-contenedor animate-fade-in">
+              {/* Selector de Modo de Juego */}
+              <div className="juegos-mode-selector-panel">
+                <button 
+                  className={`juegos-mode-tab ${modoJuego === 'pragma' ? 'active' : ''}`}
+                  onClick={() => setModoJuego('pragma')}
+                >
+                  <Gamepad2 size={14} />
+                  <span>PROYECTO PRAGMA</span>
+                  <span className="mode-desc-tag">ARENA & CAMPAÑA CIBERPUNK</span>
+                </button>
+                <button 
+                  className={`juegos-mode-tab ${modoJuego === 'arcade' ? 'active' : ''}`}
+                  onClick={() => {
+                    setModoJuego('arcade');
+                    setJuegoActivo(null);
+                  }}
+                >
+                  <Trophy size={14} />
+                  <span>ARCADE CLÁSICO</span>
+                  <span className="mode-desc-tag">MINIJUEGOS INDIVIDUALES</span>
+                </button>
               </div>
 
-              <div className="mentor-main-panel">
-                {!planActivo ? (
-                  <div className="mentor-proposal-card">
-                    <div className="proposal-header">
-                      <Sparkles className="icon-spark-proposal" />
-                      <h2>Asistente de Proyectos & Mentor IA</h2>
-                      <p>Propón una idea de proyecto que quieras construir o proporciona un repositorio de GitHub para auditar y refacturar. El Mentor IA diseñará un Plan de Implementación paso a paso de nivel profesional para guiarte, pero no te dará el código resuelto de forma fácil: su misión es enseñarte a hacerlo por tu cuenta.</p>
-                    </div>
-
-                    <form onSubmit={crearPlanMentor} className="mentor-proposal-form">
-                      <div className="form-group">
-                        <label htmlFor="ideaProyecto">¿Qué proyecto quieres construir? Describe tu idea:</label>
-                        <textarea
-                          id="ideaProyecto"
-                          rows={5}
-                          placeholder="Ej: Quiero hacer una API REST de e-commerce en Node.js con autenticación JWT, carrito de compras persistente y pasarela de pago ficticia en Stripe..."
-                          value={ideaProyecto}
-                          onChange={(e) => setIdeaProyecto(e.target.value)}
-                          required
-                        />
+              {modoJuego === 'pragma' ? (
+                <PragmaGames
+                  estudiante={estudiante}
+                  onUpdateEstudiante={(estActualizado) => setEstudiante(estActualizado)}
+                  backendUrl={API_BASE}
+                  listaAmigos={listaAmigos}
+                />
+              ) : (
+                /* RENDERIZADO DEL ARCADE DE MINIJUEGOS CLÁSICOS */
+                <div className="arcade-container-spec animate-fade-in">
+                  {!juegoActivo ? (
+                    /* CATALOGO DE JUEGOS CLÁSICOS */
+                    <div className="arcade-catalog-layout">
+                      <div className="arcade-catalog-header">
+                        <h2>🕹️ SISTEMA DE MINIJUEGOS ARCADE</h2>
+                        <p>Completa desafíos técnicos focalizados para acelerar tu asimilación neuronal de conceptos</p>
                       </div>
-
-                      <div className="form-group">
-                        <label htmlFor="githubUrlMentor">Repositorio de GitHub base (opcional):</label>
-                        <input
-                          type="url"
-                          id="githubUrlMentor"
-                          placeholder="https://github.com/usuario/repositorio"
-                          value={githubUrlMentor}
-                          onChange={(e) => setGithubUrlMentor(e.target.value)}
-                        />
-                      </div>
-
-                      <button type="submit" className="btn-primary mentor-submit-btn" disabled={mentorLoading}>
-                        {mentorLoading ? (
-                          <>
-                            <RefreshCw className="icon-spin" size={16} /> Diseñando Plan de Aprendizaje...
-                          </>
-                        ) : 'Generar Plan de Implementación Académico'}
-                      </button>
-                    </form>
-                  </div>
-                ) : (
-                  <div className="mentor-project-workspace">
-                    <div className="mentor-plan-column">
-                      <div className="plan-column-tabs">
-                        <button
-                          type="button"
-                          className={`plan-tab-btn ${tabMentorColumn === 'plan' ? 'active' : ''}`}
-                          onClick={() => {
-                            setTabMentorColumn('plan');
-                            setGuiaAyudaSeleccionada(null);
-                          }}
-                        >
-                          <BookOpen size={14} /> Plan de Trabajo
-                        </button>
-                        <button
-                          type="button"
-                          className={`plan-tab-btn ${tabMentorColumn === 'guias' ? 'active' : ''}`}
-                          onClick={() => setTabMentorColumn('guias')}
-                        >
-                          <Sparkles size={14} /> Historial de Guías ({guiasAyuda.length})
-                        </button>
-                      </div>
-
-                      {tabMentorColumn === 'plan' ? (
-                        <>
-                          <div className="plan-column-header">
-                            <h2>{planActivo.titulo}</h2>
-                            {planActivo.word_url && (
-                              <a
-                                href={`${API_BASE}${planActivo.word_url}`}
-                                download
-                                className="btn-download-word-mentor"
-                                title="Descargar Plan de Implementación en Word"
-                              >
-                                <Download size={16} /> Descargar Word (.docx)
-                              </a>
-                            )}
-                          </div>
-
-                          <div className="mentor-plan-body markdown-content-mentor">
-                            {parsearMarkdownMentor(planActivo.plan_markdown)}
-                          </div>
-                        </>
-                      ) : (
-                        <div className="mentor-guias-body">
-                          {guiaAyudaSeleccionada ? (
-                            <div className="guia-detalle-vista">
-                              <button
-                                type="button"
-                                className="btn-back-to-guias"
-                                onClick={() => setGuiaAyudaSeleccionada(null)}
-                              >
-                                ← Volver al listado
-                              </button>
-                              
-                              <div className="plan-column-header">
-                                <h2>{guiaAyudaSeleccionada.titulo}</h2>
-                                <div style={{ display: 'flex', gap: '8px' }}>
-                                  {guiaAyudaSeleccionada.word_url && (
-                                    <a
-                                      href={`${API_BASE}${guiaAyudaSeleccionada.word_url}`}
-                                      download
-                                      className="btn-download-word-mentor"
-                                    >
-                                      <Download size={16} /> Descargar Word (.docx)
-                                    </a>
-                                  )}
-                                  <button
-                                    type="button"
-                                    onClick={() => regenerarGuiaAyuda(guiaAyudaSeleccionada.id)}
-                                    disabled={regeneratingGuiaId === guiaAyudaSeleccionada.id}
-                                    className="btn-regenerar-guia-ayuda"
-                                  >
-                                    <RefreshCw size={16} className={regeneratingGuiaId === guiaAyudaSeleccionada.id ? 'animate-spin' : ''} />
-                                    Regenerar Guía
-                                  </button>
-                                </div>
+                      <div className="arcade-catalog-grid">
+                        {JUEGOS.map((juego) => {
+                          const IconComponent = juego.icon;
+                          return (
+                            <div key={juego.id} className="arcade-game-card">
+                              <div className="arcade-card-glow"></div>
+                              <div className="arcade-card-icon">
+                                <IconComponent size={20} className="text-[#00ffcc]" />
                               </div>
-
-                              <div className="mentor-plan-body markdown-content-mentor">
-                                {parsearMarkdownMentor(guiaAyudaSeleccionada.documento_markdown || guiaAyudaSeleccionada.markdown)}
+                              <h3 className="arcade-card-title">{juego.nombre}</h3>
+                              <p className="arcade-card-desc">{juego.desc}</p>
+                              <div className="arcade-card-footer">
+                                <span className="arcade-card-xp">💎 +{juego.xp} XP</span>
+                                <button className="arcade-card-btn" onClick={() => iniciarJuego(juego)}>
+                                  INICIAR RETO
+                                </button>
                               </div>
                             </div>
-                          ) : (
-                            <div className="guias-lista-vista">
-                              <h3>Documentos e Historial de Ayuda</h3>
-                              {guiasAyuda.length === 0 ? (
-                                <div className="no-guias-placeholder">
-                                  <Sparkles size={32} className="placeholder-icon" />
-                                  <p>Aún no has solicitado ayuda técnica en este chat.</p>
-                                  <span>Escribe tus dudas al Mentor en el panel derecho (ej. "Cómo estructurar geolocalización en Postgres") y se generará un documento detallado descargable en esta sección.</span>
+                          );
+                        })}
+                      </div>
+                    </div>
+                  ) : (
+                    /* MINIJUEGO CLÁSICO ACTIVO */
+                    <div className="classic-game-player-panel glass-panel">
+                      <div className="classic-game-header">
+                        <div className="flex items-center gap-2">
+                          {React.createElement(juegoActivo.icon, { size: 16, className: "text-[#00ffcc]" })}
+                          <span className="classic-game-title font-bold text-xs tracking-wider font-mono uppercase">{juegoActivo.nombre}</span>
+                        </div>
+                        <button className="btn-hud-cancel btn-sm" onClick={() => setJuegoActivo(null)}>
+                          SALIR DEL RETO
+                        </button>
+                      </div>
+
+                      <div className="classic-game-body">
+                        {juegoLoading ? (
+                          <div className="flex flex-col items-center justify-center py-20 text-slate-400 font-mono text-xs">
+                            <RefreshCw className="animate-spin mb-3 text-[#00ffcc]" size={20} />
+                            <span>DESENCRIPTANDO RETO CON INTELIGENCIA ARTIFICIAL...</span>
+                          </div>
+                        ) : juegoResultado === 'correcto' ? (
+                          <div className="classic-game-success-card animate-scale-in">
+                            <span className="success-badge-large">🏆 RETO SUPERADO</span>
+                            <h3>¡Excelente Trabajo, Operario!</h3>
+                            <p className="success-xp">Has ganado {juegoActivo.xp} XP Cognitiva</p>
+                            {juegoData?.explicacion && (
+                              <div className="success-explicacion">
+                                <strong>Análisis Técnico:</strong>
+                                <p>{juegoData.explicacion}</p>
+                              </div>
+                            )}
+                            <button className="btn-action-hud mt-6" onClick={() => setJuegoActivo(null)}>
+                              RETORNAR AL ARCADE
+                            </button>
+                          </div>
+                        ) : (
+                          /* RENDERIZADO ESPECÍFICO DE CADA MINIJUEGO CLÁSICO */
+                          <div className="classic-game-content-panel">
+                            
+                            {/* 1. TRIVIA TÉCNICA */}
+                            {juegoActivo.id === 'trivia' && juegoData && (
+                              <div className="trivia-game-view animate-fade-in">
+                                <p className="trivia-question font-mono">{juegoData.pregunta}</p>
+                                <div className="trivia-options-grid">
+                                  {juegoData.opciones.map((opcion, idx) => (
+                                    <button 
+                                      key={idx}
+                                      onClick={() => {
+                                        if (idx === juegoData.respuesta_correcta) {
+                                          reproducirSonido('exito');
+                                          setJuegoResultado('correcto');
+                                          completarReto('trivia');
+                                        } else {
+                                          reproducirSonido('error');
+                                          mostrarMensaje('Respuesta errónea, reinténtalo.', 'error');
+                                        }
+                                      }}
+                                      className="trivia-option-btn"
+                                    >
+                                      <span className="option-index font-mono">0{idx + 1}.</span>
+                                      <span className="option-text">{opcion}</span>
+                                    </button>
+                                  ))}
                                 </div>
-                              ) : (
-                                <div className="guias-grid">
-                                  {guiasAyuda.map((g) => (
-                                    <div key={g.id} className="guia-tarjeta-item">
-                                      <div className="guia-tarjeta-header">
-                                        <h4>{g.titulo}</h4>
-                                        <span className="guia-tarjeta-date">{new Date(g.creado_en || new Date()).toLocaleDateString()}</span>
-                                      </div>
-                                      <p className="guia-tarjeta-query"><strong>Consulta:</strong> "{g.mensaje_estudiante}"</p>
-                                      <div className="guia-tarjeta-acciones">
-                                        <button
-                                          type="button"
-                                          className="btn-ver-guia-card"
-                                          onClick={() => setGuiaAyudaSeleccionada(g)}
-                                        >
-                                          Visualizar Guía
-                                        </button>
-                                        {g.word_url && (
-                                          <a
-                                            href={`${API_BASE}${g.word_url}`}
-                                            download
-                                            className="btn-descargar-guia-card"
-                                          >
-                                            <Download size={14} /> Word
-                                          </a>
-                                        )}
-                                        <button
-                                          type="button"
-                                          onClick={() => regenerarGuiaAyuda(g.id)}
-                                          disabled={regeneratingGuiaId === g.id}
-                                          className="btn-regenerar-guia-card"
-                                        >
-                                          <RefreshCw size={14} className={regeneratingGuiaId === g.id ? 'animate-spin' : ''} />
-                                        </button>
+                              </div>
+                            )}
+
+                            {/* 2. FLASHCARD BATTLE (VERDADERO O FALSO) */}
+                            {juegoActivo.id === 'flashcard' && juegoData?.flashcards && (
+                              <div className="flashcard-game-view animate-fade-in">
+                                <div className="flashcard-streak-badge font-mono">
+                                  RACHA DE ACIERTOS: <span className="text-glow text-[#00ffcc]">{flashcardStreak}</span>
+                                </div>
+                                {flashcardIdx < juegoData.flashcards.length ? (
+                                  <div className="flashcard-active-card">
+                                    <p className="flashcard-text font-mono">
+                                      {juegoData.flashcards[flashcardIdx].afirmacion}
+                                    </p>
+                                    <div className="flashcard-actions">
+                                      <button 
+                                        className="flashcard-btn verdadero"
+                                        onClick={() => {
+                                          const correcto = juegoData.flashcards[flashcardIdx].es_verdadero === true;
+                                          if (correcto) {
+                                            reproducirSonido('exito');
+                                            setFlashcardStreak(prev => prev + 1);
+                                            mostrarMensaje('¡Correcto!', 'exito');
+                                          } else {
+                                            reproducirSonido('error');
+                                            setFlashcardStreak(0);
+                                            mostrarMensaje('Incorrecto.', 'error');
+                                          }
+                                          if (flashcardIdx + 1 >= juegoData.flashcards.length) {
+                                            setJuegoResultado('correcto');
+                                            completarReto('flashcard');
+                                          } else {
+                                            setFlashcardIdx(prev => prev + 1);
+                                          }
+                                        }}
+                                      >
+                                        VERDADERO
+                                      </button>
+                                      <button 
+                                        className="flashcard-btn falso"
+                                        onClick={() => {
+                                          const correcto = juegoData.flashcards[flashcardIdx].es_verdadero === false;
+                                          if (correcto) {
+                                            reproducirSonido('exito');
+                                            setFlashcardStreak(prev => prev + 1);
+                                            mostrarMensaje('¡Correcto!', 'exito');
+                                          } else {
+                                            reproducirSonido('error');
+                                            setFlashcardStreak(0);
+                                            mostrarMensaje('Incorrecto.', 'error');
+                                          }
+                                          if (flashcardIdx + 1 >= juegoData.flashcards.length) {
+                                            setJuegoResultado('correcto');
+                                            completarReto('flashcard');
+                                          } else {
+                                            setFlashcardIdx(prev => prev + 1);
+                                          }
+                                        }}
+                                      >
+                                        FALSO
+                                      </button>
+                                    </div>
+                                  </div>
+                                ) : (
+                                  <div className="text-center font-mono py-10">
+                                    Flashcards completadas con éxito.
+                                  </div>
+                                )}
+                              </div>
+                            )}
+
+                            {/* 3. CODE SORTER */}
+                            {juegoActivo.id === 'sorter' && juegoData && (
+                              <div className="sorter-game-view animate-fade-in">
+                                <p className="sorter-instructions mb-4 font-mono">{juegoData.descripcion}</p>
+                                <div className="sorter-lines-list">
+                                  {sorterLineas.map((linea, idx) => (
+                                    <div 
+                                      key={idx}
+                                      draggable
+                                      onDragStart={(e) => handleDragStart(e, idx)}
+                                      onDragOver={(e) => handleDragOver(e, idx)}
+                                      onDragEnd={handleDragEnd}
+                                      className="sorter-line-card"
+                                    >
+                                      <div className="drag-handle">☰</div>
+                                      <pre className="line-code font-mono"><code>{linea}</code></pre>
+                                      <div className="sorter-arrows flex gap-1">
+                                        <button className="arrow-btn" onClick={() => moverLineaSorter(idx, idx - 1)}>▲</button>
+                                        <button className="arrow-btn" onClick={() => moverLineaSorter(idx, idx + 1)}>▼</button>
                                       </div>
                                     </div>
                                   ))}
                                 </div>
-                              )}
-                            </div>
-                          )}
-                        </div>
-                      )}
-                    </div>
-
-                    <div className="mentor-chat-column">
-                      <div className="chat-column-header">
-                        <h3>Discusión y Dudas con el Mentor</h3>
-                        <span>Enfoque Pedagógico Académico</span>
-                      </div>
-
-                      {/* Tarjeta de Perfil Cognitivo / Memoria de IA */}
-                      {estudiante && (
-                        <div className={`mentor-cognitive-profile-card ${perfilCognitivoExpandido ? 'expanded' : 'collapsed'}`}>
-                          <div className="cognitive-card-header" onClick={() => setPerfilCognitivoExpandido(!perfilCognitivoExpandido)}>
-                            <div className="header-title-wrapper">
-                              <span className="brain-emoji">🧠</span>
-                              <div className="cognitive-title-text">
-                                <h4>Perfil Cognitivo Activo</h4>
-                                <span className="cognitive-subtitle">Machine Learning en Tiempo Real</span>
+                                <button className="btn-action-hud mt-4" onClick={verificarSorter}>
+                                  VERIFICAR ORDENAMIENTO
+                                </button>
                               </div>
-                            </div>
-                            <div className="header-actions-wrapper">
-                              {estudiante.perfil_cognitivo?.nivel_real_detectado && (
-                                <span className="badge-cognitive-level">
-                                  Nivel: {estudiante.perfil_cognitivo.nivel_real_detectado}
-                                </span>
-                              )}
-                              <span className="toggle-icon">{perfilCognitivoExpandido ? '▲ Ocultar' : '▼ Expandir Perfil'}</span>
-                            </div>
-                          </div>
-                          
-                          {perfilCognitivoExpandido && (
-                            <div className="cognitive-card-body">
-                              {estudiante.perfil_cognitivo ? (
-                                <>
-                                  {estudiante.perfil_cognitivo.observaciones_pedagogicas && (
-                                    <div className="cognitive-section obs-section">
-                                      <h5>Observaciones del Mentor:</h5>
-                                      <p>{estudiante.perfil_cognitivo.observaciones_pedagogicas}</p>
-                                    </div>
-                                  )}
-                                  
-                                  <div className="cognitive-grid-details">
-                                    <div className="cognitive-detail-item">
-                                      <h6>Conceptos Dominados:</h6>
-                                      <div className="cognitive-chips-container">
-                                        {estudiante.perfil_cognitivo.conceptos_dominados?.length > 0 ? (
-                                          estudiante.perfil_cognitivo.conceptos_dominados.map((c, i) => (
-                                            <span key={i} className="chip-cognitive chip-success">{c}</span>
-                                          ))
-                                        ) : (
-                                          <span className="cognitive-empty-text">Ninguno dominado aún</span>
-                                        )}
-                                      </div>
-                                    </div>
+                            )}
 
-                                    <div className="cognitive-detail-item">
-                                      <h6>Conceptos en Progreso:</h6>
-                                      <div className="cognitive-chips-container">
-                                        {estudiante.perfil_cognitivo.conceptos_en_progreso?.length > 0 ? (
-                                          estudiante.perfil_cognitivo.conceptos_en_progreso.map((c, i) => (
-                                            <span key={i} className="chip-cognitive chip-progress">{c}</span>
-                                          ))
-                                        ) : (
-                                          <span className="cognitive-empty-text">Ninguno en progreso</span>
-                                        )}
-                                      </div>
-                                    </div>
-
-                                    <div className="cognitive-detail-item">
-                                      <h6>Temas por Aprender (Vacíos):</h6>
-                                      <div className="cognitive-chips-container">
-                                        {estudiante.perfil_cognitivo.vacios_de_conocimiento?.length > 0 ? (
-                                          estudiante.perfil_cognitivo.vacios_de_conocimiento.map((v, i) => (
-                                            <span key={i} className="chip-cognitive chip-vacuum">{v}</span>
-                                          ))
-                                        ) : (
-                                          <span className="cognitive-empty-text">Sin vacíos detectados</span>
-                                        )}
-                                      </div>
-                                    </div>
-
-                                    <div className="cognitive-detail-item">
-                                      <h6>Fortalezas Clave:</h6>
-                                      <div className="cognitive-chips-container">
-                                        {estudiante.perfil_cognitivo.fortalezas?.length > 0 ? (
-                                          estudiante.perfil_cognitivo.fortalezas.map((f, i) => (
-                                            <span key={i} className="chip-cognitive chip-info">{f}</span>
-                                          ))
-                                        ) : (
-                                          <span className="cognitive-empty-text">Mapeando fortalezas...</span>
-                                        )}
-                                      </div>
-                                    </div>
-
-                                    <div className="cognitive-detail-item">
-                                      <h6>Errores Frecuentes:</h6>
-                                      <div className="cognitive-chips-container">
-                                        {estudiante.perfil_cognitivo.errores_frecuentes?.length > 0 ? (
-                                          estudiante.perfil_cognitivo.errores_frecuentes.map((e, i) => (
-                                            <span key={i} className="chip-cognitive chip-danger">{e}</span>
-                                          ))
-                                        ) : (
-                                          <span className="cognitive-empty-text">Ninguno registrado</span>
-                                        )}
-                                      </div>
-                                    </div>
-
-                                    <div className="cognitive-detail-item">
-                                      <h6>Dudas Recurrentes:</h6>
-                                      <div className="cognitive-chips-container">
-                                        {estudiante.perfil_cognitivo.dudas_recurrentes?.length > 0 ? (
-                                          estudiante.perfil_cognitivo.dudas_recurrentes.map((d, i) => (
-                                            <span key={i} className="chip-cognitive chip-warning">{d}</span>
-                                          ))
-                                        ) : (
-                                          <span className="cognitive-empty-text">Sin dudas persistentes</span>
-                                        )}
-                                      </div>
-                                    </div>
-                                  </div>
-                                </>
-                              ) : (
-                                <div className="cognitive-loading-state">
-                                  <div className="pulse-loader"></div>
-                                  <p>Construyendo perfil de aprendizaje...</p>
-                                  <span>Envía dudas al Mentor en el chat para que el pipeline incremental de Machine Learning analice y visualice tu progreso aquí.</span>
+                            {/* 4. FILL IN THE BLANKS */}
+                            {juegoActivo.id === 'fill-blank' && juegoData && (
+                              <div className="fill-blank-game-view animate-fade-in">
+                                <p className="fill-instructions font-mono mb-3">{juegoData.descripcion}</p>
+                                <div className="fill-code-editor bg-slate-950 p-4 border border-slate-800 rounded mb-4 font-mono">
+                                  <pre style={{ whiteSpace: 'pre-wrap' }}>
+                                    {juegoData.codigo_con_huecos.split(/(___\d+___)/g).map((token, index) => {
+                                      const match = token.match(/___(\d+)___/);
+                                      if (match) {
+                                        const huecoNum = match[1];
+                                        return (
+                                          <input 
+                                            key={index}
+                                            type="text"
+                                            value={fillRespuestas[huecoNum] || ''}
+                                            onChange={(e) => setFillRespuestas({
+                                              ...fillRespuestas,
+                                              [huecoNum]: e.target.value
+                                            })}
+                                            placeholder={`Hueco ${huecoNum}`}
+                                            className="fill-hueco-input"
+                                            style={{ width: `${Math.max(80, (fillRespuestas[huecoNum] || '').length * 10)}px` }}
+                                          />
+                                        );
+                                      }
+                                      return token;
+                                    })}
+                                  </pre>
                                 </div>
-                              )}
-                            </div>
-                          )}
-                        </div>
-                      )}
+                                <button className="btn-action-hud" onClick={verificarFillBlank}>
+                                  VERIFICAR RESPUESTAS
+                                </button>
+                              </div>
+                            )}
 
-                      <div className="mentor-chat-messages">
-                        <div className="chat-message mentor">
-                          <div className="message-sender">Mentor de Software</div>
-                          <div className="message-text">
-                            He diseñado tu plan de implementación. Puedes consultarlo a la izquierda. Escribe aquí cualquier duda técnica que tengas sobre la arquitectura, la base de datos, el flujo o cómo estructurar tu lógica. Recuerda que mi objetivo es enseñarte a hacerlo, no darte el código completo. ¡Manos a la obra!
-                          </div>
-                        </div>
-                        {planActivo.mensajes.map((msg, index) => (
-                          <div key={index} className={`chat-message ${msg.remitente}`}>
-                            <div className="message-sender">
-                              {msg.remitente === 'estudiante' ? estudiante.nombre : 'Mentor de Software'}
-                            </div>
-                            <div className="message-text">
-                              {msg.remitente === 'mentor' ? parsearInlineMarkdown(msg.texto) : msg.texto}
-                              
-                              {msg.documento_ayuda && (
-                                <div className="message-doc-link-card">
-                                  <div className="doc-link-header">
-                                    <BookOpen size={14} className="doc-icon" />
-                                    <span>{msg.documento_ayuda.titulo}</span>
-                                  </div>
-                                  <div className="doc-link-actions">
+                            {/* 5. OUTPUT PREDICTOR */}
+                            {juegoActivo.id === 'output' && juegoData && (
+                              <div className="output-game-view animate-fade-in">
+                                <p className="output-desc mb-3 font-mono">Analiza el fragmento de código e indica el output exacto en consola:</p>
+                                <pre className="output-code bg-slate-950 p-4 border border-slate-800 rounded font-mono mb-4"><code>{juegoData.codigo}</code></pre>
+                                <div className="trivia-options-grid">
+                                  {juegoData.opciones.map((opcion, idx) => (
                                     <button 
-                                      type="button"
+                                      key={idx}
                                       onClick={() => {
-                                        setTabMentorColumn('guias');
-                                        setGuiaAyudaSeleccionada({
-                                          id: msg.documento_ayuda.id,
-                                          titulo: msg.documento_ayuda.titulo,
-                                          documento_markdown: msg.documento_ayuda.markdown,
-                                          word_url: msg.documento_ayuda.word_url
-                                        });
+                                        if (opcion === juegoData.respuesta_correcta) {
+                                          reproducirSonido('exito');
+                                          setJuegoResultado('correcto');
+                                          completarReto('output');
+                                        } else {
+                                          reproducirSonido('error');
+                                          mostrarMensaje('Respuesta incorrecta, analiza bien el flujo lógico.', 'error');
+                                        }
                                       }}
-                                      className="btn-view-doc-chat"
+                                      className="trivia-option-btn"
                                     >
-                                      Visualizar Guía
+                                      <span className="option-index font-mono">0{idx + 1}.</span>
+                                      <span className="option-text font-mono"><code>{opcion}</code></span>
                                     </button>
-                                    {msg.documento_ayuda.word_url && (
-                                      <a 
-                                        href={`${API_BASE}${msg.documento_ayuda.word_url}`}
-                                        download
-                                        className="btn-download-doc-chat"
-                                      >
-                                        <Download size={12} /> Word
-                                      </a>
-                                    )}
-                                  </div>
+                                  ))}
                                 </div>
-                              )}
-                            </div>
-                          </div>
-                        ))}
-                        {chatLoading && (
-                          <div className="chat-message mentor loading-message">
-                            <div className="message-sender">Mentor de Software</div>
-                            <div className="message-text">
-                              <span className="pulse-dots">Escribiendo...</span>
-                            </div>
+                              </div>
+                            )}
+
+                            {/* 6. BUG HUNTER / REFACTOR */}
+                            {juegoActivo.id === 'refactor' && juegoData && (
+                              <div className="refactor-game-view animate-fade-in">
+                                <p className="refactor-desc mb-3 font-mono">Corrige el bug en el código:</p>
+                                <pre className="output-code bg-slate-950 p-4 border border-slate-800 rounded font-mono mb-4"><code>{juegoData.codigo_con_bug}</code></pre>
+                                <div className="trivia-options-grid">
+                                  {juegoData.opciones.map((opcion, idx) => (
+                                    <button 
+                                      key={idx}
+                                      onClick={() => {
+                                        if (idx === juegoData.opcion_correcta) {
+                                          reproducirSonido('exito');
+                                          setJuegoResultado('correcto');
+                                          completarReto('refactor');
+                                        } else {
+                                          reproducirSonido('error');
+                                          mostrarMensaje('Corrección inválida, analiza los leaks o errores de sintaxis.', 'error');
+                                        }
+                                      }}
+                                      className="trivia-option-btn"
+                                    >
+                                      <span className="option-index font-mono">0{idx + 1}.</span>
+                                      <span className="option-text font-mono"><code>{opcion}</code></span>
+                                    </button>
+                                  ))}
+                                </div>
+                              </div>
+                            )}
+
+                            {/* 7. CODE TYPER */}
+                            {juegoActivo.id === 'typer' && juegoData && (
+                              <div className="typer-game-view animate-fade-in">
+                                <p className="typer-desc font-mono mb-3">Escribe el código exactamente igual respetando indentación y mayúsculas:</p>
+                                <pre className="output-code bg-slate-950 p-4 border border-slate-800 rounded font-mono mb-3"><code>{juegoData.codigo}</code></pre>
+                                
+                                <div className="typer-stats flex gap-4 font-mono text-xs text-slate-400 mb-3 bg-slate-900/60 p-2.5 rounded border border-slate-850">
+                                  <span>WPM: <strong className="text-glow text-cyan-400">{typerWpm}</strong></span>
+                                  <span>Precisión: <strong className="text-glow text-emerald-400">{typerAccuracy}%</strong></span>
+                                  <span>Errores: <strong className="text-glow text-rose-400">{typerErrors}</strong></span>
+                                </div>
+
+                                <textarea 
+                                  value={typerInput}
+                                  onChange={(e) => verificarTyper(e.target.value)}
+                                  placeholder="Escribe el código aquí para iniciar..."
+                                  className="code-textarea font-mono text-xs w-full min-h-[120px] bg-slate-950 border border-slate-800 rounded p-3 text-emerald-400 focus:border-[#00ffcc] outline-none"
+                                />
+                              </div>
+                            )}
+
+                            {/* 8. MEMORY MATCH */}
+                            {juegoActivo.id === 'memory' && memoryCards.length > 0 && (
+                              <div className="memory-game-view animate-fade-in">
+                                <div className="memory-stats font-mono text-xs text-slate-400 mb-4 bg-slate-900/60 p-2 rounded border border-slate-850 flex justify-between">
+                                  <span>MOVIMIENTOS: <strong className="text-glow text-[#00ffcc]">{memoryMoves}</strong></span>
+                                  <span>PAREJAS LOGRADAS: <strong className="text-glow text-[#00ffcc]">{memoryCards.filter(c => c.matched).length / 2} / 4</strong></span>
+                                </div>
+                                <div className="memory-grid-cards">
+                                  {memoryCards.map((card) => {
+                                    const isFlipped = card.flipped || card.matched;
+                                    return (
+                                      <div 
+                                        key={card.id}
+                                        onClick={() => voltearCartaMemory(card.id)}
+                                        className={`memory-card-element ${isFlipped ? 'flipped' : ''} ${card.matched ? 'matched' : ''} ${card.errorShake ? 'shake-err' : ''}`}
+                                      >
+                                        <div className="memory-card-inner">
+                                          <div className="memory-card-front font-mono text-xs">
+                                            {card.texto}
+                                          </div>
+                                          <div className="memory-card-back">
+                                            <span>🎴</span>
+                                          </div>
+                                        </div>
+                                      </div>
+                                    );
+                                  })}
+                                </div>
+                              </div>
+                            )}
+
                           </div>
                         )}
                       </div>
-
-                      <div className="mentor-personality-selector">
-                        <span className="personality-label">Tono del Mentor:</span>
-                        {['Riguroso', 'Tech Lead', 'Socrático'].map(p => (
-                          <button
-                            key={p}
-                            type="button"
-                            className={`personality-btn ${personalidadMentor === p ? 'active' : ''}`}
-                            onClick={() => setPersonalidadMentor(p)}
-                          >
-                            {p === 'Riguroso' ? '🏛️' : p === 'Tech Lead' ? '🚀' : '🤔'} {p}
-                          </button>
-                        ))}
-                      </div>
-
-                      <div className="superpowers-tags">
-                        <button 
-                          type="button" 
-                          className="tag-superpower" 
-                          onClick={() => {
-                            const clean = mensajeChatMentor.replace(/^\/(planificar|idear|ejecutar)\s*/i, '');
-                            setMensajeChatMentor('/planificar ' + clean);
-                          }}
-                          title="Fuerza un enfoque en pasos de implementación y comandos técnicos"
-                        >
-                          ⚡ /planificar
-                        </button>
-                        <button 
-                          type="button" 
-                          className="tag-superpower" 
-                          onClick={() => {
-                            const clean = mensajeChatMentor.replace(/^\/(planificar|idear|ejecutar)\s*/i, '');
-                            setMensajeChatMentor('/idear ' + clean);
-                          }}
-                          title="Fuerza un enfoque en pros/contras de arquitectura y patrones"
-                        >
-                          💡 /idear
-                        </button>
-                        <button 
-                          type="button" 
-                          className="tag-superpower" 
-                          onClick={() => {
-                            const clean = mensajeChatMentor.replace(/^\/(planificar|idear|ejecutar)\s*/i, '');
-                            setMensajeChatMentor('/ejecutar ' + clean);
-                          }}
-                          title="Fuerza un enfoque en andamios de código, firmas de funciones y tests"
-                        >
-                          🛠️ /ejecutar
-                        </button>
-                      </div>
-
-                      <form onSubmit={enviarMensajeMentor} className="mentor-chat-form">
-                        <input
-                          type="text"
-                          placeholder="Pregúntale al mentor sobre arquitectura, bases de datos o lógica..."
-                          value={mensajeChatMentor}
-                          onChange={(e) => setMensajeChatMentor(e.target.value)}
-                          disabled={chatLoading}
-                          required
-                        />
-                        <button type="submit" disabled={chatLoading} className="btn-send-chat">
-                          <Send size={16} />
-                        </button>
-                      </form>
                     </div>
-                  </div>
-                )}
-              </div>
-            </div>
-          ) : vistaActiva === 'habilidades' ? (
-            <div className="skill-tree-wrapper">
-              <div className="skill-tree-header">
-                <h2>🌲 Árbol de Habilidades - {estudiante.tecnologia_actual}</h2>
-                <p>Navega a través de las ramas del temario oficial para visualizar tu progreso y dominar nuevos conceptos.</p>
-              </div>
-
-              {/* Selector de Nivel */}
-              <div className="skill-level-selector">
-                {['Novato', 'Principiante', 'Intermedio', 'Avanzado', 'Experto', 'Master', 'Arquitecto', 'Leyenda'].map((lvl, index) => {
-                  const esActivo = nivelSkillTree === lvl;
-                  const esDesbloqueado = index <= ['Novato', 'Principiante', 'Intermedio', 'Avanzado', 'Experto', 'Master', 'Arquitecto', 'Leyenda'].indexOf(estudiante.nivel_actual || 'Novato');
-                  return (
-                    <button
-                      key={lvl}
-                      type="button"
-                      className={`skill-level-btn ${esActivo ? 'active' : ''} ${!esDesbloqueado ? 'locked' : ''}`}
-                      onClick={() => esDesbloqueado && setNivelSkillTree(lvl)}
-                    >
-                      {!esDesbloqueado ? <Lock size={12} /> : null} {lvl}
-                    </button>
-                  );
-                })}
-              </div>
-
-              <div className="skill-tree-container">
-                {/* SVG para dibujar las conexiones */}
-                <div className="skill-tree-map">
-                  <NebulaCanvas />
-                  <svg className="skill-tree-connections">
-                    {[
-                      { id: 0, x: 50, y: 8, dependencias: [] },
-                      { id: 1, x: 25, y: 22, dependencias: [0] },
-                      { id: 2, x: 75, y: 22, dependencias: [0] },
-                      { id: 3, x: 25, y: 40, dependencias: [1] },
-                      { id: 4, x: 75, y: 40, dependencias: [2] },
-                      { id: 5, x: 50, y: 55, dependencias: [3, 4] },
-                      { id: 6, x: 20, y: 72, dependencias: [5] },
-                      { id: 7, x: 80, y: 72, dependencias: [5] },
-                      { id: 8, x: 50, y: 75, dependencias: [5] },
-                      { id: 9, x: 50, y: 92, dependencias: [6, 7, 8] }
-                    ].map(nodo => {
-                      return nodo.dependencias.map(depId => {
-                        const padre = [
-                          { id: 0, x: 50, y: 8 },
-                          { id: 1, x: 25, y: 22 },
-                          { id: 2, x: 75, y: 22 },
-                          { id: 3, x: 25, y: 40 },
-                          { id: 4, x: 75, y: 40 },
-                          { id: 5, x: 50, y: 55 },
-                          { id: 6, x: 20, y: 72 },
-                          { id: 7, x: 80, y: 72 },
-                          { id: 8, x: 50, y: 75 },
-                          { id: 9, x: 50, y: 92 }
-                        ].find(n => n.id === depId);
-                        if (!padre) return null;
-
-                        const idxNivel = ['Novato', 'Principiante', 'Intermedio', 'Avanzado', 'Experto', 'Master', 'Arquitecto', 'Leyenda'].indexOf(nivelSkillTree);
-                        const temaActivoIndex = (estudiante ? estudiante.tema_indice : 1) - 1;
-                        const idxPadre = idxNivel * 10 + padre.id;
-                        const idxHijo = idxNivel * 10 + nodo.id;
-                        const padreDominado = idxPadre < temaActivoIndex;
-                        const hijoDominado = idxHijo < temaActivoIndex;
-                        const hijoProgreso = idxHijo === temaActivoIndex;
-
-                        let connClase = 'bloqueado';
-                        if (padreDominado && hijoDominado) connClase = 'dominado';
-                        else if (padreDominado && hijoProgreso) connClase = 'progreso';
-
-                        return (
-                          <line
-                            key={`${padre.id}-${nodo.id}`}
-                            x1={`${padre.x}%`}
-                            y1={`${padre.y}%`}
-                            x2={`${nodo.x}%`}
-                            y2={`${nodo.y}%`}
-                            className={`connection-line ${connClase}`}
-                          />
-                        );
-                      });
-                    })}
-                  </svg>
-
-                  {/* Nodos del árbol */}
-                  {[
-                    { id: 0, x: 50, y: 8 },
-                    { id: 1, x: 25, y: 22 },
-                    { id: 2, x: 75, y: 22 },
-                    { id: 3, x: 25, y: 40 },
-                    { id: 4, x: 75, y: 40 },
-                    { id: 5, x: 50, y: 55 },
-                    { id: 6, x: 20, y: 72 },
-                    { id: 7, x: 80, y: 72 },
-                    { id: 8, x: 50, y: 75 },
-                    { id: 9, x: 50, y: 92 }
-                  ].map(nodo => {
-                    const idxNivel = ['Novato', 'Principiante', 'Intermedio', 'Avanzado', 'Experto', 'Master', 'Arquitecto', 'Leyenda'].indexOf(nivelSkillTree);
-                    const idxTema = idxNivel * 10 + nodo.id;
-                    const tema = temario[idxTema] || `Habilidad ${idxTema + 1}`;
-                    const temaActivoIndex = (estudiante ? estudiante.tema_indice : 1) - 1;
-                    const esDominado = idxTema < temaActivoIndex;
-                    const esEnProgreso = idxTema === temaActivoIndex;
-                    const esBloqueado = idxTema > temaActivoIndex;
-
-                    let estadoClase = 'bloqueado';
-                    if (esDominado) estadoClase = 'dominado';
-                    else if (esEnProgreso) estadoClase = 'progreso';
-
-                    return (
-                      <div
-                        key={nodo.id}
-                        className={`skill-node-card ${estadoClase} ${habilidadSeleccionada?.idx === idxTema ? 'selected' : ''}`}
-                        style={{ left: `${nodo.x}%`, top: `${nodo.y}%` }}
-                        onClick={() => {
-                          setHabilidadSeleccionada({
-                            idx: idxTema,
-                            titulo: tema,
-                            estado: estadoClase,
-                            nodoId: nodo.id,
-                            nivel: nivelSkillTree
-                          });
-                        }}
-                      >
-                        <div className="node-icon-circle">
-                          {esDominado ? <Check size={14} /> : esEnProgreso ? <Zap size={14} className="pulse-glow" /> : <Lock size={12} />}
-                        </div>
-                        <span className="node-tooltip">{tema}</span>
-                      </div>
-                    );
-                  })}
+                  )}
                 </div>
+              )}
+            </div>
+          ) : vistaActiva === 'logros' ? (
+            <LogrosPanel
+              logrosDesbloqueados={logrosDesbloqueados}
+              LISTA_LOGROS={LISTA_LOGROS}
+              filtroLogros={filtroLogros}
+              setFiltroLogros={setFiltroLogros}
+            />
+          ) : vistaActiva === 'cosmico' ? (
+            <PerfilCosmico
+              estudiante={estudiante}
+              tareas={tareas}
+              xpInfo={xpInfo}
+              obtenerPosicionesProcedurales={obtenerPosicionesProcedurales}
+              ArbolDeLaVidaCanvas={ArbolDeLaVidaCanvas}
+            />
+          ) : vistaActiva === 'amigos' ? (
+            <AmigosPanel
+              estudiante={estudiante}
+              mostrarMensaje={mostrarMensaje}
+              enviarSolicitudAmistad={enviarSolicitudAmistad}
+              inputIdAmigo={inputIdAmigo}
+              setInputIdAmigo={setInputIdAmigo}
+              loadingAmigos={loadingAmigos}
+              mensajeAmistad={mensajeAmistad}
+              listaAmigos={listaAmigos}
+              solicitudesPendientes={solicitudesPendientes}
+              responderSolicitudAmistad={responderSolicitudAmistad}
+            />
+          ) : null}
 
-                {/* Panel de Detalles */}
-                <div className="skill-tree-details">
-                  {habilidadSeleccionada ? (
-                    <div className="details-content">
-                      <div className={`details-badge ${habilidadSeleccionada.estado}`}>
-                        {habilidadSeleccionada.estado.toUpperCase()}
+          {/* Modal de Duelo 1vs1 Táctico */}
+          {dueloActivo && (
+            <div className="social-modal-overlay animate-fade-in" style={{ zIndex: 300 }}>
+              <div className="duel-modal-card">
+                <div className="duel-modal-header">
+                  <Swords size={20} className="text-rose-500 animate-pulse" />
+                  <span>SISTEMA DE DUELO COGNITIVO 1VS1</span>
+                  <button className="close-modal-btn" onClick={() => setDueloActivo(null)}>
+                    <X size={18} />
+                  </button>
+                </div>
+                
+                <div className="duel-modal-body text-center p-6">
+                  {dueloActivo.cargando ? (
+                    <div className="flex flex-col items-center justify-center py-8">
+                      <div className="radar-scan-circle mb-4">
+                        <Swords size={32} className="text-[#00ffcc] animate-spin" style={{ animationDuration: '4s' }} />
                       </div>
-                      <h3>{habilidadSeleccionada.titulo}</h3>
-                      <p className="details-level-info">Habilidad #{habilidadSeleccionada.idx + 1} ({habilidadSeleccionada.nivel})</p>
-                      
-                      <div className="details-description-box">
-                        {habilidadSeleccionada.estado === 'bloqueado' ? (
-                          <p>Esta habilidad se encuentra bloqueada. Completa y domina las lecciones previas en tu Ruta Académica para poder acceder.</p>
-                        ) : habilidadSeleccionada.estado === 'progreso' ? (
-                          <p>Esta es tu habilidad activa en curso. Puedes consultarle dudas específicas al Mentor IA o retar tu conocimiento completando minijuegos para ganar XP y desbloquear el siguiente nivel.</p>
-                        ) : (
-                          <p>¡Habilidad dominada con éxito! Ya has superado este tema. Puedes refrescar tus conocimientos o discutir conceptos avanzados con el Mentor.</p>
-                        )}
-                      </div>
-
-                      {habilidadSeleccionada.estado !== 'bloqueado' && (
-                        <div className="details-actions">
-                          <button
-                            type="button"
-                            className="btn-ask-mentor-skill"
-                            onClick={() => {
-                              setVistaActiva('mentor');
-                              setMensajeChatMentor(`Hola Mentor, estoy en el Árbol de Habilidades y me gustaría que me expliques a detalle con ejemplos prácticos el concepto de: "${habilidadSeleccionada.titulo}".`);
-                            }}
-                          >
-                            <Sparkles size={14} /> Preguntar al Mentor IA
-                          </button>
-                          <button
-                            type="button"
-                            className="btn-play-skill"
-                            onClick={() => {
-                              setVistaActiva('juegos');
-                            }}
-                          >
-                            <Gamepad2 size={14} /> Desafiar en Zona de Juegos
-                          </button>
-                        </div>
-                      )}
+                      <span className="text-xs text-slate-400 font-mono tracking-widest animate-pulse">
+                        ESTABLECIENDO ENLACE NEURONAL CON {dueloActivo.oponenteNombre.toUpperCase()}...
+                      </span>
                     </div>
                   ) : (
-                    <div className="details-empty">
-                      <GitFork size={36} className="empty-icon" />
-                      <p>Haz click en cualquier nodo del árbol para visualizar los detalles y las acciones disponibles.</p>
+                    <div className="animate-scale-in">
+                      <div className="flex justify-between items-center bg-slate-900/60 border border-slate-800 p-4 rounded mb-4">
+                        <div className="flex flex-col items-center flex-1">
+                          <span className="text-xs text-slate-400 font-mono">RETADOR</span>
+                          <span className="font-bold text-base text-[#00ffcc]">{estudiante.nombre}</span>
+                        </div>
+                        <span className="text-rose-500 font-black text-xl italic font-mono px-4">VS</span>
+                        <div className="flex flex-col items-center flex-1">
+                          <span className="text-xs text-slate-400 font-mono">OPONENTE</span>
+                          <span className="font-bold text-base text-rose-400">{dueloActivo.oponenteNombre}</span>
+                        </div>
+                      </div>
+
+                      <div className="mission-assignment bg-rose-950/20 border border-rose-500/30 rounded p-4 mb-4 text-left">
+                        <span className="text-[10px] text-rose-400 font-mono font-bold tracking-wider block mb-1">MISIÓN ASIGNADA POR EL MENTOR IA:</span>
+                        <p className="text-xs text-slate-200 leading-relaxed font-mono">{dueloActivo.mision}</p>
+                      </div>
+
+                      <div className="flex gap-3 mt-6">
+                        <button 
+                          className="hud-btn bg-slate-900 border border-slate-800 text-slate-400 py-2.5 px-4 text-xs flex-1"
+                          onClick={() => setDueloActivo(null)}
+                        >
+                          Abortar Duelo
+                        </button>
+                        <button 
+                          className="hud-btn bg-rose-600 border border-rose-500 text-white py-2.5 px-4 text-xs flex-1 flex items-center justify-center gap-2"
+                          onClick={() => {
+                            setDueloActivo(null);
+                            setVistaActiva('juegos');
+                            registrarPartidaOnline(false);
+                          }}
+                        >
+                          <Gamepad2 size={14} /> Comenzar Combate
+                        </button>
+                      </div>
                     </div>
                   )}
                 </div>
               </div>
             </div>
-          ) : vistaActiva === 'juegos' ? (
-            <PragmaGames
-              estudiante={estudiante}
-              onUpdateEstudiante={(estActualizado) => setEstudiante(estActualizado)}
-              backendUrl={API_BASE}
-            />
-          ) : vistaActiva === 'logros' ? (
-            <div className="logros-container animate-fade-in">
-              <div className="logros-header">
-                <h2>🏆 Medallero de Logros Épicos</h2>
-                <p>Completa desafíos y desbloquea insignias exclusivas para tu perfil</p>
-                <div className="logros-progress-bar-container">
-                  <div className="logros-progress-info">
-                    <span>Progreso del Medallero</span>
-                    <span>{logrosDesbloqueados.length} de 50 completados</span>
-                  </div>
-                  <div className="logros-progress-bar">
-                    <div 
-                      className="logros-progress-bar-fill" 
-                      style={{ width: `${(logrosDesbloqueados.length / 50) * 100}%` }}
-                    ></div>
-                  </div>
-                </div>
-              </div>
-
-              {(() => {
-                const logrosFiltradosYOrdenados = [...LISTA_LOGROS]
-                  .filter(logro => {
-                    const desbloqueado = logrosDesbloqueados.includes(logro.id);
-                    if (filtroLogros === 'completados') return desbloqueado;
-                    if (filtroLogros === 'pendientes') return !desbloqueado;
-                    return true;
-                  })
-                  .sort((a, b) => {
-                    const aUnlocked = logrosDesbloqueados.includes(a.id);
-                    const bUnlocked = logrosDesbloqueados.includes(b.id);
-                    if (aUnlocked && !bUnlocked) return -1;
-                    if (!aUnlocked && bUnlocked) return 1;
-                    return 0;
-                  });
-
-                return (
-                  <>
-                    <div className="logros-filters">
-                      <button 
-                        type="button" 
-                        className={`btn-filter ${filtroLogros === 'todos' ? 'active' : ''}`}
-                        onClick={() => setFiltroLogros('todos')}
-                      >
-                        <Filter size={14} /> Todos ({LISTA_LOGROS.length})
-                      </button>
-                      <button 
-                        type="button" 
-                        className={`btn-filter ${filtroLogros === 'completados' ? 'active' : ''}`}
-                        onClick={() => setFiltroLogros('completados')}
-                      >
-                        <Unlock size={14} /> Completados ({logrosDesbloqueados.length})
-                      </button>
-                      <button 
-                        type="button" 
-                        className={`btn-filter ${filtroLogros === 'pendientes' ? 'active' : ''}`}
-                        onClick={() => setFiltroLogros('pendientes')}
-                      >
-                        <Lock size={14} /> Pendientes ({LISTA_LOGROS.length - logrosDesbloqueados.length})
-                      </button>
-                    </div>
-
-                    <div className="logros-grid">
-                      {logrosFiltradosYOrdenados.map(logro => {
-                        const desbloqueado = logrosDesbloqueados.includes(logro.id);
-                        return (
-                          <div key={logro.id} className={`logro-card ${logro.tipo} ${desbloqueado ? 'unlocked' : 'locked'}`}>
-                            <div className="logro-card-status">
-                              {desbloqueado ? <Unlock size={20} className="icon-unlock" /> : <Lock size={20} className="icon-lock" />}
-                            </div>
-                            <h3>{logro.titulo}</h3>
-                            <p>{logro.desc}</p>
-                            <div className="logro-card-footer">
-                              <span className="logro-xp-reward">+{logro.xp} XP</span>
-                              <span className="logro-badge-status">{desbloqueado ? 'Desbloqueado' : 'Bloqueado'}</span>
-                            </div>
-                          </div>
-                        );
-                      })}
-                    </div>
-                  </>
-                );
-              })()}
-            </div>
-          ) : null}
+          )}
 
           {/* Notificación Flotante (Toast) de Logros */}
           {logroNotificado && (

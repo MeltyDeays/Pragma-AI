@@ -70,6 +70,39 @@ const client = {
         return { rows };
       }
 
+      // --- 2b. SELECT nombre FROM profesor_estudiantes WHERE id = $1 ---
+      if (queryClean.match(/SELECT nombre FROM profesor_estudiantes WHERE id = \$1/i)) {
+        const id = params[0];
+        const docRef = doc(firestoreDb, 'profesor_estudiantes', id);
+        const docSnap = await getDoc(docRef);
+        return { rows: docSnap.exists() ? [{ nombre: docSnap.data().nombre }] : [] };
+      }
+
+      // --- 2c. SELECT id, nombre, nivel_actual, tecnologia_actual, tema_indice, ultima_conexion FROM profesor_estudiantes WHERE id = ANY($1) ---
+      if (queryClean.match(/SELECT .* FROM profesor_estudiantes WHERE id = ANY\(\$1\)/i)) {
+        const idsArray = params[0];
+        const rows = [];
+        if (idsArray && idsArray.length > 0) {
+          const docSnaps = await Promise.all(
+            idsArray.map(id => getDoc(doc(firestoreDb, 'profesor_estudiantes', id)))
+          );
+          docSnaps.forEach(docSnap => {
+            if (docSnap.exists()) {
+              const d = docSnap.data();
+              rows.push({
+                id: d.id,
+                nombre: d.nombre,
+                nivel_actual: d.nivel_actual,
+                tecnologia_actual: d.tecnologia_actual,
+                tema_indice: d.tema_indice,
+                ultima_conexion: d.ultima_conexion || null
+              });
+            }
+          });
+        }
+        return { rows };
+      }
+
       // --- 3. SELECT * FROM profesor_tareas WHERE estudiante_id = $1 ORDER BY creado_en DESC ---
       if (queryClean.match(/SELECT \* FROM profesor_tareas WHERE estudiante_id = \$1 ORDER BY creado_en DESC/i)) {
         const estudiante_id = params[0];
@@ -794,30 +827,29 @@ async function actualizarPerfilCognitivoConEvaluacion(estudianteId, tareaTitulo,
 // DICCIONARIOS DE TEMARIOS SECUENCIALES (Ruta de Aprendizaje)
 const TEMARIOS = {
   "JavaScript": [
-    "Introducción a la programación: ¿Qué es el código, la computadora y cómo se ejecutan las instrucciones?",
-    "Introducción a JavaScript: Historia, el motor V8, qué es JS y su rol en el navegador",
-    "Configuración del entorno: Navegador, Chrome DevTools y tu primer console.log()",
-    "Hola Mundo en JavaScript: Creación de scripts, sintaxis básica, comentarios y bloques",
-    "Variables en JavaScript: Concepto de caja de almacenamiento y declaración básica",
-    "Tipos de datos primitivos I: Números y cadenas de texto (Strings) en detalle",
-    "Tipos de datos primitivos II: Booleanos, Undefined y Null",
-    "Operadores aritméticos simples: Sumar, restar, multiplicar, dividir y residuo",
-    "Operadores de comparación básicos: Igualdad, desigualdad, mayor y menor que",
-    "Operadores lógicos elementales: AND, OR y NOT en decisiones cotidianas",
-    "Estructuras condicionales I: Sentencia if para tomar decisiones simples",
-    "Estructuras condicionales II: Sentencias else y else if para caminos múltiples",
-    "Estructuras condicionales III: La sentencia switch para opciones predefinidas",
-    "Ciclos y bucles simples I: El ciclo while y la repetición controlada",
-    "Ciclos y bucles simples II: El ciclo for clásico y conteos numéricos",
-    "Funciones básicas I: ¿Qué es una función? Declaración e invocación básica",
-    "Funciones básicas II: Parámetros y argumentos sencillos en funciones",
-    "Funciones básicas III: Retorno de valores con return",
-    "Introducción a objetos básicos: Creación de objetos literales simples y propiedades",
-    "Introducción a arrays básicos: Creación de listas simples y acceso por índice",
-    "Variables y Ciclo de Vida: Ámbitos (Scope: Global, Function, Block, Module), Contexto de Ejecución, Lexical Environment y Temporal Dead Zone",
-    "Motor V8 e Hilos: Call Stack, Memory Heap, Garbage Collector, y Mecanismos de Optimización JIT",
-    "Coerción de Tipos en Detalle: Conversiones Explícitas e Implícitas, Algoritmo Abstract Equality y Comparadores",
-    "Closures en Profundidad: Concepto, Casos de uso de Fábricas de Funciones, Datos Privados y Gestión de Fugas de Memoria",
+    "Tu primer paso: ¿Qué es programar y cómo hablarle a una computadora de forma sencilla?",
+    "Hola Mundo en JavaScript: Escribiendo tus primeras líneas de código y viendo el resultado",
+    "Configuración del entorno: Explorando la consola de tu navegador Chrome para experimentar en vivo",
+    "Guardando datos en variables: Las cajas mágicas (let, const) para almacenar información",
+    "Textos y Números en JavaScript: Jugando con palabras y operaciones matemáticas sencillas",
+    "Tomando decisiones sencillas: Verdadero o Falso (Booleanos) y cómo usarlos",
+    "Preguntando cosas a tu código: La estructura 'if' para tomar caminos diferentes",
+    "Caminos múltiples y decisiones complejas: Estructuras 'else if' y 'else'",
+    "Simplificando decisiones repetitivas: El selector de opciones 'switch'",
+    "Repeticiones automáticas I: El bucle 'while' para repetir tareas mientras una condición se cumpla",
+    "Repeticiones automáticas II: El bucle 'for' para contar y repetir de forma controlada",
+    "Tu primera fábrica de código: Qué es una función y cómo llamarla",
+    "Personalizando funciones: Enviando datos a tus funciones (parámetros y argumentos)",
+    "Obteniendo respuestas de tus funciones: El uso de 'return' para devolver valores",
+    "Agrupando datos en listas: Arrays sencillos para manejar colecciones de elementos",
+    "Guardando datos estructurados: Objetos literales sencillos para describir cosas del mundo real",
+    "Práctica integradora: Uniendo condicionales, bucles y funciones en tu primer mini-programa",
+    "Introducción al flujo de ejecución: Cómo lee el navegador tu código línea por línea",
+    "El concepto de ámbito (Scope) simple: ¿Dónde viven y mueren mis variables?",
+    "El motor del navegador: Una mirada sencilla a cómo el motor V8 procesa tu JavaScript",
+    "Coerción de tipos amigable: Cómo JavaScript intenta convertir datos de forma automática",
+    "Entendiendo las funciones flecha (Arrow Functions) frente a las funciones tradicionales",
+    "Closures simples: Funciones que recuerdan su entorno y cómo usarlas para proteger datos",
     "Funciones en JavaScript: Declarations vs Expressions, Arrow Functions, Parámetros por Defecto, Rest y Destructuring avanzado",
     "Contexto y Enlace (This): Enlace por Defecto, Implícito, Explícito (call, apply, bind) y Enlace New",
     "Programación Funcional Fundacional: Funciones Puras, Inmutabilidad, Composición de Funciones y Currying",
@@ -5893,6 +5925,416 @@ app.post('/api/pragma/multiplayer/match/cancel', async (req, res) => {
   } catch (error) {
     console.error('Error al cancelar matchmaking:', error);
     res.status(500).json({ error: 'Error interno del servidor' });
+  }
+});
+
+// --- SISTEMA DE AMIGOS EN FIREBASE FIRESTORE ---
+
+// 1. Enviar solicitud de amistad por ID de estudiante
+app.post('/api/amistades/enviar', async (req, res) => {
+  const { solicitante_id, receptor_id } = req.body;
+  if (!solicitante_id || !receptor_id) {
+    return res.status(400).json({ error: 'Faltan parámetros requeridos.' });
+  }
+
+  if (solicitante_id === receptor_id) {
+    return res.status(400).json({ error: 'No puedes enviarte una solicitud a ti mismo.' });
+  }
+
+  try {
+    // Verificar que el solicitante existe y obtener su nombre
+    const solRes = await client.query('SELECT nombre FROM profesor_estudiantes WHERE id = $1', [solicitante_id]);
+    if (solRes.rows.length === 0) {
+      return res.status(404).json({ error: 'Estudiante solicitante no encontrado.' });
+    }
+    const solicitante_nombre = solRes.rows[0].nombre;
+
+    // Verificar que el receptor existe y obtener su nombre
+    const recRes = await client.query('SELECT nombre FROM profesor_estudiantes WHERE id = $1', [receptor_id]);
+    if (recRes.rows.length === 0) {
+      return res.status(404).json({ error: 'El ID de estudiante no corresponde a ningún usuario registrado.' });
+    }
+    const receptor_nombre = recRes.rows[0].nombre;
+
+    // Verificar que no exista ya una relación o solicitud pendiente entre ambos
+    const q1 = query(
+      collection(firestoreDb, 'profesor_amistades'),
+      where('solicitante_id', '==', solicitante_id),
+      where('receptor_id', '==', receptor_id)
+    );
+    const snap1 = await getDocs(q1);
+
+    const q2 = query(
+      collection(firestoreDb, 'profesor_amistades'),
+      where('solicitante_id', '==', receptor_id),
+      where('receptor_id', '==', solicitante_id)
+    );
+    const snap2 = await getDocs(q2);
+
+    if (!snap1.empty || !snap2.empty) {
+      return res.status(400).json({ error: 'Ya existe una solicitud de amistad pendiente o una relación activa entre ustedes.' });
+    }
+
+    // Guardar solicitud en Firestore
+    const docId = `${solicitante_id}_${receptor_id}`;
+    const docRef = doc(firestoreDb, 'profesor_amistades', docId);
+    await setDoc(docRef, {
+      id: docId,
+      solicitante_id,
+      solicitante_nombre,
+      receptor_id,
+      receptor_nombre,
+      estado: 'pendiente',
+      creado_en: new Date().toISOString()
+    });
+
+    res.json({ success: true, mensaje: `Solicitud de amistad enviada con éxito a ${receptor_nombre}.` });
+  } catch (error) {
+    console.error('Error al enviar solicitud de amistad:', error);
+    res.status(500).json({ error: 'Error interno del servidor al procesar la amistad.' });
+  }
+});
+
+// 2. Obtener solicitudes de amistad pendientes para un receptor
+app.get('/api/amistades/pendientes/:estudiante_id', async (req, res) => {
+  const { estudiante_id } = req.params;
+
+  try {
+    const q = query(
+      collection(firestoreDb, 'profesor_amistades'),
+      where('receptor_id', '==', estudiante_id),
+      where('estado', '==', 'pendiente')
+    );
+    const snapshot = await getDocs(q);
+    const pendientes = [];
+    snapshot.forEach(doc => {
+      pendientes.push(doc.data());
+    });
+
+    res.json(pendientes);
+  } catch (error) {
+    console.error('Error al obtener solicitudes pendientes:', error);
+    res.status(500).json({ error: 'Error interno del servidor.' });
+  }
+});
+
+// 3. Aceptar o rechazar solicitud de amistad
+app.post('/api/amistades/responder', async (req, res) => {
+  const { solicitud_id, accion } = req.body; // accion: 'aceptar' o 'rechazar'
+  if (!solicitud_id || !accion) {
+    return res.status(400).json({ error: 'Faltan parámetros requeridos.' });
+  }
+
+  try {
+    const docRef = doc(firestoreDb, 'profesor_amistades', solicitud_id);
+    const docSnap = await getDoc(docRef);
+
+    if (!docSnap.exists()) {
+      return res.status(404).json({ error: 'La solicitud de amistad no existe.' });
+    }
+
+    if (accion === 'aceptar') {
+      await updateDoc(docRef, { estado: 'aceptada' });
+      res.json({ success: true, mensaje: 'Solicitud de amistad aceptada con éxito.' });
+    } else {
+      await deleteDoc(docRef);
+      res.json({ success: true, mensaje: 'Solicitud de amistad rechazada y eliminada.' });
+    }
+  } catch (error) {
+    console.error('Error al responder a solicitud de amistad:', error);
+    res.status(500).json({ error: 'Error interno del servidor.' });
+  }
+});
+
+// 4. Listar amigos aceptados de un estudiante con su nivel y tecnología activa de Postgres
+app.get('/api/amistades/listar/:estudiante_id', async (req, res) => {
+  const { estudiante_id } = req.params;
+
+  try {
+    // Buscar donde estado == 'aceptada' y el estudiante es solicitante
+    const q1 = query(
+      collection(firestoreDb, 'profesor_amistades'),
+      where('solicitante_id', '==', estudiante_id),
+      where('estado', '==', 'aceptada')
+    );
+    const snap1 = await getDocs(q1);
+
+    // Buscar donde estado == 'aceptada' y el estudiante es receptor
+    const q2 = query(
+      collection(firestoreDb, 'profesor_amistades'),
+      where('receptor_id', '==', estudiante_id),
+      where('estado', '==', 'aceptada')
+    );
+    const snap2 = await getDocs(q2);
+
+    const amigosIds = new Set();
+    const amigosInfoMap = {};
+
+    snap1.forEach(doc => {
+      const data = doc.data();
+      amigosIds.add(data.receptor_id);
+      amigosInfoMap[data.receptor_id] = { nombre: data.receptor_nombre };
+    });
+
+    snap2.forEach(doc => {
+      const data = doc.data();
+      amigosIds.add(data.solicitante_id);
+      amigosInfoMap[data.solicitante_id] = { nombre: data.solicitante_nombre };
+    });
+
+    const listaAmigos = [];
+    if (amigosIds.size > 0) {
+      // Obtener detalles de Postgres de cada uno para reflejar su nivel y tecnología actualizados
+      const idsArray = Array.from(amigosIds);
+      const postgresRes = await client.query(
+        'SELECT id, nombre, nivel_actual, tecnologia_actual, tema_indice, ultima_conexion FROM profesor_estudiantes WHERE id = ANY($1)',
+        [idsArray]
+      );
+
+      postgresRes.rows.forEach(row => {
+        listaAmigos.push({
+          id: row.id,
+          nombre: row.nombre,
+          nivel_actual: row.nivel_actual,
+          tecnologia_actual: row.tecnologia_actual,
+          tema_indice: row.tema_indice,
+          ultima_conexion: row.ultima_conexion
+        });
+      });
+    }
+
+    res.json(listaAmigos);
+  } catch (error) {
+    console.error('Error al listar amigos:', error);
+    res.status(500).json({ error: 'Error interno del servidor.' });
+  }
+});
+
+// 5. Eliminar una relación de amistad activa
+app.post('/api/amistades/eliminar', async (req, res) => {
+  const { estudiante_id, amigo_id } = req.body;
+  if (!estudiante_id || !amigo_id) {
+    return res.status(400).json({ error: 'Faltan parámetros requeridos.' });
+  }
+
+  try {
+    const q1 = query(
+      collection(firestoreDb, 'profesor_amistades'),
+      where('solicitante_id', '==', estudiante_id),
+      where('receptor_id', '==', amigo_id)
+    );
+    const snap1 = await getDocs(q1);
+
+    const q2 = query(
+      collection(firestoreDb, 'profesor_amistades'),
+      where('solicitante_id', '==', amigo_id),
+      where('receptor_id', '==', estudiante_id)
+    );
+    const snap2 = await getDocs(q2);
+
+    let eliminado = false;
+    for (const docSnap of snap1.docs) {
+      await deleteDoc(doc(firestoreDb, 'profesor_amistades', docSnap.id));
+      eliminado = true;
+    }
+    for (const docSnap of snap2.docs) {
+      await deleteDoc(doc(firestoreDb, 'profesor_amistades', docSnap.id));
+      eliminado = true;
+    }
+
+    if (eliminado) {
+      res.json({ success: true, mensaje: 'Amistad eliminada con éxito.' });
+    } else {
+      res.status(404).json({ error: 'No se encontró una relación de amistad activa.' });
+    }
+  } catch (error) {
+    console.error('Error al eliminar amistad:', error);
+    res.status(500).json({ error: 'Error interno del servidor.' });
+  }
+});
+
+// --- CHAT PRIVADO CON AMIGOS ---
+app.post('/api/chats/enviar', async (req, res) => {
+  const { remitente_id, remitente_nombre, destinatario_id, destinatario_nombre, mensaje } = req.body;
+  if (!remitente_id || !destinatario_id || !mensaje) {
+    return res.status(400).json({ error: 'Faltan parámetros requeridos.' });
+  }
+
+  try {
+    const msgId = crypto.randomUUID();
+    const docRef = doc(firestoreDb, 'profesor_chats', msgId);
+    const msgData = {
+      id: msgId,
+      remitente_id,
+      remitente_nombre: remitente_nombre || 'Usuario',
+      destinatario_id,
+      destinatario_nombre: destinatario_nombre || 'Usuario',
+      mensaje,
+      creado_en: new Date().toISOString()
+    };
+    await setDoc(docRef, msgData);
+    res.json({ success: true, mensaje: msgData });
+  } catch (error) {
+    console.error('Error al enviar mensaje de chat:', error);
+    res.status(500).json({ error: 'Error interno del servidor.' });
+  }
+});
+
+app.get('/api/chats/listar/:remitente_id/:destinatario_id', async (req, res) => {
+  const { remitente_id, destinatario_id } = req.params;
+
+  try {
+    const q1 = query(
+      collection(firestoreDb, 'profesor_chats'),
+      where('remitente_id', '==', remitente_id),
+      where('destinatario_id', '==', destinatario_id)
+    );
+    const q2 = query(
+      collection(firestoreDb, 'profesor_chats'),
+      where('remitente_id', '==', destinatario_id),
+      where('destinatario_id', '==', remitente_id)
+    );
+
+    const [snap1, snap2] = await Promise.all([getDocs(q1), getDocs(q2)]);
+    const mensajes = [];
+    snap1.forEach(doc => mensajes.push(doc.data()));
+    snap2.forEach(doc => mensajes.push(doc.data()));
+
+    mensajes.sort((a, b) => a.creado_en.localeCompare(b.creado_en));
+    res.json(mensajes);
+  } catch (error) {
+    console.error('Error al listar mensajes de chat:', error);
+    res.status(500).json({ error: 'Error interno del servidor.' });
+  }
+});
+
+// --- SISTEMA DE DUELOS PERSONALIZADOS ---
+app.post('/api/duelos/invitar', async (req, res) => {
+  const { retador_id, retador_nombre, retado_id, retado_nombre, tipo_match, modos } = req.body;
+  if (!retador_id || !retado_id || !tipo_match || !modos) {
+    return res.status(400).json({ error: 'Faltan parámetros requeridos.' });
+  }
+
+  try {
+    const dueloId = crypto.randomUUID();
+    const docRef = doc(firestoreDb, 'profesor_duelos', dueloId);
+    const dueloData = {
+      id: dueloId,
+      retador_id,
+      retador_nombre: retador_nombre || 'Retador',
+      retado_id,
+      retado_nombre: retado_nombre || 'Retado',
+      tipo_match,
+      modos,
+      estado: 'pendiente',
+      creado_en: new Date().toISOString()
+    };
+    await setDoc(docRef, dueloData);
+    res.json({ success: true, duelo: dueloData });
+  } catch (error) {
+    console.error('Error al crear invitación de duelo:', error);
+    res.status(500).json({ error: 'Error interno del servidor.' });
+  }
+});
+
+app.get('/api/duelos/pendientes/:estudiante_id', async (req, res) => {
+  const { estudiante_id } = req.params;
+
+  try {
+    const q = query(
+      collection(firestoreDb, 'profesor_duelos'),
+      where('retado_id', '==', estudiante_id),
+      where('estado', '==', 'pendiente')
+    );
+    const snap = await getDocs(q);
+    const duelos = [];
+    snap.forEach(doc => duelos.push(doc.data()));
+    res.json(duelos);
+  } catch (error) {
+    console.error('Error al obtener duelos pendientes:', error);
+    res.status(500).json({ error: 'Error interno del servidor.' });
+  }
+});
+
+app.post('/api/duelos/responder', async (req, res) => {
+  const { duelo_id, accion } = req.body;
+  if (!duelo_id || !accion) {
+    return res.status(400).json({ error: 'Faltan parámetros requeridos.' });
+  }
+
+  try {
+    const docRef = doc(firestoreDb, 'profesor_duelos', duelo_id);
+    const docSnap = await getDoc(docRef);
+    if (!docSnap.exists()) {
+      return res.status(404).json({ error: 'Invitación de duelo no encontrada.' });
+    }
+
+    const estadoFinal = accion === 'aceptar' ? 'aceptado' : 'rechazado';
+    await updateDoc(docRef, { estado: estadoFinal });
+    res.json({ success: true, mensaje: `Duelo ${estadoFinal} con éxito.` });
+  } catch (error) {
+    console.error('Error al responder duelo:', error);
+    res.status(500).json({ error: 'Error interno del servidor.' });
+  }
+});
+
+app.get('/api/duelos/estado/:duelo_id', async (req, res) => {
+  const { duelo_id } = req.params;
+
+  try {
+    const docRef = doc(firestoreDb, 'profesor_duelos', duelo_id);
+    const docSnap = await getDoc(docRef);
+    if (!docSnap.exists()) {
+      return res.status(404).json({ error: 'Duelo no encontrado.' });
+    }
+    res.json(docSnap.data());
+  } catch (error) {
+    console.error('Error al obtener estado de duelo:', error);
+    res.status(500).json({ error: 'Error interno del servidor.' });
+  }
+});
+
+// Ping para registrar presencia online
+app.post('/api/estudiantes/:id/ping', async (req, res) => {
+  const { id } = req.params;
+  try {
+    const docRef = doc(firestoreDb, 'profesor_estudiantes', id);
+    const docSnap = await getDoc(docRef);
+    if (docSnap.exists()) {
+      await updateDoc(docRef, {
+        ultima_conexion: new Date().toISOString()
+      });
+      res.json({ success: true, ultima_conexion: new Date().toISOString() });
+    } else {
+      res.status(404).json({ error: 'Estudiante no encontrado.' });
+    }
+  } catch (error) {
+    console.error('Error en ping de estudiante:', error);
+    res.status(500).json({ error: 'Error interno.' });
+  }
+});
+
+// Registrar/Actualizar estadísticas de duelos y partidas del estudiante
+app.post('/api/estudiantes/:id/stats', async (req, res) => {
+  const { id } = req.params;
+  const { partidas_jugadas, partidas_ganadas, lenguaje_mas_dominado } = req.body;
+  try {
+    const docRef = doc(firestoreDb, 'profesor_estudiantes', id);
+    const docSnap = await getDoc(docRef);
+    if (!docSnap.exists()) {
+      return res.status(404).json({ error: 'Estudiante no encontrado.' });
+    }
+    
+    const updates = {};
+    if (partidas_jugadas !== undefined) updates.partidas_jugadas = Number(partidas_jugadas);
+    if (partidas_ganadas !== undefined) updates.partidas_ganadas = Number(partidas_ganadas);
+    if (lenguaje_mas_dominado !== undefined) updates.lenguaje_mas_dominado = lenguaje_mas_dominado;
+    
+    await updateDoc(docRef, updates);
+    res.json({ success: true, updates });
+  } catch (error) {
+    console.error('Error al actualizar estadísticas del estudiante:', error);
+    res.status(500).json({ error: 'Error interno.' });
   }
 });
 
