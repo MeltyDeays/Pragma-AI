@@ -29,3 +29,5 @@ repomix.config.json
 CLAUDE.md
 *.mp4
 .agents
+.rtk/
+public/

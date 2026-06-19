@@ -4132,17 +4132,21 @@ app.post('/api/mentor/crear-plan', async (req, res) => {
       - Si mencionas PostgreSQL, da el DDL COMPLETO con tipos específicos, CHECK constraints, índices, comentarios en cada campo.
       - Si mencionas endpoints, da la firma HTTP completa: método, ruta, query params, body JSON de ejemplo, códigos de respuesta esperados.
 
-      REGLAS DE CONTENIDO OBLIGATORIAS:
-      1. NUNCA ENTREGUES LA LÓGICA DE NEGOCIO RESUELTA. En su lugar, proporciona esqueletos estructurados, plantillas limpias y ejemplos de código alusivos (con imports, nombres de clases/funciones, contratos tipados y comentarios TODO) listos para que el estudiante los complete y adapte. La estructura del código debe ser un andamiaje perfecto pero vacío de lógica de negocio.
+       REGLAS DE CONTENIDO OBLIGATORIAS:
+      1. NUNCA ENTREGUES LA LÓGICA DE NEGOCIO COMPLETA DEL PROYECTO. En su lugar, proporciona esqueletos estructurados, plantillas limpias y ejemplos de código alusivos (con imports, nombres de clases/funciones, contratos tipados y comentarios TODO) listos para que el estudiante los complete y adapte. La estructura del código debe ser un andamiaje perfecto pero vacío de lógica de negocio.
       
-      2. ARQUITECTURA CONCRETA Y ESTRUCTURA FÍSICA:
+      2. EJEMPLOS DE USO REAL Y CÓDIGO DE REFERENCIA:
+         - Debes incluir de forma obligatoria ejemplos cortos pero funcionales de uso de cada librería clave recomendada (por ejemplo, cómo instanciar express, cómo hacer una consulta parametrizada con el pool de 'pg', cómo estructurar un middleware de autenticación de ejemplo, o cómo utilizar un validador). Esto servirá para ilustrar de forma práctica la sintaxis exacta de lo que se debe usar.
+         - Proporciona fragmentos de código ilustrativos con comentarios detallados paso a paso de su funcionamiento interno.
+      
+      3. ARQUITECTURA CONCRETA Y ESTRUCTURA FÍSICA:
          - Árbol de directorios detallado del proyecto completo (src/, routes/, controllers/, models/, middleware/, config/, tests/).
          - Explicación exhaustiva de la estructura de carpetas: detalla el propósito de cada directorio, la interconexión de sus componentes y cómo fluyen los datos físicamente de un archivo a otro.
          - Diagrama ASCII de flujo de datos con nombres reales de componentes.
          - Justificación técnica específica de CADA tecnología elegida (no "puedes usar X o Y").
          - Toma decisiones concretas: SI el proyecto es una API REST con geo, di exactamente: "Usa Node.js 20 + Express 4.x + pg (driver nativo, NO ORM) + PostGIS 3.x".
       
-      3. BASE DE DATOS EXHAUSTIVA:
+      4. BASE DE DATOS EXHAUSTIVA:
          - DDL COMPLETO de TODAS las tablas con:
            * Tipos de datos específicos (VARCHAR(255), NUMERIC(10,7), GEOGRAPHY(POINT, 4326))
            * Restricciones CHECK con rangos exactos
@@ -4151,7 +4155,7 @@ app.post('/api/mentor/crear-plan', async (req, res) => {
            * Comentarios SQL en cada campo explicando su propósito
          - Si aplica PostGIS: explica la diferencia entre GEOMETRY vs GEOGRAPHY y cuál elegir y por qué.
       
-      4. FASES DE DESARROLLO (5 fases) — CADA FASE debe incluir:
+      5. FASES DE DESARROLLO (5 fases) — CADA FASE debe incluir:
          a) Hito verificable concreto (ej: "Al terminar esta fase, ejecutar 'curl localhost:3000/api/health' debe retornar {status: 'ok'}")
          b) Tareas con comandos exactos de terminal (npm init, npm install pg dotenv, mkdir -p src/routes)
          c) Esqueletos de archivos y plantillas de código alusivos con JSDoc completo:
@@ -4183,7 +4187,7 @@ app.post('/api/mentor/crear-plan', async (req, res) => {
       {
         "titulo": "Título técnico preciso del proyecto (ej: 'API REST de Geolocalización con PostGIS y Express')",
         "introduccion_pedagogica": "Párrafo denso (150+ palabras) que contextualice las competencias técnicas específicas que adquirirá el estudiante: qué stack dominará, qué patrones de diseño aplicará, qué problemas de producción real aprenderá a resolver.",
-        "plan_markdown": "Plan COMPLETO en Markdown limpio y bien estructurado con:\\n## 📐 Arquitectura (diagrama ASCII + árbol de carpetas + explicaciones de la estructura física + justificación técnica)\\n## 🎯 Personalización Cognitiva y Ruta de Aprendizaje (Mapeo personalizado relacionando las fases del proyecto con los vacíos de conocimiento y conceptos en progreso del estudiante, detallando cómo los superará en este proyecto)\\n## ⚙️ Pila Tecnológica Recomendada y Versiones (Dependencias y versiones de paquetes estables y compatibles sugeridas)\\n## 🗄️ Modelo de Datos (DDL completo comentado)\\n## Fases de Desarrollo 1-5 (con hitos, tareas concretas, plantillas y esqueletos de código alusivos con firmas JSDoc, contratos API, riesgos específicos, y una subsección '🛠️ Guía de Depuración y Diagnóstico' para cada fase con checkpoints de consola y logs)\\n## 🧪 Criterios de Aceptación por Fase\\n## 🔒 Checklist de Seguridad\\n## 📚 Recursos y Documentación (URLs reales)",
+        "plan_markdown": "Plan COMPLETO en Markdown limpio y bien estructurado con:\\n## 📐 Arquitectura (diagrama ASCII + árbol de carpetas + explicaciones de la estructura física + justificación técnica)\\n## 🎯 Personalización Cognitiva y Ruta de Aprendizaje (Mapeo personalizado relacionando las fases del proyecto con los vacíos de conocimiento y conceptos en progreso del estudiante, detallando cómo los superará en este proyecto)\\n## ⚙️ Pila Tecnológica Recomendada y Versiones (Dependencias y versiones de paquetes estables y compatibles sugeridas)\\n## 🗄️ Modelo de Datos (DDL completo comentado)\\n## 🛠️ Ejemplos de Código de Referencia e Implementación (Ejemplos de código funcionales detallando el uso básico de cada dependencia/librería clave e integración con base de datos)\\n## Fases de Desarrollo 1-5 (con hitos, tareas concretas, plantillas y esqueletos de código alusivos con firmas JSDoc, contratos API, riesgos específicos, y una subsección '🛠️ Guía de Depuración y Diagnóstico' para cada fase con checkpoints de consola y logs)\\n## 🧪 Criterios de Aceptación por Fase\\n## 🔒 Checklist de Seguridad\\n## 📚 Recursos y Documentación (URLs reales)",
         "conceptos_clave": [
           {
             "termino": "Nombre exacto de la tecnología o patrón",
