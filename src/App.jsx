@@ -1324,7 +1324,7 @@ function App() {
               <h2>Aprende Programación a Nivel Producción</h2>
               <p>Pragma AI te guiará secuencialmente a través de temarios profesionales avanzados. Generará documentación teórica y misiones prácticas dinámicas, evaluando tus habilidades en tiempo real mediante una suite completa de minijuegos gamificados.</p>
 
-              <form onSubmit={iniciarSesion} className="login-form">
+              <form onSubmit={submitIniciarSesion} className="login-form">
                 <div className="form-group">
                   <label htmlFor="nombre">Tu Nombre de Desarrollador:</label>
                   <input

@@ -549,15 +549,316 @@ router.post('/api/regenerar-tarea', async (req, res) => {
 
     const data = parsearJSONGroq(chatCompletion.choices[0].message.content);
 
-    // Generar archivo docx similar...
+    // Generar el documento Word (.docx) con maquetación premium completa al regenerar
     const doc = new docx.Document({
       sections: [{
-        properties: { page: { margin: { top: 1440, bottom: 1440, left: 1440, right: 1440 } } },
+        properties: {
+          page: { margin: { top: 1440, bottom: 1440, left: 1440, right: 1440 } }
+        },
+        headers: {
+          default: new docx.Header({
+            children: [
+              new docx.Paragraph({
+                alignment: docx.AlignmentType.RIGHT,
+                children: [
+                  new docx.TextRun({
+                    text: `IA-PROFESOR  |  PLAN DE ESTUDIO REGENERADO  |  ${tecnologia.toUpperCase()}`,
+                    size: 16,
+                    color: "94A3B8",
+                    font: "Segoe UI"
+                  })
+                ],
+                spacing: { after: 120 }
+              })
+            ]
+          })
+        },
+        footers: {
+          default: new docx.Footer({
+            children: [
+              new docx.Paragraph({
+                alignment: docx.AlignmentType.CENTER,
+                children: [
+                  new docx.TextRun({ text: "Página ", size: 18, color: "94A3B8", font: "Segoe UI" }),
+                  new docx.TextRun({ children: [docx.PageNumber.CURRENT], size: 18, color: "94A3B8", font: "Segoe UI" }),
+                  new docx.TextRun({ text: " de ", size: 18, color: "94A3B8", font: "Segoe UI" }),
+                  new docx.TextRun({ children: [docx.PageNumber.TOTAL_PAGES], size: 18, color: "94A3B8", font: "Segoe UI" })
+                ]
+              })
+            ]
+          })
+        },
         children: [
-          new docx.Paragraph({ text: `PLAN DE ESTUDIO REGENERADO: TEMA ${temaIndice}`, bold: true, size: 16, font: "Segoe UI" }),
-          new docx.Paragraph({ text: temaActual.toUpperCase(), bold: true, size: 32, font: "Segoe UI" }),
-          new docx.Paragraph({ text: `Nivel: ${nivelReal}`, font: "Segoe UI" }),
-          new docx.Paragraph({ text: data.descripcion, font: "Segoe UI" })
+          new docx.Paragraph({
+            children: [
+              new docx.TextRun({
+                text: `PLAN DE ESTUDIO REGENERADO: TEMA ${temaIndice}`,
+                bold: true, size: 16, color: "475569",
+                font: "Segoe UI"
+              })
+            ],
+            spacing: { after: 60 }
+          }),
+          new docx.Paragraph({
+            children: [
+              new docx.TextRun({
+                text: temaActual.toUpperCase(),
+                bold: true, size: 32, color: "1E293B", font: "Segoe UI"
+              })
+            ],
+            border: {
+              bottom: { color: "4F46E5", space: 15, value: "single", size: 18 }
+            },
+            spacing: { after: 200 }
+          }),
+          new docx.Paragraph({
+            children: [
+              new docx.TextRun({ text: "Tecnología: ", bold: true, font: "Segoe UI", color: "1E293B" }),
+              new docx.TextRun({ text: `${data.tema}   |   `, font: "Segoe UI", color: "475569" }),
+              new docx.TextRun({ text: "Nivel de Dificultad: ", bold: true, font: "Segoe UI", color: "1E293B" }),
+              new docx.TextRun({ text: `${nivelReal}`, font: "Segoe UI", color: "4F46E5", bold: true })
+            ],
+            spacing: { after: 400 }
+          }),
+          new docx.Paragraph({
+            children: [
+              new docx.TextRun({ text: "1. INTRODUCCIÓN ACADÉMICA Y TRASFONDO", bold: true, size: 24, color: "4F46E5", font: "Segoe UI" })
+            ],
+            spacing: { before: 200, after: 150 }
+          }),
+          ...(data.introduccion_profunda || "").split('\n').map(line => 
+            new docx.Paragraph({
+              children: [new docx.TextRun({ text: line.trim(), size: 20, font: "Segoe UI", color: "334155" })],
+              spacing: { after: 150 },
+              alignment: docx.AlignmentType.JUSTIFY
+            })
+          ),
+          new docx.Paragraph({
+            children: [
+              new docx.TextRun({ text: "2. FUNCIONAMIENTO INTERNO", bold: true, size: 24, color: "4F46E5", font: "Segoe UI" })
+            ],
+            spacing: { before: 200, after: 150 }
+          }),
+          ...(data.funcionamiento_interno || "").split('\n').map(line => 
+            new docx.Paragraph({
+              children: [new docx.TextRun({ text: line.trim(), size: 20, font: "Segoe UI", color: "334155" })],
+              spacing: { after: 150 },
+              alignment: docx.AlignmentType.JUSTIFY
+            })
+          ),
+          new docx.Paragraph({
+            children: [
+              new docx.TextRun({ text: "3. CASOS DE ESTUDIO EN PRODUCCIÓN", bold: true, size: 24, color: "4F46E5", font: "Segoe UI" })
+            ],
+            spacing: { before: 200, after: 150 }
+          }),
+          ...(data.casos_de_estudio_produccion || "").split('\n').map(line => 
+            new docx.Paragraph({
+              children: [new docx.TextRun({ text: line.trim(), size: 20, font: "Segoe UI", color: "334155" })],
+              spacing: { after: 150 },
+              alignment: docx.AlignmentType.JUSTIFY
+            })
+          ),
+          new docx.Paragraph({
+            children: [
+              new docx.TextRun({ text: "4. CONFIGURACIÓN E INICIALIZACIÓN DEL ENTORNO", bold: true, size: 24, color: "4F46E5", font: "Segoe UI" })
+            ],
+            spacing: { before: 200, after: 150 }
+          }),
+          new docx.Table({
+            width: { size: 100, type: docx.WidthType.PERCENTAGE },
+            rows: [
+              new docx.TableRow({
+                children: [
+                  new docx.TableCell({
+                    children: (data.inicializacion_proyecto || "").split('\n').map(line =>
+                      new docx.Paragraph({
+                        children: [new docx.TextRun({ text: line.trim(), size: 20, font: "Segoe UI", color: "1E293B" })],
+                        spacing: { before: 60, after: 60 }
+                      })
+                    ),
+                    shading: { fill: "F8FAFC" },
+                    borders: { left: { style: docx.BorderStyle.SINGLE, size: 24, color: "64748B" } },
+                    margins: { top: 120, bottom: 120, left: 200, right: 200 }
+                  })
+                ]
+              })
+            ]
+          }),
+          new docx.Paragraph({
+            children: [
+              new docx.TextRun({ text: "5. INSTRUCCIONES DE EJECUCIÓN Y PRUEBA", bold: true, size: 24, color: "4F46E5", font: "Segoe UI" })
+            ],
+            spacing: { before: 200, after: 150 }
+          }),
+          new docx.Table({
+            width: { size: 100, type: docx.WidthType.PERCENTAGE },
+            rows: [
+              new docx.TableRow({
+                children: [
+                  new docx.TableCell({
+                    children: (data.como_ejecutar || "").split('\n').map(line =>
+                      new docx.Paragraph({
+                        children: [new docx.TextRun({ text: line.trim(), size: 20, font: "Segoe UI", color: "1E293B" })],
+                        spacing: { before: 60, after: 60 }
+                      })
+                    ),
+                    shading: { fill: "F8FAFC" },
+                    borders: { left: { style: docx.BorderStyle.SINGLE, size: 24, color: "64748B" } },
+                    margins: { top: 120, bottom: 120, left: 200, right: 200 }
+                  })
+                ]
+              })
+            ]
+          }),
+          new docx.Paragraph({
+            children: [
+              new docx.TextRun({ text: "EXPLICACIÓN CONCEPTUAL AVANZADA", bold: true, size: 20, color: "4F46E5", font: "Segoe UI" })
+            ],
+            spacing: { before: 200, after: 200 }
+          }),
+          ...data.conceptos_clave.flatMap(c => [
+            new docx.Table({
+              width: { size: 100, type: docx.WidthType.PERCENTAGE },
+              rows: [
+                new docx.TableRow({
+                  children: [
+                    new docx.TableCell({
+                      children: [
+                        new docx.Paragraph({
+                          children: [new docx.TextRun({ text: c.termino.toUpperCase(), bold: true, size: 20, color: "4F46E5", font: "Segoe UI" })],
+                          spacing: { after: 80 }
+                        }),
+                        new docx.Paragraph({
+                          children: [new docx.TextRun({ text: c.explicacion, size: 20, font: "Segoe UI", color: "334155" })],
+                          spacing: { after: 160 }
+                        }),
+                        new docx.Table({
+                          width: { size: 100, type: docx.WidthType.PERCENTAGE },
+                          rows: [
+                            new docx.TableRow({
+                              children: [
+                                new docx.TableCell({
+                                  children: c.ejemplo.split('\n').map(line => 
+                                    new docx.Paragraph({
+                                      children: [new docx.TextRun({ text: line, font: "Consolas", size: 18, color: "0F172A" })],
+                                      spacing: { before: 10, after: 10 }
+                                    })
+                                  ),
+                                  shading: { fill: "F1F5F9" },
+                                  borders: {
+                                    top: { style: docx.BorderStyle.SINGLE, size: 4, color: "CBD5E1" },
+                                    bottom: { style: docx.BorderStyle.SINGLE, size: 4, color: "CBD5E1" },
+                                    left: { style: docx.BorderStyle.SINGLE, size: 4, color: "CBD5E1" },
+                                    right: { style: docx.BorderStyle.SINGLE, size: 4, color: "CBD5E1" }
+                                  },
+                                  margins: { top: 100, bottom: 100, left: 150, right: 150 }
+                                })
+                              ]
+                            })
+                          ]
+                        })
+                      ],
+                      shading: { fill: "F8FAFC" },
+                      borders: { left: { style: docx.BorderStyle.SINGLE, size: 24, color: "4F46E5" } },
+                      margins: { top: 150, bottom: 150, left: 200, right: 200 }
+                    })
+                  ]
+                })
+              ]
+            }),
+            new docx.Paragraph({ text: "", spacing: { after: 150 } })
+          ]),
+          new docx.Paragraph({
+            children: [
+              new docx.TextRun({ text: "BUENAS PRÁCTICAS DE LA INDUSTRIA", bold: true, size: 22, color: "10B981", font: "Segoe UI" })
+            ],
+            spacing: { before: 200, after: 150 }
+          }),
+          new docx.Table({
+            width: { size: 100, type: docx.WidthType.PERCENTAGE },
+            rows: [
+              new docx.TableRow({
+                children: [
+                  new docx.TableCell({
+                    children: data.buenas_practicas.map(bp => 
+                      new docx.Paragraph({
+                        children: [
+                          new docx.TextRun({ text: "✔  ", color: "10B981", bold: true, font: "Segoe UI" }),
+                          new docx.TextRun({ text: bp, size: 20, font: "Segoe UI", color: "065F46" })
+                        ],
+                        spacing: { before: 60, after: 60 }
+                      })
+                    ),
+                    shading: { fill: "ECFDF5" },
+                    borders: { left: { style: docx.BorderStyle.SINGLE, size: 24, color: "10B981" } },
+                    margins: { top: 120, bottom: 120, left: 200, right: 200 }
+                  })
+                ]
+              })
+            ]
+          }),
+          new docx.Paragraph({
+            children: [
+              new docx.TextRun({ text: "EJERCICIO DE GRADO DE PRODUCCIÓN", bold: true, size: 24, color: "DC2626", font: "Segoe UI" })
+            ],
+            spacing: { before: 200, after: 150 }
+          }),
+          new docx.Table({
+            width: { size: 100, type: docx.WidthType.PERCENTAGE },
+            rows: [
+              new docx.TableRow({
+                children: [
+                  new docx.TableCell({
+                    children: [
+                      new docx.Paragraph({
+                        children: [new docx.TextRun({ text: "REQUISITOS FUNCIONALES DEL RETO:", bold: true, size: 18, color: "991B1B", font: "Segoe UI" })],
+                        spacing: { after: 100 }
+                      }),
+                      ...(data.descripcion || "").split('\n').map(line => 
+                        new docx.Paragraph({
+                          children: [new docx.TextRun({ text: line.trim(), size: 20, font: "Segoe UI", color: "7F1D1D" })],
+                          spacing: { after: 60 }
+                        })
+                      )
+                    ],
+                    shading: { fill: "FEF2F2" },
+                    borders: { left: { style: docx.BorderStyle.SINGLE, size: 24, color: "DC2626" } },
+                    margins: { top: 150, bottom: 150, left: 200, right: 200 }
+                  })
+                ]
+              })
+            ]
+          }),
+          new docx.Paragraph({
+            children: [
+              new docx.TextRun({ text: "DESAFÍOS ADICIONALES (RETOS EXPERTO)", bold: true, size: 22, color: "7C3AED", font: "Segoe UI" })
+            ],
+            spacing: { before: 200, after: 150 }
+          }),
+          new docx.Table({
+            width: { size: 100, type: docx.WidthType.PERCENTAGE },
+            rows: [
+              new docx.TableRow({
+                children: [
+                  new docx.TableCell({
+                    children: data.retos_experto.map(re => 
+                      new docx.Paragraph({
+                        children: [
+                          new docx.TextRun({ text: "★  ", color: "7C3AED", bold: true, font: "Segoe UI" }),
+                          new docx.TextRun({ text: re, size: 20, font: "Segoe UI", color: "5B21B6" })
+                        ],
+                        spacing: { before: 60, after: 60 }
+                      })
+                    ),
+                    shading: { fill: "F5F3FF" },
+                    borders: { left: { style: docx.BorderStyle.SINGLE, size: 24, color: "7C3AED" } },
+                    margins: { top: 120, bottom: 120, left: 200, right: 200 }
+                  })
+                ]
+              })
+            ]
+          })
         ]
       }]
     });

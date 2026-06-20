@@ -31,3 +31,5 @@ CLAUDE.md
 .agents
 .rtk/
 public/
+dist.zip
+*.zip

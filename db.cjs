@@ -126,6 +126,19 @@ const client = {
         return { rows };
       }
 
+      // --- 3b. SELECT * FROM profesor_tareas WHERE word_url = $1 ---
+      if (queryClean.match(/SELECT \* FROM profesor_tareas WHERE word_url = \$1/i)) {
+        const word_url = params[0];
+        const q = query(
+          collection(firestoreDb, 'profesor_tareas'),
+          where('word_url', '==', word_url)
+        );
+        const querySnapshot = await getDocs(q);
+        const rows = [];
+        querySnapshot.forEach(doc => rows.push(doc.data()));
+        return { rows };
+      }
+
       // --- 4. SELECT * FROM profesor_tareas WHERE id = $1 ---
       if (queryClean.match(/SELECT \* FROM profesor_tareas WHERE id = \$1/i)) {
         const id = params[0];
