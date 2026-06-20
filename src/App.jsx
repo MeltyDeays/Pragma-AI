@@ -1590,7 +1590,7 @@ function App() {
                               <div className="trivia-game-view animate-fade-in">
                                 <p className="trivia-question font-mono">{juegoData.pregunta}</p>
                                 <div className="trivia-options-grid">
-                                  {juegoData.opciones.map((opcion, idx) => (
+                                  {juegoData.opciones?.map((opcion, idx) => (
                                     <button 
                                       key={idx}
                                       onClick={() => {
@@ -1751,7 +1751,7 @@ function App() {
                                 <p className="output-desc mb-3 font-mono">Analiza el fragmento de código e indica el output exacto en consola:</p>
                                 <pre className="output-code bg-slate-950 p-4 border border-slate-800 rounded font-mono mb-4"><code>{juegoData.codigo}</code></pre>
                                 <div className="trivia-options-grid">
-                                  {juegoData.opciones.map((opcion, idx) => (
+                                  {juegoData.opciones?.map((opcion, idx) => (
                                     <button 
                                       key={idx}
                                       onClick={() => {
@@ -1780,7 +1780,7 @@ function App() {
                                 <p className="refactor-desc mb-3 font-mono">Corrige el bug en el código:</p>
                                 <pre className="output-code bg-slate-950 p-4 border border-slate-800 rounded font-mono mb-4"><code>{juegoData.codigo_con_bug}</code></pre>
                                 <div className="trivia-options-grid">
-                                  {juegoData.opciones.map((opcion, idx) => (
+                                  {juegoData.opciones?.map((opcion, idx) => (
                                     <button 
                                       key={idx}
                                       onClick={() => {
