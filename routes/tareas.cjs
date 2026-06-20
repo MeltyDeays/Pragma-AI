@@ -97,8 +97,14 @@ router.post('/api/generar-tarea', async (req, res) => {
     const temaActual = listaTemas[temaIndice - 1];
 
     const systemPrompt = `
-      Eres un Profesor de IA con pedagogía adaptativa para ingenieros de software. Diseñas planes de estudio, guías teóricas y retos de código adaptando estrictamente la complejidad teórica, la profundidad y la dificultad del código al nivel especificado: "${nivelReal}".
+      Eres un Profesor de IA con pedagogía adaptativa para ingenieros de software. Diseñas planes de estudio, guías teóricas y retos de código adaptando la complejidad teórica, la profundidad y la dificultad del código al nivel especificado: "${nivelReal}".
       Debes responder estrictamente en formato JSON válido.
+
+      ESTRUCTURA DE CONTENIDO PEDAGÓGICO REQUERIDO (ORDEN OBLIGATORIO):
+      1. INTRODUCCIÓN CORTA Y TÉRMINOS A OCUPAR: Define de manera concisa el tema y lista/define todos los términos técnicos, variables o funciones clave que se van a ocupar en la tarea.
+      2. EJEMPLOS DE CASOS DE USO EN PRODUCCIÓN: Proporciona escenarios y ejemplos prácticos de uso real del tema en entornos de producción.
+      3. EJEMPLOS ESPECÍFICOS: Brinda ejemplos específicos detallados de cada término, variable o función mencionada en la introducción.
+      4. TAREA DESGLOSADA PASO A PASO: Redacta la tarea práctica bien detallada y estructurada paso a paso.
 
       DIRECTRICES PEDAGÓGICAS SEGÚN NIVEL DE DIFICULTAD:
       - Si el nivel es "Novato" o "Principiante": El contenido DEBE ser extremadamente didáctico, claro e intuitivo. Usa explicaciones amigables paso a paso y analogías conceptuales sencillas. Los ejemplos de código deben ser minimalistas (máximo 8 a 12 líneas de código limpio y directo) enfocados en enseñar exclusivamente el fundamento del tema, sin sobrecargar con librerías complejas o algoritmos avanzados. Todo el reto práctico y retos experto deben ser muy sencillos de resolver combinando directamente las líneas de los ejemplos.
@@ -111,25 +117,25 @@ router.post('/api/generar-tarea', async (req, res) => {
       3. CLARIDAD ABSOLUTA EN LOS REQUISITOS: La "descripcion" de la tarea debe definir de manera secuencial, clara e inequívoca el paso a paso del entregable técnico esperado, sin dejar lugar a ambigüedades sobre qué archivos entregar, cómo estructurar el código (ej. carpetas, nombres de archivos) o cómo presentar el entregable final.
       4. DESGLOSE EXHAUSTIVO DE TÉRMINOS (REGLA ESTRICTA): En la sección "conceptos_clave", debes extraer y explicar por separado ABSOLUTAMENTE TODAS las palabras reservadas, símbolos, funciones y estructuras que aparezcan en los ejemplos de código o que el estudiante deba usar (ej. 'function', 'console.log', 'if', 'return', 'var', 'let', 'const'). PROHIBIDO dar por sentado conocimientos previos. Genera un MÍNIMO DE 8 a 10 CONCEPTOS CLAVE por documento.
       5. GUÍA DE INICIALIZACIÓN DEL PROYECTO: Incluye OBLIGATORIAMENTE en "inicializacion_proyecto" los comandos exactos de terminal para crear el proyecto desde cero (mkdir, npm init, pip install, javac, g++, etc.), instalar dependencias necesarias, crear la estructura de carpetas y archivos iniciales. Adapta los comandos al sistema operativo Windows y al lenguaje ${tecnologia}.
-      6. GUÍA DE EJECUCIÓN Y PRUEBA: Incluye OBLIGATORIAMENTE en "como_ejecutar" los comandos exactos para compilar/ejecutar el proyecto terminado y cómo verificar que funciona correctamente (ej: node index.js, python main.py, javac Main.java && java Main, g++ -o main main.cpp && ./main). Incluye qué salida esperada debería ver el estudiante en consola o navegador.
+      6. GUÍA DE EJECUCIÓN Y PRUEBA: Incluye OBLIGATORIAMENTE en "como_ejecutar" los comandos exactos para compilar/ejecutar el proyecto terminado y cómo verificar que funciona correctamente. Incluye qué salida esperada debería ver el estudiante en consola o navegador.
       7. ADAPTABILIDAD DE HERRAMIENTAS: Las guías y configuraciones generadas deben ser completamente agnósticas de editores y motores de BD.
 
       El formato del JSON debe ser exactamente:
       {
-        "titulo": "Título corto, descriptivo y directo de la tarea",
+        "titulo": "Título de la tarea",
         "tema": "${tecnologia}",
         "nivel": "${nivelReal}",
-        "introduccion_profunda": "Texto académico fluido (mínimo 100 palabras) sobre la importancia práctica de este tema y su rol arquitectónico. Usa saltos de línea \\n.",
-        "funcionamiento_interno": "Análisis técnico de bajo nivel (mínimo 100 palabras) explicando cómo ejecuta internamente el motor. Usa saltos de línea \\n.",
-        "casos_de_estudio_produccion": "Análisis práctico (mínimo 100 palabras) de un escenario de producción. Usa saltos de línea \\n.",
+        "introduccion_profunda": "Introducción corta con el listado y definición rápida de todos los términos técnicos, variables o funciones clave que se van a ocupar en la tarea. Usa saltos de línea \\n.",
+        "funcionamiento_interno": "Análisis del funcionamiento interno de la tecnología en relación al tema. Usa saltos de línea \\n.",
+        "casos_de_estudio_produccion": "Ejemplos prácticos de caso de uso en producción del tema. Usa saltos de línea \\n.",
         "inicializacion_proyecto": "Comandos necesarios para Windows y ${tecnologia}. Usa \\n.",
         "como_ejecutar": "Pasos y comandos de terminal para probar el código. Usa \\n.",
-        "descripcion": "Instrucciones paso a paso. DEBES separar cada paso con un salto de línea explícito (\\n) para que se renderice como lista.",
+        "descripcion": "Instrucciones de la tarea desglosada paso a paso. DEBES separar cada paso con un salto de línea explícito (\\n) para que se renderice como lista.",
         "conceptos_clave": [
           {
-            "termino": "Término exacto, palabra reservada o símbolo",
-            "explicacion": "Explicación conceptual rápida y directa.",
-            "ejemplo": "Código adaptado al nivel (Novato: 8-12 líneas; Experto: +20 líneas). Usa \\n."
+            "termino": "Término exacto, variable o función",
+            "explicacion": "Explicación detallada de para qué sirve y cómo se comporta.",
+            "ejemplo": "Ejemplo de código de uso específico de este término/variable/función adaptado al nivel (Novato: 8-12 líneas; Experto: +20 líneas). Usa \\n."
           }
         ],
         "buenas_practicas": [
@@ -155,12 +161,10 @@ router.post('/api/generar-tarea', async (req, res) => {
 
     const data = parsearJSONGroq(chatCompletion.choices[0].message.content);
 
-    // Crear el archivo .docx
+    // Crear el archivo .docx con el orden estricto solicitado por el usuario
     const doc = new docx.Document({
       sections: [{
-        properties: {
-          page: { margin: { top: 1440, bottom: 1440, left: 1440, right: 1440 } }
-        },
+        properties: { page: { margin: { top: 1440, bottom: 1440, left: 1440, right: 1440 } } },
         headers: {
           default: new docx.Header({
             children: [
@@ -168,7 +172,7 @@ router.post('/api/generar-tarea', async (req, res) => {
                 alignment: docx.AlignmentType.RIGHT,
                 children: [
                   new docx.TextRun({
-                    text: `IA-PROFESOR  |  PLAN DE ESTUDIO SECUENCIAL  |  ${tecnologia.toUpperCase()}`,
+                    text: `PRAGMA AI  |  PLAN DE ESTUDIO  |  ${tecnologia.toUpperCase()}`,
                     size: 16,
                     color: "94A3B8",
                     font: "Segoe UI"
@@ -226,9 +230,10 @@ router.post('/api/generar-tarea', async (req, res) => {
             ],
             spacing: { after: 400 }
           }),
+          // 1. INTRODUCCIÓN CORTA Y TÉRMINOS A OCUPAR
           new docx.Paragraph({
             children: [
-              new docx.TextRun({ text: "1. INTRODUCCIÓN ACADÉMICA Y TRASFONDO", bold: true, size: 24, color: "4F46E5", font: "Segoe UI" })
+              new docx.TextRun({ text: "1. INTRODUCCIÓN CORTA Y TÉRMINOS A OCUPAR", bold: true, size: 24, color: "4F46E5", font: "Segoe UI" })
             ],
             spacing: { before: 200, after: 150 }
           }),
@@ -239,22 +244,10 @@ router.post('/api/generar-tarea', async (req, res) => {
               alignment: docx.AlignmentType.JUSTIFY
             })
           ),
+          // 2. CASOS DE USO EN PRODUCCIÓN
           new docx.Paragraph({
             children: [
-              new docx.TextRun({ text: "2. FUNCIONAMIENTO INTERNO", bold: true, size: 24, color: "4F46E5", font: "Segoe UI" })
-            ],
-            spacing: { before: 200, after: 150 }
-          }),
-          ...(data.funcionamiento_interno || "").split('\n').map(line => 
-            new docx.Paragraph({
-              children: [new docx.TextRun({ text: line.trim(), size: 20, font: "Segoe UI", color: "334155" })],
-              spacing: { after: 150 },
-              alignment: docx.AlignmentType.JUSTIFY
-            })
-          ),
-          new docx.Paragraph({
-            children: [
-              new docx.TextRun({ text: "3. CASOS DE ESTUDIO EN PRODUCCIÓN", bold: true, size: 24, color: "4F46E5", font: "Segoe UI" })
+              new docx.TextRun({ text: "2. CASOS DE USO EN PRODUCCIÓN", bold: true, size: 24, color: "4F46E5", font: "Segoe UI" })
             ],
             spacing: { before: 200, after: 150 }
           }),
@@ -265,61 +258,10 @@ router.post('/api/generar-tarea', async (req, res) => {
               alignment: docx.AlignmentType.JUSTIFY
             })
           ),
+          // 3. EJEMPLOS ESPECÍFICOS DE CADA TÉRMINO, VARIABLE O FUNCIÓN
           new docx.Paragraph({
             children: [
-              new docx.TextRun({ text: "4. CONFIGURACIÓN E INICIALIZACIÓN DEL ENTORNO", bold: true, size: 24, color: "4F46E5", font: "Segoe UI" })
-            ],
-            spacing: { before: 200, after: 150 }
-          }),
-          new docx.Table({
-            width: { size: 100, type: docx.WidthType.PERCENTAGE },
-            rows: [
-              new docx.TableRow({
-                children: [
-                  new docx.TableCell({
-                    children: (data.inicializacion_proyecto || "").split('\n').map(line =>
-                      new docx.Paragraph({
-                        children: [new docx.TextRun({ text: line.trim(), size: 20, font: "Segoe UI", color: "1E293B" })],
-                        spacing: { before: 60, after: 60 }
-                      })
-                    ),
-                    shading: { fill: "F8FAFC" },
-                    borders: { left: { style: docx.BorderStyle.SINGLE, size: 24, color: "64748B" } },
-                    margins: { top: 120, bottom: 120, left: 200, right: 200 }
-                  })
-                ]
-              })
-            ]
-          }),
-          new docx.Paragraph({
-            children: [
-              new docx.TextRun({ text: "5. INSTRUCCIONES DE EJECUCIÓN Y PRUEBA", bold: true, size: 24, color: "4F46E5", font: "Segoe UI" })
-            ],
-            spacing: { before: 200, after: 150 }
-          }),
-          new docx.Table({
-            width: { size: 100, type: docx.WidthType.PERCENTAGE },
-            rows: [
-              new docx.TableRow({
-                children: [
-                  new docx.TableCell({
-                    children: (data.como_ejecutar || "").split('\n').map(line =>
-                      new docx.Paragraph({
-                        children: [new docx.TextRun({ text: line.trim(), size: 20, font: "Segoe UI", color: "1E293B" })],
-                        spacing: { before: 60, after: 60 }
-                      })
-                    ),
-                    shading: { fill: "F8FAFC" },
-                    borders: { left: { style: docx.BorderStyle.SINGLE, size: 24, color: "64748B" } },
-                    margins: { top: 120, bottom: 120, left: 200, right: 200 }
-                  })
-                ]
-              })
-            ]
-          }),
-          new docx.Paragraph({
-            children: [
-              new docx.TextRun({ text: "EXPLICACIÓN CONCEPTUAL AVANZADA", bold: true, size: 20, color: "4F46E5", font: "Segoe UI" })
+              new docx.TextRun({ text: "3. EJEMPLOS ESPECÍFICOS (TÉRMINOS, VARIABLES O FUNCIONES)", bold: true, size: 24, color: "4F46E5", font: "Segoe UI" })
             ],
             spacing: { before: 200, after: 200 }
           }),
@@ -375,9 +317,63 @@ router.post('/api/generar-tarea', async (req, res) => {
             }),
             new docx.Paragraph({ text: "", spacing: { after: 150 } })
           ]),
+          // 4. CONFIGURACIÓN DEL ENTORNO Y COMANDOS
           new docx.Paragraph({
             children: [
-              new docx.TextRun({ text: "BUENAS PRÁCTICAS DE LA INDUSTRIA", bold: true, size: 22, color: "10B981", font: "Segoe UI" })
+              new docx.TextRun({ text: "4. CONFIGURACIÓN DEL ENTORNO E INICIALIZACIÓN", bold: true, size: 24, color: "4F46E5", font: "Segoe UI" })
+            ],
+            spacing: { before: 200, after: 150 }
+          }),
+          new docx.Table({
+            width: { size: 100, type: docx.WidthType.PERCENTAGE },
+            rows: [
+              new docx.TableRow({
+                children: [
+                  new docx.TableCell({
+                    children: (data.inicializacion_proyecto || "").split('\n').map(line =>
+                      new docx.Paragraph({
+                        children: [new docx.TextRun({ text: line.trim(), size: 20, font: "Segoe UI", color: "1E293B" })],
+                        spacing: { before: 60, after: 60 }
+                      })
+                    ),
+                    shading: { fill: "F8FAFC" },
+                    borders: { left: { style: docx.BorderStyle.SINGLE, size: 24, color: "64748B" } },
+                    margins: { top: 120, bottom: 120, left: 200, right: 200 }
+                  })
+                ]
+              })
+            ]
+          }),
+          new docx.Paragraph({
+            children: [
+              new docx.TextRun({ text: "5. INSTRUCCIONES DE EJECUCIÓN Y PRUEBA", bold: true, size: 24, color: "4F46E5", font: "Segoe UI" })
+            ],
+            spacing: { before: 200, after: 150 }
+          }),
+          new docx.Table({
+            width: { size: 100, type: docx.WidthType.PERCENTAGE },
+            rows: [
+              new docx.TableRow({
+                children: [
+                  new docx.TableCell({
+                    children: (data.como_ejecutar || "").split('\n').map(line =>
+                      new docx.Paragraph({
+                        children: [new docx.TextRun({ text: line.trim(), size: 20, font: "Segoe UI", color: "1E293B" })],
+                        spacing: { before: 60, after: 60 }
+                      })
+                    ),
+                    shading: { fill: "F8FAFC" },
+                    borders: { left: { style: docx.BorderStyle.SINGLE, size: 24, color: "64748B" } },
+                    margins: { top: 120, bottom: 120, left: 200, right: 200 }
+                  })
+                ]
+              })
+            ]
+          }),
+          // 6. BUENAS PRÁCTICAS
+          new docx.Paragraph({
+            children: [
+              new docx.TextRun({ text: "6. BUENAS PRÁCTICAS DE LA INDUSTRIA", bold: true, size: 22, color: "10B981", font: "Segoe UI" })
             ],
             spacing: { before: 200, after: 150 }
           }),
@@ -404,9 +400,10 @@ router.post('/api/generar-tarea', async (req, res) => {
               })
             ]
           }),
+          // 7. TAREA DESGLOSADA PASO A PASO
           new docx.Paragraph({
             children: [
-              new docx.TextRun({ text: "EJERCICIO DE GRADO DE PRODUCCIÓN", bold: true, size: 24, color: "DC2626", font: "Segoe UI" })
+              new docx.TextRun({ text: "7. TAREA PRÁCTICA DESGLOSADA PASO A PASO", bold: true, size: 24, color: "DC2626", font: "Segoe UI" })
             ],
             spacing: { before: 200, after: 150 }
           }),
@@ -418,7 +415,7 @@ router.post('/api/generar-tarea', async (req, res) => {
                   new docx.TableCell({
                     children: [
                       new docx.Paragraph({
-                        children: [new docx.TextRun({ text: "REQUISITOS FUNCIONALES DEL RETO:", bold: true, size: 18, color: "991B1B", font: "Segoe UI" })],
+                        children: [new docx.TextRun({ text: "PASOS REQUERIDOS PARA COMPLETAR EL RETO:", bold: true, size: 18, color: "991B1B", font: "Segoe UI" })],
                         spacing: { after: 100 }
                       }),
                       ...(data.descripcion || "").split('\n').map(line => 
@@ -438,7 +435,7 @@ router.post('/api/generar-tarea', async (req, res) => {
           }),
           new docx.Paragraph({
             children: [
-              new docx.TextRun({ text: "DESAFÍOS ADICIONALES (RETOS EXPERTO)", bold: true, size: 22, color: "7C3AED", font: "Segoe UI" })
+              new docx.TextRun({ text: "RETOS ADICIONALES (OPCIONALES)", bold: true, size: 22, color: "7C3AED", font: "Segoe UI" })
             ],
             spacing: { before: 200, after: 150 }
           }),
@@ -525,14 +522,58 @@ router.post('/api/regenerar-tarea', async (req, res) => {
     const nivelReal = tarea.nivel;
     const temaActual = tarea.tema;
     const estudiante_id = tarea.estudiante_id;
-
     const listaTemas = TEMARIOS[tecnologia] || TEMARIOS['JavaScript'];
     const temaIndice = listaTemas.indexOf(temaActual) + 1 || 1;
 
     const systemPrompt = `
-      Eres un Profesor de IA con pedagogía adaptativa para ingenieros de software. Diseñas planes de estudio, guías teóricas y retos de código adaptando estrictamente la complejidad teórica, la profundidad y la dificultad del código al nivel especificado: "${nivelReal}".
+      Eres un Profesor de IA con pedagogía adaptativa para ingenieros de software. Diseñas planes de estudio, guías teóricas y retos de código adaptando la complejidad teórica, la profundidad y la dificultad del código al nivel especificado: "${nivelReal}".
       Debes responder estrictamente en formato JSON válido.
-      El formato del JSON debe ser exactamente el mismo de la generación de tareas.
+
+      ESTRUCTURA DE CONTENIDO PEDAGÓGICO REQUERIDO (ORDEN OBLIGATORIO):
+      1. INTRODUCCIÓN CORTA Y TÉRMINOS A OCUPAR: Define de manera concisa el tema y lista/define todos los términos técnicos, variables o funciones clave que se van a ocupar en la tarea.
+      2. EJEMPLOS DE CASOS DE USO EN PRODUCCIÓN: Proporciona escenarios y ejemplos prácticos de uso real del tema en entornos de producción.
+      3. EJEMPLOS ESPECÍFICOS: Brinda ejemplos específicos detallados de cada término, variable o función mencionada en la introducción.
+      4. TAREA DESGLOSADA PASO A PASO: Redacta la tarea práctica bien detallada y estructurada paso a paso.
+
+      DIRECTRICES PEDAGÓGICAS SEGÚN NIVEL DE DIFICULTAD:
+      - Si el nivel es "Novato" o "Principiante": El contenido DEBE ser extremadamente didáctico, claro e intuitivo. Usa explicaciones amigables paso a paso y analogías conceptuales sencillas. Los ejemplos de código deben ser minimalistas (máximo 8 a 12 líneas de código limpio y directo) enfocados en enseñar exclusivamente el fundamento del tema, sin sobrecargar con librerías complejas o algoritmos avanzados. Todo el reto práctico y retos experto deben ser muy sencillos de resolver combinando directamente las líneas de los ejemplos.
+      - Si el nivel es "Intermedio" o "Avanzado": Introduce explicaciones técnicas más formales, flujos de trabajo estándar de la industria y ejemplos de código estructurados de nivel intermedio (12 a 20 líneas).
+      - Si el nivel es "Experto", "Master", "Arquitecto" o "Leyenda": Explicaciones técnicas profundas de bajo nivel, optimización de recursos, concurrencia, patrones arquitectónicos de nivel empresarial y ejemplos de código altamente sofisticados, complejos y de grado de producción (más de 20 líneas).
+
+      Exigencias críticas de generación y enfoque:
+      1. PRIORIZA EL CÓDIGO Y LOS EJEMPLOS PRÁCTICOS: Los documentos deben estar cargados de ejemplos de código de producción real (mínimo 5 ejemplos robustos, variados e integrados). Evita descripciones abstractas o redundantes de poco contenido real.
+      2. TAREA 100% RESOLUBLE CON EL DOCUMENTO: El ejercicio práctico (descrito en "descripcion") y los "retos_experto" deben estar diseñados de forma que el estudiante pueda resolverlos y completarlos directamente utilizando, combinando o extendiendo los ejemplos de código proporcionados en la sección "conceptos_clave". Los ejemplos de código deben servir como base, andamiaje o plantilla directa para la tarea práctica.
+      3. CLARIDAD ABSOLUTA EN LOS REQUISITOS: La "descripcion" de la tarea debe definir de manera secuencial, clara e inequívoca el paso a paso del entregable técnico esperado, sin dejar lugar a ambigüedades sobre qué archivos entregar, cómo estructurar el código (ej. carpetas, nombres de archivos) o cómo presentar el entregable final.
+      4. DESGLOSE EXHAUSTIVO DE TÉRMINOS (REGLA ESTRICTA): En la sección "conceptos_clave", debes extraer y explicar por separado ABSOLUTAMENTE TODAS las palabras reservadas, símbolos, funciones y estructuras que aparezcan en los ejemplos de código o que el estudiante deba usar (ej. 'function', 'console.log', 'if', 'return', 'var', 'let', 'const'). PROHIBIDO dar por sentado conocimientos previos. Genera un MÍNIMO DE 8 a 10 CONCEPTOS CLAVE por documento.
+      5. GUÍA DE INICIALIZACIÓN DEL PROYECTO: Incluye OBLIGATORIAMENTE en "inicializacion_proyecto" los comandos exactos de terminal para crear el proyecto desde cero (mkdir, npm init, pip install, javac, g++, etc.), instalar dependencias necesarias, crear la estructura de carpetas y archivos iniciales. Adapta los comandos al sistema operativo Windows y al lenguaje ${tecnologia}.
+      6. GUÍA DE EJECUCIÓN Y PRUEBA: Incluye OBLIGATORIAMENTE en "como_ejecutar" los comandos exactos para compilar/ejecutar el proyecto terminado y cómo verificar que funciona correctamente. Incluye qué salida esperada debería ver el estudiante en consola o navegador.
+      7. ADAPTABILIDAD DE HERRAMIENTAS: Las guías y configuraciones generadas deben ser completamente agnósticas de editores y motores de BD.
+
+      El formato del JSON debe ser exactamente:
+      {
+        "titulo": "Título de la tarea",
+        "tema": "${tecnologia}",
+        "nivel": "${nivelReal}",
+        "introduccion_profunda": "Introducción corta con el listado y definición rápida de todos los términos técnicos, variables o funciones clave que se van a ocupar en la tarea. Usa saltos de línea \\n.",
+        "funcionamiento_interno": "Análisis del funcionamiento interno de la tecnología en relación al tema. Usa saltos de línea \\n.",
+        "casos_de_estudio_produccion": "Ejemplos prácticos de caso de uso en producción del tema. Usa saltos de línea \\n.",
+        "inicializacion_proyecto": "Comandos necesarios para Windows y ${tecnologia}. Usa \\n.",
+        "como_ejecutar": "Pasos y comandos de terminal para probar el código. Usa \\n.",
+        "descripcion": "Instrucciones de la tarea desglosada paso a paso. DEBES separar cada paso con un salto de línea explícito (\\n) para que se renderice como lista.",
+        "conceptos_clave": [
+          {
+            "termino": "Término exacto, variable o función",
+            "explicacion": "Explicación detallada de para qué sirve y cómo se comporta.",
+            "ejemplo": "Ejemplo de código de uso específico de este término/variable/función adaptado al nivel (Novato: 8-12 líneas; Experto: +20 líneas). Usa \\n."
+          }
+        ],
+        "buenas_practicas": [
+          "Instrucción de codificación específica y accionable."
+        ],
+        "retos_experto": [
+          "Un requerimiento o extensión específica basada en los ejemplos."
+        ]
+      }
     `;
 
     const userPrompt = `Genera la guía conceptual avanzada y la tarea detallada para el Tema ${temaIndice}: "${temaActual}" en la tecnología ${tecnologia} adaptado al nivel de dificultad: "${nivelReal}".`;
@@ -562,7 +603,7 @@ router.post('/api/regenerar-tarea', async (req, res) => {
                 alignment: docx.AlignmentType.RIGHT,
                 children: [
                   new docx.TextRun({
-                    text: `IA-PROFESOR  |  PLAN DE ESTUDIO REGENERADO  |  ${tecnologia.toUpperCase()}`,
+                    text: `PRAGMA AI  |  PLAN DE ESTUDIO REGENERADO  |  ${tecnologia.toUpperCase()}`,
                     size: 16,
                     color: "94A3B8",
                     font: "Segoe UI"
@@ -620,9 +661,10 @@ router.post('/api/regenerar-tarea', async (req, res) => {
             ],
             spacing: { after: 400 }
           }),
+          // 1. INTRODUCCIÓN CORTA Y TÉRMINOS A OCUPAR
           new docx.Paragraph({
             children: [
-              new docx.TextRun({ text: "1. INTRODUCCIÓN ACADÉMICA Y TRASFONDO", bold: true, size: 24, color: "4F46E5", font: "Segoe UI" })
+              new docx.TextRun({ text: "1. INTRODUCCIÓN CORTA Y TÉRMINOS A OCUPAR", bold: true, size: 24, color: "4F46E5", font: "Segoe UI" })
             ],
             spacing: { before: 200, after: 150 }
           }),
@@ -633,22 +675,10 @@ router.post('/api/regenerar-tarea', async (req, res) => {
               alignment: docx.AlignmentType.JUSTIFY
             })
           ),
+          // 2. CASOS DE USO EN PRODUCCIÓN
           new docx.Paragraph({
             children: [
-              new docx.TextRun({ text: "2. FUNCIONAMIENTO INTERNO", bold: true, size: 24, color: "4F46E5", font: "Segoe UI" })
-            ],
-            spacing: { before: 200, after: 150 }
-          }),
-          ...(data.funcionamiento_interno || "").split('\n').map(line => 
-            new docx.Paragraph({
-              children: [new docx.TextRun({ text: line.trim(), size: 20, font: "Segoe UI", color: "334155" })],
-              spacing: { after: 150 },
-              alignment: docx.AlignmentType.JUSTIFY
-            })
-          ),
-          new docx.Paragraph({
-            children: [
-              new docx.TextRun({ text: "3. CASOS DE ESTUDIO EN PRODUCCIÓN", bold: true, size: 24, color: "4F46E5", font: "Segoe UI" })
+              new docx.TextRun({ text: "2. CASOS DE USO EN PRODUCCIÓN", bold: true, size: 24, color: "4F46E5", font: "Segoe UI" })
             ],
             spacing: { before: 200, after: 150 }
           }),
@@ -659,61 +689,10 @@ router.post('/api/regenerar-tarea', async (req, res) => {
               alignment: docx.AlignmentType.JUSTIFY
             })
           ),
+          // 3. EJEMPLOS ESPECÍFICOS DE CADA TÉRMINO, VARIABLE O FUNCIÓN
           new docx.Paragraph({
             children: [
-              new docx.TextRun({ text: "4. CONFIGURACIÓN E INICIALIZACIÓN DEL ENTORNO", bold: true, size: 24, color: "4F46E5", font: "Segoe UI" })
-            ],
-            spacing: { before: 200, after: 150 }
-          }),
-          new docx.Table({
-            width: { size: 100, type: docx.WidthType.PERCENTAGE },
-            rows: [
-              new docx.TableRow({
-                children: [
-                  new docx.TableCell({
-                    children: (data.inicializacion_proyecto || "").split('\n').map(line =>
-                      new docx.Paragraph({
-                        children: [new docx.TextRun({ text: line.trim(), size: 20, font: "Segoe UI", color: "1E293B" })],
-                        spacing: { before: 60, after: 60 }
-                      })
-                    ),
-                    shading: { fill: "F8FAFC" },
-                    borders: { left: { style: docx.BorderStyle.SINGLE, size: 24, color: "64748B" } },
-                    margins: { top: 120, bottom: 120, left: 200, right: 200 }
-                  })
-                ]
-              })
-            ]
-          }),
-          new docx.Paragraph({
-            children: [
-              new docx.TextRun({ text: "5. INSTRUCCIONES DE EJECUCIÓN Y PRUEBA", bold: true, size: 24, color: "4F46E5", font: "Segoe UI" })
-            ],
-            spacing: { before: 200, after: 150 }
-          }),
-          new docx.Table({
-            width: { size: 100, type: docx.WidthType.PERCENTAGE },
-            rows: [
-              new docx.TableRow({
-                children: [
-                  new docx.TableCell({
-                    children: (data.como_ejecutar || "").split('\n').map(line =>
-                      new docx.Paragraph({
-                        children: [new docx.TextRun({ text: line.trim(), size: 20, font: "Segoe UI", color: "1E293B" })],
-                        spacing: { before: 60, after: 60 }
-                      })
-                    ),
-                    shading: { fill: "F8FAFC" },
-                    borders: { left: { style: docx.BorderStyle.SINGLE, size: 24, color: "64748B" } },
-                    margins: { top: 120, bottom: 120, left: 200, right: 200 }
-                  })
-                ]
-              })
-            ]
-          }),
-          new docx.Paragraph({
-            children: [
-              new docx.TextRun({ text: "EXPLICACIÓN CONCEPTUAL AVANZADA", bold: true, size: 20, color: "4F46E5", font: "Segoe UI" })
+              new docx.TextRun({ text: "3. EJEMPLOS ESPECÍFICOS (TÉRMINOS, VARIABLES O FUNCIONES)", bold: true, size: 24, color: "4F46E5", font: "Segoe UI" })
             ],
             spacing: { before: 200, after: 200 }
           }),
@@ -769,9 +748,63 @@ router.post('/api/regenerar-tarea', async (req, res) => {
             }),
             new docx.Paragraph({ text: "", spacing: { after: 150 } })
           ]),
+          // 4. CONFIGURACIÓN DEL ENTORNO Y COMANDOS
           new docx.Paragraph({
             children: [
-              new docx.TextRun({ text: "BUENAS PRÁCTICAS DE LA INDUSTRIA", bold: true, size: 22, color: "10B981", font: "Segoe UI" })
+              new docx.TextRun({ text: "4. CONFIGURACIÓN DEL ENTORNO E INICIALIZACIÓN", bold: true, size: 24, color: "4F46E5", font: "Segoe UI" })
+            ],
+            spacing: { before: 200, after: 150 }
+          }),
+          new docx.Table({
+            width: { size: 100, type: docx.WidthType.PERCENTAGE },
+            rows: [
+              new docx.TableRow({
+                children: [
+                  new docx.TableCell({
+                    children: (data.inicializacion_proyecto || "").split('\n').map(line =>
+                      new docx.Paragraph({
+                        children: [new docx.TextRun({ text: line.trim(), size: 20, font: "Segoe UI", color: "1E293B" })],
+                        spacing: { before: 60, after: 60 }
+                      })
+                    ),
+                    shading: { fill: "F8FAFC" },
+                    borders: { left: { style: docx.BorderStyle.SINGLE, size: 24, color: "64748B" } },
+                    margins: { top: 120, bottom: 120, left: 200, right: 200 }
+                  })
+                ]
+              })
+            ]
+          }),
+          new docx.Paragraph({
+            children: [
+              new docx.TextRun({ text: "5. INSTRUCCIONES DE EJECUCIÓN Y PRUEBA", bold: true, size: 24, color: "4F46E5", font: "Segoe UI" })
+            ],
+            spacing: { before: 200, after: 150 }
+          }),
+          new docx.Table({
+            width: { size: 100, type: docx.WidthType.PERCENTAGE },
+            rows: [
+              new docx.TableRow({
+                children: [
+                  new docx.TableCell({
+                    children: (data.como_ejecutar || "").split('\n').map(line =>
+                      new docx.Paragraph({
+                        children: [new docx.TextRun({ text: line.trim(), size: 20, font: "Segoe UI", color: "1E293B" })],
+                        spacing: { before: 60, after: 60 }
+                      })
+                    ),
+                    shading: { fill: "F8FAFC" },
+                    borders: { left: { style: docx.BorderStyle.SINGLE, size: 24, color: "64748B" } },
+                    margins: { top: 120, bottom: 120, left: 200, right: 200 }
+                  })
+                ]
+              })
+            ]
+          }),
+          // 6. BUENAS PRÁCTICAS
+          new docx.Paragraph({
+            children: [
+              new docx.TextRun({ text: "6. BUENAS PRÁCTICAS DE LA INDUSTRIA", bold: true, size: 22, color: "10B981", font: "Segoe UI" })
             ],
             spacing: { before: 200, after: 150 }
           }),
@@ -798,9 +831,10 @@ router.post('/api/regenerar-tarea', async (req, res) => {
               })
             ]
           }),
+          // 7. TAREA DESGLOSADA PASO A PASO
           new docx.Paragraph({
             children: [
-              new docx.TextRun({ text: "EJERCICIO DE GRADO DE PRODUCCIÓN", bold: true, size: 24, color: "DC2626", font: "Segoe UI" })
+              new docx.TextRun({ text: "7. TAREA PRÁCTICA DESGLOSADA PASO A PASO", bold: true, size: 24, color: "DC2626", font: "Segoe UI" })
             ],
             spacing: { before: 200, after: 150 }
           }),
@@ -812,7 +846,7 @@ router.post('/api/regenerar-tarea', async (req, res) => {
                   new docx.TableCell({
                     children: [
                       new docx.Paragraph({
-                        children: [new docx.TextRun({ text: "REQUISITOS FUNCIONALES DEL RETO:", bold: true, size: 18, color: "991B1B", font: "Segoe UI" })],
+                        children: [new docx.TextRun({ text: "PASOS REQUERIDOS PARA COMPLETAR EL RETO:", bold: true, size: 18, color: "991B1B", font: "Segoe UI" })],
                         spacing: { after: 100 }
                       }),
                       ...(data.descripcion || "").split('\n').map(line => 
@@ -832,7 +866,7 @@ router.post('/api/regenerar-tarea', async (req, res) => {
           }),
           new docx.Paragraph({
             children: [
-              new docx.TextRun({ text: "DESAFÍOS ADICIONALES (RETOS EXPERTO)", bold: true, size: 22, color: "7C3AED", font: "Segoe UI" })
+              new docx.TextRun({ text: "RETOS ADICIONALES (OPCIONALES)", bold: true, size: 22, color: "7C3AED", font: "Segoe UI" })
             ],
             spacing: { before: 200, after: 150 }
           }),

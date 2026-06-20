@@ -126,39 +126,7 @@ app.get('/descargas/:filename', async (req, res, next) => {
           }),
           new docx.Paragraph({
             children: [
-              new docx.TextRun({ text: "EJERCICIO DE GRADO DE PRODUCCIÓN", bold: true, size: 24, color: "DC2626", font: "Segoe UI" })
-            ],
-            spacing: { before: 200, after: 150 }
-          }),
-          new docx.Table({
-            width: { size: 100, type: docx.WidthType.PERCENTAGE },
-            rows: [
-              new docx.TableRow({
-                children: [
-                  new docx.TableCell({
-                    children: [
-                      new docx.Paragraph({
-                        children: [new docx.TextRun({ text: "REQUISITOS FUNCIONALES DEL RETO:", bold: true, size: 18, color: "991B1B", font: "Segoe UI" })],
-                        spacing: { after: 100 }
-                      }),
-                      ...(tarea.descripcion || "").split('\n').map(line => 
-                        new docx.Paragraph({
-                          children: [new docx.TextRun({ text: line.trim(), size: 20, font: "Segoe UI", color: "7F1D1D" })],
-                          spacing: { after: 60 }
-                        })
-                      )
-                    ],
-                    shading: { fill: "FEF2F2" },
-                    borders: { left: { style: docx.BorderStyle.SINGLE, size: 24, color: "DC2626" } },
-                    margins: { top: 150, bottom: 150, left: 200, right: 200 }
-                  })
-                ]
-              })
-            ]
-          }),
-          new docx.Paragraph({
-            children: [
-              new docx.TextRun({ text: "EXPLICACIÓN CONCEPTUAL ASOCIADA", bold: true, size: 20, color: "4F46E5", font: "Segoe UI" })
+              new docx.TextRun({ text: "1. EJEMPLOS ESPECÍFICOS (TÉRMINOS, VARIABLES O FUNCIONES)", bold: true, size: 24, color: "4F46E5", font: "Segoe UI" })
             ],
             spacing: { before: 200, after: 200 }
           }),
@@ -213,7 +181,39 @@ app.get('/descargas/:filename', async (req, res, next) => {
               ]
             }),
             new docx.Paragraph({ text: "", spacing: { after: 150 } })
-          ])
+          ]),
+          new docx.Paragraph({
+            children: [
+              new docx.TextRun({ text: "2. TAREA PRÁCTICA DESGLOSADA PASO A PASO", bold: true, size: 24, color: "DC2626", font: "Segoe UI" })
+            ],
+            spacing: { before: 200, after: 150 }
+          }),
+          new docx.Table({
+            width: { size: 100, type: docx.WidthType.PERCENTAGE },
+            rows: [
+              new docx.TableRow({
+                children: [
+                  new docx.TableCell({
+                    children: [
+                      new docx.Paragraph({
+                        children: [new docx.TextRun({ text: "PASOS REQUERIDOS PARA COMPLETAR EL RETO:", bold: true, size: 18, color: "991B1B", font: "Segoe UI" })],
+                        spacing: { after: 100 }
+                      }),
+                      ...(tarea.descripcion || "").split('\n').map(line => 
+                        new docx.Paragraph({
+                          children: [new docx.TextRun({ text: line.trim(), size: 20, font: "Segoe UI", color: "7F1D1D" })],
+                          spacing: { after: 60 }
+                        })
+                      )
+                    ],
+                    shading: { fill: "FEF2F2" },
+                    borders: { left: { style: docx.BorderStyle.SINGLE, size: 24, color: "DC2626" } },
+                    margins: { top: 150, bottom: 150, left: 200, right: 200 }
+                  })
+                ]
+              })
+            ]
+          })
         ]
       }]
     });

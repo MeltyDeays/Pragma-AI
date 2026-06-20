@@ -248,6 +248,22 @@ const client = {
         return { rows };
       }
 
+      // --- 10b. SELECT logro_id FROM profesor_logros WHERE estudiante_id = $1 AND logro_id = ANY($2) ---
+      if (queryClean.match(/SELECT logro_id FROM profesor_logros WHERE estudiante_id = \$1 AND logro_id = ANY\(\$2\)/i)) {
+        const estudiante_id = params[0];
+        const logrosArray = params[1] || [];
+        if (logrosArray.length === 0) return { rows: [] };
+        const q = query(
+          collection(firestoreDb, 'profesor_logros'),
+          where('estudiante_id', '==', estudiante_id),
+          where('logro_id', 'in', logrosArray)
+        );
+        const querySnapshot = await getDocs(q);
+        const rows = [];
+        querySnapshot.forEach(doc => rows.push({ logro_id: doc.data().logro_id }));
+        return { rows };
+      }
+
       // --- 11. SELECT id FROM profesor_logros WHERE estudiante_id = $1 AND logro_id = $2 ---
       if (queryClean.match(/SELECT id FROM profesor_logros WHERE estudiante_id = \$1 AND logro_id = \$2/i)) {
         const estudiante_id = params[0];
