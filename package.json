@@ -11,18 +11,19 @@
     "preview": "vite preview"
   },
   "dependencies": {
+    "compression": "^1.8.1",
     "cors": "^2.8.6",
     "docx": "^9.7.1",
     "dotenv": "^17.4.2",
     "express": "^5.2.1",
-    "firebase": "^12.14.0",
+    "firebase": "^12.15.0",
     "groq-sdk": "^1.2.1",
+    "jspdf": "^4.2.1",
     "lucide-react": "^1.17.0",
     "pg": "^8.21.0",
     "react": "^19.2.6",
     "react-dom": "^19.2.6",
-    "rtk": "^4.2.0",
-    "sqlite3": "^6.0.1"
+    "rtk": "^4.2.0"
   },
   "devDependencies": {
     "@eslint/js": "^10.0.1",
