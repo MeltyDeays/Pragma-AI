@@ -812,6 +812,14 @@ function App() {
   const nuevasSolicitudes = solicitudesPendientes.filter(req => !solicitudesVistas.includes(req.id));
   const nuevasSolicitudesCount = nuevasSolicitudes.length;
 
+  const desafiarAmigo1vs1 = (amigo) => {
+    setRetarAmigoActivo(amigo);
+    setTipoMatchDuelo('1v1');
+    setModosDueloSeleccionados(['trivia']);
+    setLenguajeDuelo(estudiante?.tecnologia_actual || 'JavaScript');
+    setNivelDuelo('Novato');
+  };
+
   const abrirSocialModal = () => {
     setMostrarSocialDropdown(true);
     if (solicitudesPendientes.length > 0) {
@@ -1747,7 +1755,7 @@ function App() {
                                     <button 
                                       key={idx}
                                       onClick={() => {
-                                        if (opcion === juegoData.respuesta_correcta) {
+                                        if (idx === juegoData.respuesta_correcta) {
                                           reproducirSonido('exito');
                                           setJuegoResultado('correcto');
                                           completarReto('output');

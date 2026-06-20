@@ -47,7 +47,7 @@ router.get('/api/gamificacion/refactor', async (req,res)=>{
     const ck=`refactor:${b.tecnologia}:${b.nivel}`;
     const ci=getCachedGameItem(ck); if(ci) return res.json(ci);
     const np=obtenerNivelParaReto(b.nivel);
-    const sp=`Genera reto de depuración (Bug Hunter) en ${b.tecnologia} para "${np}". Errores frecuentes: ${JSON.stringify(b.perfil.errores_frecuentes||[])}. EXCLUSIVAMENTE ${b.tecnologia}. JSON: {"descripcion":"...","codigo_con_bug":"...","opciones_correcion":["...","...","..."],"respuesta_correcta":1,"explicacion":"..."}`;
+    const sp=`Genera reto de depuración (Bug Hunter) en ${b.tecnologia} para "${np}". Errores frecuentes: ${JSON.stringify(b.perfil.errores_frecuentes||[])}. EXCLUSIVAMENTE ${b.tecnologia}. JSON: {"descripcion":"...","codigo_con_bug":"...","opciones":["...","...","..."],"opcion_correcta":1,"explicacion":"..."}`;
     const cc=await ejecutarGroqConReintentos([{role:'system',content:sp}],'llama-3.3-70b-versatile',{type:'json_object'});
     const d=parsearJSONGroq(cc.choices[0].message.content);
     addCachedGameItem(ck,d); res.json(d);
