@@ -3,22 +3,21 @@ FROM node:20-slim
 # Instalar git necesario para clonar repositorios de estudiantes
 RUN apt-get update && apt-get install -y git && rm -rf /var/lib/apt/lists/*
 
-# Crear usuario sin privilegios de root (requerido por Hugging Face Spaces)
-RUN useradd -m -u 1000 user
-USER user
-ENV HOME=/home/user \
-    PATH=/home/user/.local/bin:$PATH
+# Usar el usuario 'node' (que ya tiene UID 1000) provisto por la imagen oficial
+USER node
+ENV HOME=/home/node \
+    PATH=/home/node/.local/bin:$PATH
 
 WORKDIR $HOME/app
 
 # Copiar archivos de dependencias
-COPY --chown=user package*.json ./
+COPY --chown=node package*.json ./
 
 # Instalar dependencias para producción
-RUN npm ci --only=production
+RUN npm ci --omit=dev
 
 # Copiar los archivos del proyecto al contenedor
-COPY --chown=user . .
+COPY --chown=node . .
 
 # Exponer el puerto 7860 (Hugging Face redirecciona el tráfico aquí)
 EXPOSE 7860
