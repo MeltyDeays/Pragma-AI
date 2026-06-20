@@ -58,3 +58,20 @@ CREATE POLICY "Permitir todo progreso" ON public.profesor_estudiante_progreso FO
 CREATE POLICY "Permitir todo tareas" ON public.profesor_tareas FOR ALL USING (true) WITH CHECK (true);
 CREATE POLICY "Permitir todo entregas" ON public.profesor_entregas FOR ALL USING (true) WITH CHECK (true);
 
+-- 7. Crear tabla de logros
+CREATE TABLE IF NOT EXISTS public.profesor_logros (
+    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    estudiante_id UUID REFERENCES public.profesor_estudiantes(id) ON DELETE CASCADE,
+    logro_id VARCHAR(100) NOT NULL,
+    desbloqueado_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
+    UNIQUE(estudiante_id, logro_id)
+);
+ALTER TABLE public.profesor_logros ENABLE ROW LEVEL SECURITY;
+CREATE POLICY "Permitir todo logros" ON public.profesor_logros FOR ALL USING (true) WITH CHECK (true);
+
+-- 8. Índices para acelerar consultas críticas y evitar Table Scans
+CREATE INDEX IF NOT EXISTS idx_profesor_tareas_estudiante ON public.profesor_tareas(estudiante_id);
+CREATE INDEX IF NOT EXISTS idx_profesor_entregas_tarea ON public.profesor_entregas(tarea_id);
+CREATE INDEX IF NOT EXISTS idx_profesor_estudiante_progreso_estudiante ON public.profesor_estudiante_progreso(estudiante_id);
+CREATE INDEX IF NOT EXISTS idx_profesor_logros_estudiante ON public.profesor_logros(estudiante_id);
+
