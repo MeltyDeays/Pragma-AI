@@ -6951,4 +6951,204 @@ button, input, textarea, select {
   }
 }
 
+/* ==========================================================================
+   MODAL DE COMBATE HOLOGRÁFICO PREMIUM (CYBERPUNK HUD)
+   ========================================================================== */
+.hologram-modal-card {
+  width: 100%;
+  max-width: 480px;
+  background: rgba(3, 8, 20, 0.95) !important;
+  border: 1px solid rgba(0, 255, 204, 0.35) !important;
+  box-shadow: 0 0 35px rgba(0, 255, 204, 0.25), inset 0 0 20px rgba(0, 255, 204, 0.05) !important;
+  border-radius: 12px;
+  overflow: hidden;
+  position: relative;
+}
+
+.hologram-modal-card::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 3px;
+  background: linear-gradient(90deg, #00ffcc, #00ccff, #ff0055);
+  z-index: 10;
+}
+
+.target-banner {
+  background: linear-gradient(90deg, rgba(0, 255, 204, 0.03), rgba(0, 255, 204, 0.1), rgba(0, 255, 204, 0.03)) !important;
+  border: 1px dashed rgba(0, 255, 204, 0.25) !important;
+  border-radius: 8px;
+  padding: 10px 14px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 8px;
+}
+
+.target-status-glow {
+  font-size: 0.62rem;
+  letter-spacing: 1.5px;
+  color: rgba(0, 255, 204, 0.75);
+  font-family: monospace;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.target-status-dot {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background-color: #00ffcc;
+  box-shadow: 0 0 8px #00ffcc;
+  animation: target-pulse 1s infinite alternate;
+}
+
+@keyframes target-pulse {
+  0% { transform: scale(0.8); opacity: 0.5; }
+  100% { transform: scale(1.2); opacity: 1; }
+}
+
+.cyber-grid-tiles {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 8px;
+}
+
+.cyber-tile-btn {
+  background: rgba(5, 12, 28, 0.8) !important;
+  border: 1px solid rgba(255, 255, 255, 0.06) !important;
+  color: #94a3b8 !important;
+  padding: 10px;
+  border-radius: 8px;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+  font-family: monospace;
+  font-size: 0.72rem;
+  text-transform: uppercase;
+  font-weight: 600;
+}
+
+.cyber-tile-btn:hover:not(:disabled) {
+  border-color: rgba(0, 255, 204, 0.4) !important;
+  color: #ffffff !important;
+  background: rgba(0, 255, 204, 0.04) !important;
+  transform: translateY(-1px);
+}
+
+.cyber-tile-btn.active {
+  border-color: #00ffcc !important;
+  color: #00ffcc !important;
+  background: rgba(0, 255, 204, 0.1) !important;
+  box-shadow: 0 0 12px rgba(0, 255, 204, 0.2), inset 0 0 6px rgba(0, 255, 204, 0.1);
+}
+
+.cyber-tile-btn:disabled {
+  opacity: 0.25;
+  cursor: not-allowed;
+}
+
+.cyber-checkbox-list {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 8px;
+  max-height: 180px;
+  overflow-y: auto;
+  padding-right: 4px;
+}
+
+.cyber-checkbox-card {
+  background: rgba(5, 12, 28, 0.7) !important;
+  border: 1px solid rgba(255, 255, 255, 0.05) !important;
+  border-radius: 8px;
+  padding: 10px 12px;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  cursor: pointer;
+  user-select: none;
+  transition: all 0.2s ease;
+}
+
+.cyber-checkbox-card:hover {
+  background: rgba(255, 255, 255, 0.02) !important;
+  border-color: rgba(255, 255, 255, 0.1) !important;
+}
+
+.cyber-checkbox-card.selected {
+  background: rgba(0, 255, 204, 0.04) !important;
+  border-color: rgba(0, 255, 204, 0.3) !important;
+}
+
+.cyber-checkbox-indicator {
+  width: 14px;
+  height: 14px;
+  border: 1.5px solid #475569;
+  border-radius: 3px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.2s ease;
+}
+
+.cyber-checkbox-card.selected .cyber-checkbox-indicator {
+  border-color: #00ffcc;
+  background: #00ffcc;
+  box-shadow: 0 0 8px rgba(0, 255, 204, 0.4);
+}
+
+.cyber-checkbox-indicator svg {
+  color: #020617;
+}
+
+.cyber-checkbox-label {
+  font-size: 0.68rem;
+  font-family: monospace;
+  color: #94a3b8;
+  line-height: 1.2;
+}
+
+.cyber-checkbox-card.selected .cyber-checkbox-label {
+  color: #e2e8f0;
+  font-weight: 600;
+}
+
+.hud-btn-primary-neon {
+  background: #00ffcc !important;
+  color: #020617 !important;
+  border: 1px solid #00ffcc !important;
+  box-shadow: 0 0 15px rgba(0, 255, 204, 0.35) !important;
+  transition: all 0.2s ease;
+  font-weight: 800 !important;
+  letter-spacing: 0.1em;
+}
+
+.hud-btn-primary-neon:hover {
+  background: #00ccff !important;
+  border-color: #00ccff !important;
+  box-shadow: 0 0 20px rgba(0, 204, 255, 0.5) !important;
+  transform: translateY(-1px);
+}
+
+.hud-btn-secondary-cyber {
+  background: rgba(15, 23, 42, 0.6) !important;
+  border: 1px solid rgba(255, 255, 255, 0.1) !important;
+  color: #94a3b8 !important;
+  transition: all 0.2s ease;
+  font-weight: 600 !important;
+}
+
+.hud-btn-secondary-cyber:hover {
+  border-color: #f43f5e !important;
+  color: #f43f5e !important;
+  background: rgba(244, 63, 94, 0.05) !important;
+}
+
+
 

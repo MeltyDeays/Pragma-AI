@@ -1120,29 +1120,36 @@ function App() {
               {/* Modal de Configuración de Duelo */}
               {retarAmigoActivo && (
                 <div className="social-modal-overlay animate-fade-in" style={{ zIndex: 400 }}>
-                   <div className="social-modal-card max-w-[450px]">
+                   <div className="hologram-modal-card">
                     <div className="social-modal-header" style={{ borderBottomColor: 'rgba(0, 255, 204, 0.4)' }}>
                       <div className="flex items-center gap-2">
                         <Swords size={18} className="text-[#00ffcc] animate-pulse" />
-                        <span>CONFIGURACIÓN DE COMBATE HOLOGRÁFICO</span>
+                        <span className="tracking-wider">CONFIGURACIÓN DE COMBATE HOLOGRÁFICO</span>
                       </div>
                       <button className="close-modal-btn" onClick={() => setRetarAmigoActivo(null)}>
                         <X size={18} />
                       </button>
                     </div>
                     <div className="p-4 flex flex-col gap-4 font-mono text-xs text-slate-100">
-                      <div className="bg-slate-950/80 border border-slate-800 p-2.5 rounded text-center">
-                        <span className="text-slate-400">COMBATIENTE OBJETIVO: </span>
-                        <span className="text-[#00ffcc] font-bold">{retarAmigoActivo.nombre}</span>
+                      
+                      <div className="target-banner">
+                        <div className="target-status-glow">
+                          <span className="target-status-dot"></span>
+                          TARGET ACQUIRED
+                        </div>
+                        <div className="font-mono text-xs">
+                          <span className="text-slate-400 font-bold">OPERADOR: </span>
+                          <span className="text-[#00ffcc] font-extrabold text-sm">{retarAmigoActivo.nombre}</span>
+                        </div>
                       </div>
 
-                      <div className="flex flex-col gap-2">
-                        <label className="text-[#00ffcc] font-bold text-[10px] uppercase tracking-wider">TECNOLOGÍA DEL DESAFÍO</label>
+                      <div className="flex flex-col gap-1.5">
+                        <label className="text-[#00ffcc] font-bold text-[9px] uppercase tracking-widest font-mono">TECNOLOGÍA DEL DESAFÍO</label>
                         <select
                           value={lenguajeDuelo}
                           onChange={(e) => setLenguajeDuelo(e.target.value)}
-                          className="select-tech-header w-full p-2 rounded bg-slate-950 border border-slate-800 text-white focus:border-[#00ffcc] outline-none"
-                          style={{ height: '35px', padding: '0 10px' }}
+                          className="select-tech-header w-full p-2.5 rounded bg-slate-950/80 border border-slate-800 text-[#00ffcc] focus:border-[#00ffcc] outline-none font-mono text-xs"
+                          style={{ height: '38px', padding: '0 12px' }}
                         >
                           <option value="JavaScript">JavaScript</option>
                           <option value="Python">Python</option>
@@ -1161,9 +1168,9 @@ function App() {
                         const idxMaximo = JERARQUIA_NIVELES.indexOf(estudiante?.nivel_actual || 'Novato');
                         const nivelesPermitidos = JERARQUIA_NIVELES.slice(0, idxMaximo !== -1 ? idxMaximo + 1 : 1);
                         return (
-                          <div className="flex flex-col gap-2">
-                            <label className="text-[#00ffcc] font-bold text-[10px] uppercase tracking-wider font-mono">DIFICULTAD (MÁXIMO: {estudiante?.nivel_actual})</label>
-                            <div className="grid grid-cols-2 gap-2">
+                          <div className="flex flex-col gap-1.5">
+                            <label className="text-[#00ffcc] font-bold text-[9px] uppercase tracking-widest font-mono">DIFICULTAD (MÁXIMO: {estudiante?.nivel_actual || 'Novato'})</label>
+                            <div className="cyber-grid-tiles">
                               {JERARQUIA_NIVELES.map((nivel) => {
                                 const permitido = nivelesPermitidos.includes(nivel);
                                 return (
@@ -1172,13 +1179,7 @@ function App() {
                                     type="button"
                                     disabled={!permitido}
                                     onClick={() => setNivelDuelo(nivel)}
-                                    className={`p-2 rounded border text-center transition text-[10px] font-mono uppercase ${
-                                      !permitido 
-                                        ? 'opacity-30 cursor-not-allowed bg-slate-950 border-slate-900 text-slate-600'
-                                        : nivelDuelo === nivel
-                                        ? 'bg-amber-500/15 border-amber-500 text-amber-500 font-bold'
-                                        : 'bg-slate-900 border-slate-800 text-slate-400 hover:border-slate-700'
-                                    }`}
+                                    className={`cyber-tile-btn ${nivelDuelo === nivel ? 'active' : ''}`}
                                   >
                                     {nivel}
                                   </button>
@@ -1189,9 +1190,9 @@ function App() {
                         );
                       })()}
 
-                      <div className="flex flex-col gap-2">
-                        <label className="text-[#00ffcc] font-bold text-[10px] uppercase tracking-wider">TAMAÑO DEL ENCUENTRO</label>
-                        <div className="grid grid-cols-2 gap-2">
+                      <div className="flex flex-col gap-1.5">
+                        <label className="text-[#00ffcc] font-bold text-[9px] uppercase tracking-widest font-mono">TAMAÑO DEL ENCUENTRO</label>
+                        <div className="cyber-grid-tiles">
                           {[
                             { id: '1v1', label: '1vs1 (Duelo)' },
                             { id: '2v2', label: '2vs2 (Dúo)' },
@@ -1202,11 +1203,7 @@ function App() {
                               key={t.id}
                               type="button"
                               onClick={() => setTipoMatchDuelo(t.id)}
-                              className={`p-2 rounded border text-center transition text-[10px] ${
-                                tipoMatchDuelo === t.id
-                                  ? 'bg-[#00ffcc]/15 border-[#00ffcc] text-[#00ffcc] font-bold'
-                                  : 'bg-slate-900 border-slate-800 text-slate-400 hover:border-slate-700'
-                              }`}
+                              className={`cyber-tile-btn ${tipoMatchDuelo === t.id ? 'active' : ''}`}
                             >
                               {t.label}
                             </button>
@@ -1214,14 +1211,14 @@ function App() {
                         </div>
                       </div>
 
-                      <div className="flex flex-col gap-2">
-                        <label className="text-[#00ffcc] font-bold text-[10px] uppercase tracking-wider">MINIJUEGOS INCLUIDOS</label>
-                        <div className="flex flex-col gap-2 bg-slate-950/40 p-2.5 rounded border border-slate-900 max-h-[160px] overflow-y-auto pr-1">
+                      <div className="flex flex-col gap-1.5">
+                        <label className="text-[#00ffcc] font-bold text-[9px] uppercase tracking-widest font-mono">ARENAS DE COMBATE</label>
+                        <div className="cyber-checkbox-list">
                           {[
                             { id: 'trivia', label: 'Preguntas Técnicas (Trivia)' },
                             { id: 'refactor', label: 'Bug Hunter (Refactor)' },
                             { id: 'sorter', label: 'Code Sorter (Ordenar líneas)' },
-                            { id: 'fill-blank', label: 'Fill the Code (Completar espacios)' },
+                            { id: 'fill-blank', label: 'Fill the Code (Completar)' },
                             { id: 'output', label: 'Output Predictor (Predicción)' },
                             { id: 'flashcard', label: 'Flashcards de Conceptos' },
                             { id: 'typer', label: 'Code Typer Speed (Tipeo)' },
@@ -1229,38 +1226,39 @@ function App() {
                           ].map((modo) => {
                             const seleccionado = modosDueloSeleccionados.includes(modo.id);
                             return (
-                              <label key={modo.id} className="flex items-center gap-2 cursor-pointer p-1 hover:bg-slate-900/60 rounded transition">
-                                <input
-                                  type="checkbox"
-                                  checked={seleccionado}
-                                  onChange={() => {
-                                    if (seleccionado) {
-                                      if (modosDueloSeleccionados.length > 1) {
-                                        setModosDueloSeleccionados(prev => prev.filter(m => m !== modo.id));
-                                      }
-                                    } else {
-                                      setModosDueloSeleccionados(prev => [...prev, modo.id]);
+                              <div
+                                key={modo.id}
+                                onClick={() => {
+                                  if (seleccionado) {
+                                    if (modosDueloSeleccionados.length > 1) {
+                                      setModosDueloSeleccionados(prev => prev.filter(m => m !== modo.id));
                                     }
-                                  }}
-                                  className="accent-[#00ffcc]"
-                                />
-                                <span className={seleccionado ? 'text-[#00ffcc] font-semibold' : 'text-slate-400'}>{modo.label}</span>
-                              </label>
+                                  } else {
+                                    setModosDueloSeleccionados(prev => [...prev, modo.id]);
+                                  }
+                                }}
+                                className={`cyber-checkbox-card ${seleccionado ? 'selected' : ''}`}
+                              >
+                                <div className="cyber-checkbox-indicator">
+                                  {seleccionado && <Check size={10} strokeWidth={4} />}
+                                </div>
+                                <span className="cyber-checkbox-label">{modo.label}</span>
+                              </div>
                             );
                           })}
                         </div>
                       </div>
 
-                      <div className="flex gap-2 mt-2">
+                      <div className="flex gap-3 mt-3">
                         <button
                           onClick={enviarInvitacionDuelo}
-                          className="hud-btn flex-1 py-2 text-[10px] font-bold uppercase tracking-widest flex items-center justify-center gap-1.5"
+                          className="hud-btn hud-btn-primary-neon flex-1 py-3 text-[10px] font-bold uppercase tracking-widest flex items-center justify-center gap-1.5 rounded-lg"
                         >
-                          <Swords size={12} /> ENVIAR DESAFÍO
+                          <Swords size={13} /> ENVIAR DESAFÍO
                         </button>
                         <button
                           onClick={() => setRetarAmigoActivo(null)}
-                          className="bg-slate-900 hover:bg-slate-800 border border-slate-800 text-slate-300 px-3 py-2 rounded text-[10px] transition uppercase font-semibold"
+                          className="hud-btn hud-btn-secondary-cyber px-5 py-3 rounded-lg text-[10px] uppercase font-semibold transition"
                         >
                           Abortar
                         </button>
