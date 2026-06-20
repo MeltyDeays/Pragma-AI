@@ -14,7 +14,7 @@ WORKDIR $HOME/app
 COPY --chown=node package*.json ./
 
 # Instalar dependencias para producción
-RUN npm ci --omit=dev
+RUN npm install --omit=dev
 
 # Copiar los archivos del proyecto al contenedor
 COPY --chown=node . .
