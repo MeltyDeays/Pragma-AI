@@ -286,6 +286,7 @@
   font-size: 1.15rem;
   background: linear-gradient(135deg, #ffffff 0%, #a855f7 100%);
   -webkit-background-clip: text;
+  background-clip: text;
   -webkit-text-fill-color: transparent;
   border-left: 4px solid var(--color-primary);
   padding-left: 0.75rem;
@@ -301,6 +302,7 @@
   font-size: 0.98rem;
   background: linear-gradient(135deg, #c084fc 0%, #818cf8 100%);
   -webkit-background-clip: text;
+  background-clip: text;
   -webkit-text-fill-color: transparent;
   margin-top: 1.75rem;
   margin-bottom: 0.85rem;
@@ -1291,3 +1293,77 @@
   from { opacity: 0; transform: translateY(-8px); }
   to { opacity: 1; transform: translateY(0); }
 }
+
+/* ==========================================================================
+   RESPONSIVIDAD MÓVIL PARA EL WORKSPACE DEL MENTOR
+   ========================================================================== */
+@media (max-width: 768px) {
+  .mentor-workspace {
+    grid-template-columns: 1fr !important;
+    height: auto !important;
+    max-height: none !important;
+    border-radius: 12px !important;
+    overflow: visible !important;
+  }
+  
+  .mentor-sidebar {
+    border-right: none !important;
+    border-bottom: 1px solid var(--border-light) !important;
+    max-height: 220px !important;
+    height: auto !important;
+  }
+  
+  .mentor-project-workspace {
+    grid-template-columns: 1fr !important;
+    height: auto !important;
+    overflow: visible !important;
+  }
+
+  .mentor-plan-column, .mentor-chat-column {
+    border-right: none !important;
+    height: auto !important;
+    overflow: visible !important;
+  }
+  
+  .plan-column-header {
+    flex-direction: column !important;
+    align-items: flex-start !important;
+    gap: 10px !important;
+  }
+
+  .plan-column-header h2 {
+    max-width: 100% !important;
+    white-space: normal !important;
+  }
+  
+  .mentor-plan-body {
+    padding: 1rem !important;
+  }
+  
+  .markdown-content-mentor h2 {
+    font-size: 1.05rem !important;
+    margin-top: 1.5rem !important;
+  }
+  
+  .markdown-content-mentor h3 {
+    font-size: 0.95rem !important;
+  }
+  
+  .mentor-code-block {
+    font-size: 0.78rem !important;
+    padding: 1rem !important;
+    word-break: break-all !important;
+    white-space: pre-wrap !important;
+  }
+  
+  .btn-download-word-mentor, .btn-pdf-download {
+    padding: 0.4rem 0.6rem !important;
+    font-size: 0.7rem !important;
+  }
+  
+  .mentor-chat-messages {
+    max-height: 400px !important;
+    min-height: 250px !important;
+  }
+}
+

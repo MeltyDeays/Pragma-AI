@@ -1,6 +1,7 @@
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import { BookOpen, Download, RefreshCw, Send, Code, Target, Award, Check } from 'lucide-react';
 import { parsearRequisitos } from '../../core/controladores/markdown';
+import { descargarDocumentoPDF } from '../../core/controladores/pdfGenerator';
 
 export default function DashboardRuta({
   indiceTemaActual,
@@ -26,6 +27,27 @@ export default function DashboardRuta({
   setMostrarTodoTemario,
   estudiante
 }) {
+  const [esMovil, setEsMovil] = useState(false);
+
+  useEffect(() => {
+    const checkMovil = () => {
+      setEsMovil(window.innerWidth < 768 || /Mobi|Android|iPhone/i.test(navigator.userAgent));
+    };
+    checkMovil();
+    window.addEventListener('resize', checkMovil);
+    return () => window.removeEventListener('resize', checkMovil);
+  }, []);
+
+  const handleDescargarPDF = () => {
+    if (tareaActiva) {
+      descargarDocumentoPDF(
+        tareaActiva.titulo,
+        tareaActiva.descripcion || 'Sin descripción disponible.',
+        `Tarea - ${tareaActiva.tema || 'Tecnología'}`
+      );
+    }
+  };
+
   return (
     <div className="dashboard-grid animate-fade-in">
       {/* Panel Principal de la Tarea Activa */}
@@ -73,19 +95,49 @@ export default function DashboardRuta({
                 <BookOpen className="icon-doc" />
                 <div>
                   <h4>Guía Conceptual y Tarea</h4>
-                  <p>Descarga el documento de Word con explicaciones, retos expertos y buenas prácticas.</p>
+                  <p>{esMovil ? 'Descarga la guía en formato PDF optimizado para dispositivos móviles.' : 'Descarga el documento con explicaciones, retos expertos y buenas prácticas.'}</p>
                 </div>
               </div>
-              <div className="action-buttons-wrapper">
-                <a
-                  href={tareaActiva.word_url ? `${API_BASE}${tareaActiva.word_url}` : '#'}
-                  download
-                  className="btn-download"
-                  target="_blank"
-                  rel="noopener noreferrer"
+              <div className="action-buttons-wrapper" style={{ display: 'flex', flexWrap: 'wrap', gap: '8px' }}>
+                <button
+                  type="button"
+                  onClick={handleDescargarPDF}
+                  className="btn-download btn-pdf-download"
+                  style={{
+                    background: 'linear-gradient(135deg, #7c3aed, #4f46e5)',
+                    color: '#ffffff',
+                    border: 'none',
+                    display: 'inline-flex',
+                    alignItems: 'center',
+                    gap: '8px',
+                    cursor: 'pointer'
+                  }}
                 >
-                  <Download size={18} /> Descargar Word
-                </a>
+                  <Download size={18} /> Descargar PDF
+                </button>
+                
+                {!esMovil && tareaActiva.word_url && (
+                  <a
+                    href={`${API_BASE}${tareaActiva.word_url}`}
+                    download
+                    className="btn-download-secundario"
+                    style={{
+                      background: 'transparent',
+                      border: '1px solid var(--border-light, #334155)',
+                      color: 'var(--color-text-regular, #94a3b8)',
+                      padding: '8px 16px',
+                      borderRadius: '8px',
+                      display: 'inline-flex',
+                      alignItems: 'center',
+                      gap: '8px',
+                      textDecoration: 'none',
+                      fontSize: '14px'
+                    }}
+                  >
+                    Word (.docx)
+                  </a>
+                )}
+                
                 <button
                   onClick={handleRegenerar}
                   disabled={isRegenerating}

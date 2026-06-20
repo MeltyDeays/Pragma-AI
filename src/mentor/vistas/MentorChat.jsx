@@ -1,6 +1,7 @@
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import { Sparkles, RefreshCw, BookOpen, Download, Send } from 'lucide-react';
 import { parsearMarkdownMentor, parsearInlineMarkdown } from '../../core/controladores/markdown';
+import { descargarDocumentoPDF } from '../../core/controladores/pdfGenerator';
 
 export default function MentorChat({
   estudiante,
@@ -30,6 +31,37 @@ export default function MentorChat({
   setMensajeChatMentor,
   enviarMensajeMentor
 }) {
+  const [esMovil, setEsMovil] = useState(false);
+
+  useEffect(() => {
+    const checkMovil = () => {
+      setEsMovil(window.innerWidth < 768 || /Mobi|Android|iPhone/i.test(navigator.userAgent));
+    };
+    checkMovil();
+    window.addEventListener('resize', checkMovil);
+    return () => window.removeEventListener('resize', checkMovil);
+  }, []);
+
+  const handleDescargarPlanPDF = () => {
+    if (planActivo) {
+      descargarDocumentoPDF(
+        planActivo.titulo,
+        planActivo.plan_markdown || 'Sin contenido.',
+        'Plan de Implementación'
+      );
+    }
+  };
+
+  const handleDescargarGuiaPDF = (guia) => {
+    if (guia) {
+      descargarDocumentoPDF(
+        guia.titulo,
+        guia.documento_markdown || guia.markdown || 'Sin contenido.',
+        'Guía de Ayuda Técnica'
+      );
+    }
+  };
+
   return (
     <div className="mentor-workspace animate-fade-in">
       <div className="mentor-sidebar">
@@ -133,18 +165,33 @@ export default function MentorChat({
 
               {tabMentorColumn === 'plan' ? (
                 <>
-                  <div className="plan-column-header">
+                  <div className="plan-column-header" style={{ flexWrap: 'wrap', gap: '8px' }}>
                     <h2>{planActivo.titulo}</h2>
-                    {planActivo.word_url && (
-                      <a
-                        href={`${API_BASE}${planActivo.word_url}`}
-                        download
-                        className="btn-download-word-mentor"
-                        title="Descargar Plan de Implementación en Word"
+                    <div style={{ display: 'flex', gap: '8px', flexWrap: 'wrap' }}>
+                      <button
+                        type="button"
+                        onClick={handleDescargarPlanPDF}
+                        className="btn-download-word-mentor btn-pdf-download"
+                        style={{
+                          background: 'linear-gradient(135deg, #7c3aed, #4f46e5)',
+                          color: '#ffffff',
+                          border: 'none',
+                          cursor: 'pointer'
+                        }}
                       >
-                        <Download size={16} /> Descargar Word (.docx)
-                      </a>
-                    )}
+                        <Download size={16} /> PDF
+                      </button>
+                      {!esMovil && planActivo.word_url && (
+                        <a
+                          href={`${API_BASE}${planActivo.word_url}`}
+                          download
+                          className="btn-download-word-mentor"
+                          title="Descargar Plan de Implementación en Word"
+                        >
+                          <Download size={16} /> Word (.docx)
+                        </a>
+                      )}
+                    </div>
                   </div>
 
                   <div className="mentor-plan-body markdown-content-mentor">
@@ -163,16 +210,29 @@ export default function MentorChat({
                         ← Volver al listado
                       </button>
                       
-                      <div className="plan-column-header">
+                      <div className="plan-column-header" style={{ flexWrap: 'wrap', gap: '8px' }}>
                         <h2>{guiaAyudaSeleccionada.titulo}</h2>
-                        <div style={{ display: 'flex', gap: '8px' }}>
-                          {guiaAyudaSeleccionada.word_url && (
+                        <div style={{ display: 'flex', gap: '8px', flexWrap: 'wrap' }}>
+                          <button
+                            type="button"
+                            onClick={() => handleDescargarGuiaPDF(guiaAyudaSeleccionada)}
+                            className="btn-download-word-mentor btn-pdf-download"
+                            style={{
+                              background: 'linear-gradient(135deg, #7c3aed, #4f46e5)',
+                              color: '#ffffff',
+                              border: 'none',
+                              cursor: 'pointer'
+                            }}
+                          >
+                            <Download size={16} /> PDF
+                          </button>
+                          {!esMovil && guiaAyudaSeleccionada.word_url && (
                             <a
                               href={`${API_BASE}${guiaAyudaSeleccionada.word_url}`}
                               download
                               className="btn-download-word-mentor"
                             >
-                              <Download size={16} /> Descargar Word (.docx)
+                              <Download size={16} /> Word (.docx)
                             </a>
                           )}
                           <button
@@ -209,21 +269,40 @@ export default function MentorChat({
                                 <span className="guia-tarjeta-date">{new Date(g.creado_en || new Date()).toLocaleDateString()}</span>
                               </div>
                               <p className="guia-tarjeta-query"><strong>Consulta:</strong> "{g.mensaje_estudiante}"</p>
-                              <div className="guia-tarjeta-acciones">
+                              <div className="guia-tarjeta-acciones" style={{ flexWrap: 'wrap', gap: '6px' }}>
                                 <button
                                   type="button"
                                   className="btn-ver-guia-card"
                                   onClick={() => setGuiaAyudaSeleccionada(g)}
                                 >
-                                  Visualizar Guía
+                                  Visualizar
                                 </button>
-                                {g.word_url && (
+                                <button
+                                  type="button"
+                                  onClick={() => handleDescargarGuiaPDF(g)}
+                                  className="btn-descargar-guia-card"
+                                  style={{
+                                    background: 'linear-gradient(135deg, #7c3aed, #4f46e5)',
+                                    color: '#ffffff',
+                                    border: 'none',
+                                    padding: '4px 8px',
+                                    borderRadius: '4px',
+                                    cursor: 'pointer',
+                                    display: 'inline-flex',
+                                    alignItems: 'center',
+                                    gap: '4px',
+                                    fontSize: '12px'
+                                  }}
+                                >
+                                  <Download size={12} /> PDF
+                                </button>
+                                {!esMovil && g.word_url && (
                                   <a
                                     href={`${API_BASE}${g.word_url}`}
                                     download
                                     className="btn-descargar-guia-card"
                                   >
-                                    <Download size={14} /> Word
+                                    <Download size={12} /> Word
                                   </a>
                                 )}
                                 <button
@@ -232,7 +311,7 @@ export default function MentorChat({
                                   disabled={regeneratingGuiaId === g.id}
                                   className="btn-regenerar-guia-card"
                                 >
-                                  <RefreshCw size={14} className={regeneratingGuiaId === g.id ? 'animate-spin' : ''} />
+                                  <RefreshCw size={12} className={regeneratingGuiaId === g.id ? 'animate-spin' : ''} />
                                 </button>
                               </div>
                             </div>
@@ -412,7 +491,26 @@ export default function MentorChat({
                             >
                               Visualizar Guía
                             </button>
-                            {msg.documento_ayuda.word_url && (
+                            <button
+                              type="button"
+                              onClick={() => handleDescargarGuiaPDF(msg.documento_ayuda)}
+                              className="btn-download-doc-chat btn-pdf-download"
+                              style={{
+                                background: 'linear-gradient(135deg, #7c3aed, #4f46e5)',
+                                color: '#ffffff',
+                                border: 'none',
+                                cursor: 'pointer',
+                                padding: '4px 8px',
+                                borderRadius: '4px',
+                                display: 'inline-flex',
+                                alignItems: 'center',
+                                gap: '4px',
+                                fontSize: '11px'
+                              }}
+                            >
+                              <Download size={11} /> PDF
+                            </button>
+                            {!esMovil && msg.documento_ayuda.word_url && (
                               <a 
                                 href={`${API_BASE}${msg.documento_ayuda.word_url}`}
                                 download

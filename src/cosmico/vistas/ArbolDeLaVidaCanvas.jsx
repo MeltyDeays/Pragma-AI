@@ -22,7 +22,7 @@ export default function ArbolDeLaVidaCanvas({ estudiante, tareas, posiciones }) 
     window.addEventListener('resize', resizeCanvas);
 
     // Sistema de partículas de polvo estelar de fondo
-    const particles = Array.from({ length: 150 }, () => ({
+    const particles = Array.from({ length: 80 }, () => ({
       x: Math.random() * (canvas.width || 800),
       y: Math.random() * (canvas.height || 600),
       radius: Math.random() * 1.8,
@@ -154,8 +154,8 @@ export default function ArbolDeLaVidaCanvas({ estudiante, tareas, posiciones }) 
             ctx.shadowBlur = 0;
           }
 
-          // Generar partículas de luz fluyendo
-          if (Math.random() < 0.04) {
+          // Generar partículas de luz fluyendo (máx 50 activas)
+          if (Math.random() < 0.04 && flowParticles.length < 50) {
             flowParticles.push({
               fromX: x1, fromY: y1,
               toX: x2, toY: y2,

@@ -12,7 +12,7 @@ const LOFI_TRACKS = [
   { title: "Binary Lullaby", url: "https://www.soundhelix.com/examples/mp3/SoundHelix-Song-3.mp3" }
 ];
 
-export default function PragmaGames({ estudiante, onUpdateEstudiante, backendUrl, listaAmigos }) {
+export default function PragmaGames({ estudiante, onUpdateEstudiante, backendUrl, listaAmigos, partidaDueloActiva, onLimpiarPartidaDuelo }) {
   const [selectedSubTab, setSelectedSubTab] = useState('lobby'); // lobby, copiloto, runas, zen, taberna, forja, tinder, defense, dungeon
   const pragmaProfile = estudiante?.pragma_profile || {
     rank_points: 0,
@@ -71,7 +71,16 @@ export default function PragmaGames({ estudiante, onUpdateEstudiante, backendUrl
 
       {/* Pantalla Activa */}
       <div className="pragma-game-screen">
-        {selectedSubTab === 'lobby' && <LobbyView estudiante={estudiante} backendUrl={backendUrl} onUpdate={syncProfile} listaAmigos={listaAmigos} />}
+        {selectedSubTab === 'lobby' && (
+          <LobbyView
+            estudiante={estudiante}
+            backendUrl={backendUrl}
+            onUpdate={syncProfile}
+            listaAmigos={listaAmigos}
+            partidaDueloActiva={partidaDueloActiva}
+            onLimpiarPartidaDuelo={onLimpiarPartidaDuelo}
+          />
+        )}
         {selectedSubTab === 'copiloto' && <CopilotoView estudiante={estudiante} backendUrl={backendUrl} onUpdate={syncProfile} />}
         {selectedSubTab === 'zen' && <ZenView estudiante={estudiante} backendUrl={backendUrl} onUpdate={syncProfile} />}
         {selectedSubTab === 'taberna' && <TabernaView estudiante={estudiante} backendUrl={backendUrl} onUpdate={syncProfile} />}
@@ -88,10 +97,112 @@ export default function PragmaGames({ estudiante, onUpdateEstudiante, backendUrl
 /* ==========================================
    1. LOBBY MULTIJUGADOR COMPETITIVO
    ========================================== */
-function LobbyView({ estudiante, backendUrl, onUpdate, listaAmigos = [] }) {
+function LobbyView({ estudiante, backendUrl, onUpdate, listaAmigos = [], partidaDueloActiva, onLimpiarPartidaDuelo }) {
   const [matchType, setMatchType] = useState('1v1');
   const [showInviteModal, setShowInviteModal] = useState(false);
   const [friendSearchQuery, setFriendSearchQuery] = useState('');
+
+  // Efecto para unirse a un Duelo Realizado vía SSE / invitación aceptada
+  useEffect(() => {
+    if (partidaDueloActiva) {
+      console.log("Inicializando partida multijugador real de la IA:", partidaDueloActiva);
+      const isRetador = partidaDueloActiva.retador_id === estudiante.id;
+      const rivalId = isRetador ? partidaDueloActiva.retado_id : partidaDueloActiva.retador_id;
+      const rivalNombre = isRetador ? partidaDueloActiva.retado_nombre : partidaDueloActiva.retador_nombre;
+
+      const realPlayers = [
+        {
+          id: estudiante.id,
+          nombre: estudiante.nombre,
+          avatar: '⚡',
+          team: 'orange',
+          isSelf: true,
+          progress: 0,
+          errors: 0,
+          finished: false,
+          time: null
+        },
+        {
+          id: rivalId,
+          nombre: rivalNombre,
+          avatar: '🕶️',
+          team: 'blue',
+          isSelf: false,
+          progress: 0,
+          errors: 0,
+          finished: false,
+          time: null
+        }
+      ];
+
+      const matchState = {
+        id: partidaDueloActiva.id,
+        retos: partidaDueloActiva.retos,
+        retoActualIndice: 0,
+        userTriviaRespuestas: {},
+        userCodigoInput: partidaDueloActiva.retos[0]?.codigoInicial || '',
+        userProgress: 0,
+        userErrors: 0,
+        userFinished: false,
+        userTime: 0,
+        timeLeft: 180, // 3 minutos para duelos reales
+        players: realPlayers,
+        esRealtime: true // Bandera de combate real
+      };
+
+      setMatchType('1v1');
+      setActiveMatch(matchState);
+      setBattleResult(null);
+
+      // Si existe callback para limpiar en App.jsx, lo llamamos
+      if (onLimpiarPartidaDuelo) {
+        onLimpiarPartidaDuelo();
+      }
+    }
+  }, [partidaDueloActiva]);
+
+  // Listener para capturar el progreso en tiempo real enviado por el rival vía SSE
+  useEffect(() => {
+    const handleProgresoRival = (e) => {
+      const data = e.detail;
+      // data: { estudiante_id, progreso, errores, tiempo, finalizado }
+      console.log("Progreso del rival recibido vía SSE en LobbyView:", data);
+
+      setActiveMatch(prev => {
+        if (!prev || !prev.esRealtime) return prev;
+
+        const updatedPlayers = prev.players.map(p => {
+          if (p.id === data.jugador_id) {
+            return {
+              ...p,
+              progress: data.progreso,
+              errors: data.errores,
+              finished: data.finalizado,
+              time: data.finalizado ? data.tiempo : null
+            };
+          }
+          return p;
+        });
+
+        // Verificar si todos terminaron
+        const allFinished = updatedPlayers.every(p => p.finished);
+        if (allFinished && matchIntervalRef.current) {
+          clearInterval(matchIntervalRef.current);
+          setTimeout(() => calculateFinalResult({ ...prev, players: updatedPlayers }), 500);
+        }
+
+        return {
+          ...prev,
+          players: updatedPlayers
+        };
+      });
+    };
+
+    window.addEventListener('pragma-progreso-rival', handleProgresoRival);
+    return () => {
+      window.removeEventListener('pragma-progreso-rival', handleProgresoRival);
+    };
+  }, []);
   
   // Slots estáticos para Naranja y Azul (4 slots cada uno por defecto)
   const [orangeSlots, setOrangeSlots] = useState([
@@ -174,6 +285,50 @@ function LobbyView({ estudiante, backendUrl, onUpdate, listaAmigos = [] }) {
   const [searchTimer, setSearchTimer] = useState(0);
   const [activeMatch, setActiveMatch] = useState(null);
   const [battleResult, setBattleResult] = useState(null);
+
+  // Estados locales para los 8 minijuegos del combate multijugador activo
+  const [juegoResultado, setJuegoResultado] = useState(null);
+  const [sorterLineas, setSorterLineas] = useState([]);
+  const [draggedIndex, setDraggedIndex] = useState(null);
+  const [fillRespuestas, setFillRespuestas] = useState({});
+  const [flashcardIdx, setFlashcardIdx] = useState(0);
+  const [flashcardScore, setFlashcardScore] = useState(0);
+  const [typerInput, setTyperInput] = useState('');
+  const [typerStartTime, setTyperStartTime] = useState(null);
+  const [typerErrors, setTyperErrors] = useState(0);
+  const [typerWpm, setTyperWpm] = useState(0);
+  const [typerAccuracy, setTyperAccuracy] = useState(100);
+  const [memoryCards, setMemoryCards] = useState([]);
+  const [memorySelected, setMemorySelected] = useState([]);
+  const [memoryMoves, setMemoryMoves] = useState(0);
+
+  // Inicializar estados específicos por tipo de reto al cambiar retoActualIndice
+  useEffect(() => {
+    if (!activeMatch) return;
+    const currentChallenge = activeMatch.retos[activeMatch.retoActualIndice];
+    if (!currentChallenge) return;
+
+    setJuegoResultado(null);
+
+    if (currentChallenge.tipo === 'sorter') {
+      setSorterLineas(currentChallenge.lineas || []);
+    } else if (currentChallenge.tipo === 'fill-blank') {
+      setFillRespuestas({});
+    } else if (currentChallenge.tipo === 'flashcard') {
+      setFlashcardIdx(0);
+      setFlashcardScore(0);
+    } else if (currentChallenge.tipo === 'typer') {
+      setTyperInput('');
+      setTyperStartTime(null);
+      setTyperErrors(0);
+      setTyperWpm(0);
+      setTyperAccuracy(100);
+    } else if (currentChallenge.tipo === 'memory') {
+      setMemoryCards(currentChallenge.cartas || []);
+      setMemorySelected([]);
+      setMemoryMoves(0);
+    }
+  }, [activeMatch?.retoActualIndice, activeMatch?.id]);
 
   // Referencias para timers
   const timerRef = useRef(null);
@@ -425,9 +580,14 @@ function LobbyView({ estudiante, backendUrl, onUpdate, listaAmigos = [] }) {
             };
           }
 
+          if (prev.esRealtime) {
+            // En una partida en tiempo real, el progreso del oponente se actualiza mediante eventos SSE
+            return p;
+          }
+
           if (p.finished) return p;
 
-          // Incremento aleatorio de progreso
+          // Incremento aleatorio de progreso para bots
           const randIncrement = Math.floor(Math.random() * 8) + 4;
           const nextProgress = Math.min(p.progress + randIncrement, 100);
           const finished = nextProgress >= 100;
@@ -466,89 +626,184 @@ function LobbyView({ estudiante, backendUrl, onUpdate, listaAmigos = [] }) {
     }, 1000);
   };
 
-  // Enviar respuesta en Trivia
-  const handleTriviaAnswer = (opcionIndex) => {
+  // Función centralizada para avanzar de reto y reportar progreso a la red en tiempo real
+  const completarRetoMultijugador = async (esCorrecto) => {
+    if (!activeMatch) return;
+
+    let nextErrors = activeMatch.userErrors;
+    let progressIncrement = 0;
+    let nextFinished = false;
+
+    if (esCorrecto) {
+      progressIncrement = Math.ceil(100 / activeMatch.retos.length);
+    } else {
+      nextErrors += 1;
+    }
+
+    const nextUserProgress = Math.min(activeMatch.userProgress + (esCorrecto ? progressIncrement : 0), 100);
+    const isLastChallenge = activeMatch.retoActualIndice === activeMatch.retos.length - 1;
+
+    let nextChallengeIndex = activeMatch.retoActualIndice;
+    if (esCorrecto) {
+      if (isLastChallenge) {
+        nextFinished = true;
+      } else {
+        nextChallengeIndex += 1;
+      }
+    }
+
+    const nextChallenge = activeMatch.retos[nextChallengeIndex];
+
     setActiveMatch(prev => {
       if (!prev) return null;
-      const currentChallenge = prev.retos[prev.retoActualIndice];
-      const esCorrecta = opcionIndex === currentChallenge.correcta;
-
-      let nextErrors = prev.userErrors;
-      let progressIncrement = 0;
-      let nextFinished = false;
-
-      if (esCorrecta) {
-        progressIncrement = Math.ceil(100 / prev.retos.length);
-      } else {
-        nextErrors += 1;
-      }
-
-      const nextUserProgress = Math.min(prev.userProgress + (esCorrecta ? progressIncrement : 0), 100);
-      const isLastChallenge = prev.retoActualIndice === prev.retos.length - 1;
-
-      // Si es correcta avanzamos de reto
-      let nextChallengeIndex = prev.retoActualIndice;
-      if (esCorrecta) {
-        if (isLastChallenge) {
-          nextFinished = true;
-        } else {
-          nextChallengeIndex += 1;
-        }
-      }
-
-      const nextChallenge = prev.retos[nextChallengeIndex];
-
       return {
         ...prev,
         userProgress: nextUserProgress,
         userErrors: nextErrors,
         retoActualIndice: nextChallengeIndex,
         userFinished: nextFinished,
-        userCodigoInput: nextChallenge && nextChallenge.tipo !== 'trivia' ? nextChallenge.codigoInicial : ''
+        userCodigoInput: nextChallenge && nextChallenge.tipo !== 'trivia' ? (nextChallenge.codigoInicial || '') : ''
       };
     });
+
+    // Enviar progreso en tiempo real al servidor
+    if (activeMatch.esRealtime && activeMatch.id) {
+      try {
+        await fetch(`${backendUrl}/api/partidas/${activeMatch.id}/progreso`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            jugador_id: estudiante.id,
+            progreso: nextUserProgress,
+            errores: nextErrors,
+            tiempo: activeMatch.userTime,
+            finalizado: nextFinished
+          })
+        });
+      } catch (err) {
+        console.error("Error al reportar progreso del duelo:", err);
+      }
+    }
   };
 
-  // Enviar validación de código en Zen/Tinder
+  // Enviar respuesta en Trivia / Output / Refactor
+  const handleTriviaAnswer = (opcionIndex) => {
+    if (!activeMatch) return;
+    const currentChallenge = activeMatch.retos[activeMatch.retoActualIndice];
+    
+    let correctaIndex = currentChallenge.correcta;
+    if (correctaIndex === undefined) {
+      correctaIndex = currentChallenge.respuesta_correcta;
+    }
+
+    const esCorrecta = opcionIndex === correctaIndex;
+    completarRetoMultijugador(esCorrecta);
+  };
+
+  // Enviar validación de código en Zen/Tinder/Refactor manual
   const handleCodeSubmit = () => {
-    setActiveMatch(prev => {
-      if (!prev) return null;
-      const currentChallenge = prev.retos[prev.retoActualIndice];
-      const esValido = currentChallenge.validador(prev.userCodigoInput);
+    if (!activeMatch) return;
+    const currentChallenge = activeMatch.retos[activeMatch.retoActualIndice];
+    let esValido = false;
+    if (typeof currentChallenge.validador === 'function') {
+      esValido = currentChallenge.validador(activeMatch.userCodigoInput);
+    } else if (currentChallenge.codigoCorrecto) {
+      esValido = activeMatch.userCodigoInput.trim().replace(/\s+/g, '') === currentChallenge.codigoCorrecto.trim().replace(/\s+/g, '');
+    } else {
+      // Fallback aprobatorio para evitar bloqueos
+      esValido = activeMatch.userCodigoInput.trim().length > 5;
+    }
+    completarRetoMultijugador(esValido);
+  };
 
-      let nextErrors = prev.userErrors;
-      let progressIncrement = 0;
-      let nextFinished = false;
+  const verificarSorter = () => {
+    if (!activeMatch) return;
+    const currentChallenge = activeMatch.retos[activeMatch.retoActualIndice];
+    const correcto = JSON.stringify(sorterLineas) === JSON.stringify(currentChallenge.lineas_ordenadas);
+    completarRetoMultijugador(correcto);
+  };
 
-      if (esValido) {
-        progressIncrement = Math.ceil(100 / prev.retos.length);
+  const verificarFillBlank = () => {
+    if (!activeMatch) return;
+    const currentChallenge = activeMatch.retos[activeMatch.retoActualIndice];
+    const respuestasCorrectas = currentChallenge.respuestas;
+    const todasCorrectas = Object.keys(respuestasCorrectas).every(
+      key => (fillRespuestas[key] || '').trim().toLowerCase() === respuestasCorrectas[key].trim().toLowerCase()
+    );
+    completarRetoMultijugador(todasCorrectas);
+  };
+
+  const responderFlashcard = (esVerdadero) => {
+    if (!activeMatch) return;
+    const currentChallenge = activeMatch.retos[activeMatch.retoActualIndice];
+    const cardActual = currentChallenge.flashcards[flashcardIdx];
+    const esCorrecto = esVerdadero === cardActual.es_verdadero;
+    
+    if (esCorrecto) {
+      if (flashcardIdx === currentChallenge.flashcards.length - 1) {
+        completarRetoMultijugador(true);
       } else {
-        nextErrors += 1;
+        setFlashcardIdx(idx => idx + 1);
       }
+    } else {
+      completarRetoMultijugador(false);
+    }
+  };
 
-      const nextUserProgress = Math.min(prev.userProgress + (esValido ? progressIncrement : 0), 100);
-      const isLastChallenge = prev.retoActualIndice === prev.retos.length - 1;
+  const verificarTyper = (val) => {
+    if (!activeMatch) return;
+    const currentChallenge = activeMatch.retos[activeMatch.retoActualIndice];
+    setTyperInput(val);
+    if (val === currentChallenge.codigo) {
+      completarRetoMultijugador(true);
+    }
+  };
 
-      let nextChallengeIndex = prev.retoActualIndice;
-      if (esValido) {
-        if (isLastChallenge) {
-          nextFinished = true;
-        } else {
-          nextChallengeIndex += 1;
-        }
+  const voltearCartaMemory = (cardId) => {
+    if (!activeMatch) return;
+    const currentChallenge = activeMatch.retos[activeMatch.retoActualIndice];
+    if (memorySelected.length >= 2) return;
+    
+    const targetIdx = memoryCards.findIndex(c => c.id === cardId);
+    if (targetIdx === -1 || memoryCards[targetIdx].flipped || memoryCards[targetIdx].matched) return;
+
+    const nuevasCartas = [...memoryCards];
+    nuevasCartas[targetIdx] = { ...nuevasCartas[targetIdx], flipped: true };
+    setMemoryCards(nuevasCartas);
+
+    const nuevasSelected = [...memorySelected, nuevasCartas[targetIdx]];
+    setMemorySelected(nuevasSelected);
+
+    if (nuevasSelected.length === 2) {
+      setMemoryMoves(prev => prev + 1);
+      const [first, second] = nuevasSelected;
+      
+      if (first.matchingId === second.matchingId) {
+        setTimeout(() => {
+          setMemoryCards(prevCards => {
+            const res = prevCards.map(c => 
+              c.matchingId === first.matchingId ? { ...c, matched: true } : c
+            );
+            const todasCompletadas = res.every(c => c.matched);
+            if (todasCompletadas) {
+              completarRetoMultijugador(true);
+            }
+            return res;
+          });
+          setMemorySelected([]);
+        }, 600);
+      } else {
+        setTimeout(() => {
+          setMemoryCards(prevCards => 
+            prevCards.map(c => 
+              c.id === first.id || c.id === second.id ? { ...c, flipped: false } : c
+            )
+          );
+          setMemorySelected([]);
+          completarRetoMultijugador(false);
+        }, 1000);
       }
-
-      const nextChallenge = prev.retos[nextChallengeIndex];
-
-      return {
-        ...prev,
-        userProgress: nextUserProgress,
-        userErrors: nextErrors,
-        retoActualIndice: nextChallengeIndex,
-        userFinished: nextFinished,
-        userCodigoInput: nextChallenge && nextChallenge.tipo !== 'trivia' ? nextChallenge.codigoInicial : ''
-      };
-    });
+    }
   };
 
   // Cálculo de Puntuaciones y Ganador
@@ -1029,21 +1284,238 @@ function LobbyView({ estudiante, backendUrl, onUpdate, listaAmigos = [] }) {
 
             {/* RENDERIZADO SI EL RETO ACTUAL ES TRIVIA */}
             {activeMatch.retos[activeMatch.retoActualIndice].tipo === 'trivia' && (
-              <div className="trivia-interactive-game">
-                <p className="trivia-question">
+              <div className="trivia-interactive-game space-y-4">
+                <p className="trivia-question text-sm text-slate-200 font-mono bg-slate-900/60 p-4 border border-slate-800 rounded">
                   {activeMatch.retos[activeMatch.retoActualIndice].pregunta}
                 </p>
-                <div className="trivia-options-grid">
+                <div className="trivia-options-grid grid grid-cols-1 md:grid-cols-2 gap-3 mt-4">
                   {activeMatch.retos[activeMatch.retoActualIndice].opciones.map((opcion, idx) => (
                     <button 
                       key={idx}
                       onClick={() => handleTriviaAnswer(idx)}
-                      className="trivia-option-card"
+                      className="trivia-option-card flex items-center gap-3 p-3 bg-slate-900 hover:bg-[#00f3ff]/10 border border-slate-800 hover:border-[#00f3ff]/40 rounded transition-all text-left text-xs font-mono text-slate-300"
                     >
-                      <span className="option-badge">
+                      <span className="option-badge px-2 py-0.5 bg-slate-800 text-[#00f3ff] rounded font-bold">
                         {String.fromCharCode(65 + idx)}
                       </span>
-                      <span className="option-text">{opcion}</span>
+                      <span className="option-text flex-1">{opcion}</span>
+                    </button>
+                  ))}
+                </div>
+              </div>
+            )}
+
+            {/* RENDERIZADO SI EL RETO ACTUAL ES OUTPUT */}
+            {activeMatch.retos[activeMatch.retoActualIndice].tipo === 'output' && (
+              <div className="output-interactive-game space-y-4">
+                <p className="text-xs text-slate-400 font-mono">Predecir la salida en consola del siguiente fragmento:</p>
+                <pre className="bg-slate-900 border border-slate-800 p-4 rounded text-xs text-emerald-400 font-mono overflow-x-auto">
+                  <code>{activeMatch.retos[activeMatch.retoActualIndice].codigo}</code>
+                </pre>
+                <div className="trivia-options-grid grid grid-cols-1 md:grid-cols-2 gap-3 mt-4">
+                  {activeMatch.retos[activeMatch.retoActualIndice].opciones.map((opcion, idx) => (
+                    <button 
+                      key={idx}
+                      onClick={() => handleTriviaAnswer(idx)}
+                      className="trivia-option-card flex items-center gap-3 p-3 bg-slate-900 hover:bg-[#00f3ff]/10 border border-slate-800 hover:border-[#00f3ff]/40 rounded transition-all text-left text-xs font-mono text-slate-300"
+                    >
+                      <span className="option-badge px-2 py-0.5 bg-slate-800 text-[#00f3ff] rounded font-bold">
+                        {String.fromCharCode(65 + idx)}
+                      </span>
+                      <span className="option-text flex-1">{opcion}</span>
+                    </button>
+                  ))}
+                </div>
+              </div>
+            )}
+
+            {/* RENDERIZADO SI EL RETO ACTUAL ES REFACTOR */}
+            {activeMatch.retos[activeMatch.retoActualIndice].tipo === 'refactor' && (
+              <div className="refactor-interactive-game space-y-4">
+                <div className="bg-slate-900/60 p-3 border border-slate-800 rounded">
+                  <span className="text-[10px] text-rose-400 font-mono font-bold block mb-1">BUG DETECTADO:</span>
+                  <p className="text-xs text-slate-300 font-mono">
+                    {activeMatch.retos[activeMatch.retoActualIndice].descripcion}
+                  </p>
+                </div>
+                <pre className="bg-slate-900 border border-rose-950/40 p-4 rounded text-xs text-rose-400 font-mono overflow-x-auto">
+                  <code>{activeMatch.retos[activeMatch.retoActualIndice].codigo_con_bug}</code>
+                </pre>
+                <div className="trivia-options-grid grid grid-cols-1 gap-3 mt-4">
+                  {activeMatch.retos[activeMatch.retoActualIndice].opciones_correcion.map((opcion, idx) => (
+                    <button 
+                      key={idx}
+                      onClick={() => handleTriviaAnswer(idx)}
+                      className="trivia-option-card flex items-start gap-3 p-3 bg-slate-900 hover:bg-emerald-500/10 border border-slate-800 hover:border-emerald-500/40 rounded transition-all text-left text-[11px] font-mono text-slate-300"
+                    >
+                      <span className="option-badge px-2 py-0.5 bg-slate-800 text-emerald-400 rounded font-bold">
+                        {String.fromCharCode(65 + idx)}
+                      </span>
+                      <pre className="option-text flex-1 overflow-x-auto whitespace-pre-wrap"><code>{opcion}</code></pre>
+                    </button>
+                  ))}
+                </div>
+              </div>
+            )}
+
+            {/* RENDERIZADO SI EL RETO ACTUAL ES SORTER */}
+            {activeMatch.retos[activeMatch.retoActualIndice].tipo === 'sorter' && (
+              <div className="sorter-interactive-game space-y-4">
+                <p className="text-xs text-slate-400 font-mono">Reordena las líneas de código para construir la lógica correcta:</p>
+                <div className="sorter-lines-container space-y-2">
+                  {sorterLineas.map((linea, idx) => (
+                    <div 
+                      key={idx}
+                      className="sorter-line flex items-center justify-between p-2.5 bg-slate-900 border border-slate-800 rounded font-mono text-xs text-slate-300"
+                    >
+                      <span className="select-none text-slate-600 mr-2">{idx + 1}</span>
+                      <code className="flex-1 whitespace-pre">{linea}</code>
+                      <div className="flex gap-1.5 ml-2">
+                        <button 
+                          disabled={idx === 0}
+                          onClick={() => {
+                            const next = [...sorterLineas];
+                            [next[idx], next[idx - 1]] = [next[idx - 1], next[idx]];
+                            setSorterLineas(next);
+                          }}
+                          className="px-1.5 py-0.5 bg-slate-800 hover:bg-slate-700 disabled:opacity-30 rounded text-[10px]"
+                        >
+                          ▲
+                        </button>
+                        <button 
+                          disabled={idx === sorterLineas.length - 1}
+                          onClick={() => {
+                            const next = [...sorterLineas];
+                            [next[idx], next[idx + 1]] = [next[idx + 1], next[idx]];
+                            setSorterLineas(next);
+                          }}
+                          className="px-1.5 py-0.5 bg-slate-800 hover:bg-slate-700 disabled:opacity-30 rounded text-[10px]"
+                        >
+                          ▼
+                        </button>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+                <button 
+                  onClick={verificarSorter}
+                  className="hud-btn w-full mt-4 bg-cyan-600 hover:bg-cyan-500 text-white font-bold py-2 text-xs"
+                >
+                  VERIFICAR ORDENAMIENTO
+                </button>
+              </div>
+            )}
+
+            {/* RENDERIZADO SI EL RETO ACTUAL ES FILL-BLANK */}
+            {activeMatch.retos[activeMatch.retoActualIndice].tipo === 'fill-blank' && (
+              <div className="fillblank-interactive-game space-y-4">
+                <p className="text-xs text-slate-400 font-mono">Identifica y completa los fragmentos marcados con ___1___, ___2___, etc.:</p>
+                <pre className="bg-slate-900 border border-slate-800 p-4 rounded text-xs text-slate-300 font-mono overflow-x-auto">
+                  <code>{activeMatch.retos[activeMatch.retoActualIndice].codigo_con_huecos}</code>
+                </pre>
+                <div className="fill-inputs-grid grid grid-cols-1 md:grid-cols-2 gap-3 mt-4">
+                  {Object.keys(activeMatch.retos[activeMatch.retoActualIndice].respuestas).map((key) => (
+                    <div key={key} className="flex flex-col gap-1">
+                      <label className="text-[10px] text-cyan-400 font-mono font-bold">Hueco ___{key}___:</label>
+                      <input 
+                        type="text"
+                        className="bg-slate-900 border border-slate-800 text-xs text-white p-2 font-mono rounded focus:border-cyan-500 focus:outline-none"
+                        value={fillRespuestas[key] || ''}
+                        onChange={(e) => setFillRespuestas(prev => ({ ...prev, [key]: e.target.value }))}
+                        placeholder={`Respuesta para hueco ${key}`}
+                      />
+                    </div>
+                  ))}
+                </div>
+                <button 
+                  onClick={verificarFillBlank}
+                  className="hud-btn w-full mt-4 bg-emerald-600 hover:bg-emerald-500 text-white font-bold py-2 text-xs"
+                >
+                  COMPILAR Y ENVIAR RESPUESTAS
+                </button>
+              </div>
+            )}
+
+            {/* RENDERIZADO SI EL RETO ACTUAL ES FLASHCARD */}
+            {activeMatch.retos[activeMatch.retoActualIndice].tipo === 'flashcard' && (
+              <div className="flashcard-interactive-game space-y-4">
+                <div className="flex justify-between items-center text-[10px] text-slate-400 font-mono">
+                  <span>MODO EVALUACIÓN FLASHCARD</span>
+                  <span>Tarjeta {flashcardIdx + 1} de {activeMatch.retos[activeMatch.retoActualIndice].flashcards.length}</span>
+                </div>
+                <div className="card-display p-6 bg-gradient-to-br from-slate-900 to-slate-950 border border-slate-800 rounded min-h-[140px] flex items-center justify-center text-center">
+                  <p className="text-sm text-slate-200 font-mono leading-relaxed">
+                    "{activeMatch.retos[activeMatch.retoActualIndice].flashcards[flashcardIdx]?.afirmacion}"
+                  </p>
+                </div>
+                <div className="flex gap-4">
+                  <button 
+                    onClick={() => responderFlashcard(true)}
+                    className="hud-btn flex-1 bg-emerald-600 hover:bg-emerald-500 text-white font-bold py-3 text-xs"
+                  >
+                    VERDADERO
+                  </button>
+                  <button 
+                    onClick={() => responderFlashcard(false)}
+                    className="hud-btn flex-1 bg-rose-600 hover:bg-rose-500 text-white font-bold py-3 text-xs"
+                  >
+                    FALSO
+                  </button>
+                </div>
+              </div>
+            )}
+
+            {/* RENDERIZADO SI EL RETO ACTUAL ES TYPER */}
+            {activeMatch.retos[activeMatch.retoActualIndice].tipo === 'typer' && (
+              <div className="typer-interactive-game space-y-4">
+                <p className="text-xs text-slate-400 font-mono">Escribe exactamente la siguiente línea de código:</p>
+                <div className="bg-slate-900/60 p-4 border border-slate-800 rounded">
+                  <pre className="text-sm font-mono text-emerald-400 overflow-x-auto select-none">
+                    <code>{activeMatch.retos[activeMatch.retoActualIndice].codigo}</code>
+                  </pre>
+                  <p className="text-[10px] text-slate-500 mt-2 font-mono">
+                    {activeMatch.retos[activeMatch.retoActualIndice].descripcion}
+                  </p>
+                </div>
+                <input 
+                  type="text"
+                  className="w-full bg-slate-900 border border-slate-800 text-xs text-white p-3 font-mono rounded focus:border-[#00ffcc] focus:outline-none"
+                  value={typerInput}
+                  onChange={(e) => verificarTyper(e.target.value)}
+                  placeholder="Comienza a escribir aquí..."
+                  autoComplete="off"
+                  autoCapitalize="off"
+                  autoCorrect="off"
+                  spellCheck="false"
+                />
+                <div className="flex justify-between text-[9px] text-slate-500 font-mono">
+                  <span>Letras: {typerInput.length} / {activeMatch.retos[activeMatch.retoActualIndice].codigo.length}</span>
+                  <span>Coincidencia: {activeMatch.retos[activeMatch.retoActualIndice].codigo.startsWith(typerInput) ? '🟢 OK' : '🔴 ERROR'}</span>
+                </div>
+              </div>
+            )}
+
+            {/* RENDERIZADO SI EL RETO ACTUAL ES MEMORY */}
+            {activeMatch.retos[activeMatch.retoActualIndice].tipo === 'memory' && (
+              <div className="memory-interactive-game space-y-4">
+                <div className="flex justify-between items-center text-[10px] text-slate-400 font-mono">
+                  <span>EMPAREJAR CONCEPTOS Y DEFINICIONES</span>
+                  <span>Movimientos: {memoryMoves}</span>
+                </div>
+                <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
+                  {memoryCards.map((carta) => (
+                    <button 
+                      key={carta.id}
+                      onClick={() => voltearCartaMemory(carta.id)}
+                      className={`memory-card h-[90px] p-2.5 rounded font-mono text-[10px] flex items-center justify-center text-center transition-all border ${
+                        carta.matched 
+                          ? 'bg-emerald-950/40 border-emerald-500/40 text-emerald-400' 
+                          : carta.flipped 
+                            ? 'bg-slate-900 border-[#00f3ff]/40 text-[#00f3ff]' 
+                            : 'bg-slate-950 border-slate-800 text-slate-500 hover:border-slate-700 hover:text-slate-400'
+                      }`}
+                    >
+                      {carta.matched || carta.flipped ? carta.texto : '❔'}
                     </button>
                   ))}
                 </div>
