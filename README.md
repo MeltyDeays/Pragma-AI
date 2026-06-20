@@ -1,3 +1,13 @@
+---
+title: PragmaAI
+emoji: 🚀
+colorFrom: blue
+colorTo: indigo
+sdk: docker
+app_port: 7860
+pinned: false
+---
+
 # ⚡ Pragma AI — Aprendizaje y Gamificación con Inteligencia Artificial
 
 ¡Bienvenido a **Pragma AI**! Una plataforma interactiva ciberpunk de nivel producción diseñada para gamificar el aprendizaje de programación mediante Inteligencia Artificial y una economía interna de recursos y cosméticos estelares.
