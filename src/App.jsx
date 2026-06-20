@@ -1,20 +1,21 @@
 import React, { useState, useEffect, useCallback, useRef } from 'react';
 import { BookOpen, Award, Download, CheckCircle2, AlertTriangle, Play, RefreshCw, Send, Code, Sparkles, User, LogOut, Check, ChevronRight, Gamepad2, Zap, Brain, Trophy, Target, Shuffle, GitFork, Lock, Unlock, Keyboard, Eye, Filter, Globe, UserPlus, Users, Copy, X, Swords, Trash2, MessageSquare } from 'lucide-react';
 import './App.css';
-import PragmaGames from './PragmaGames';
 
-// Módulos e Importaciones Modularizadas
-import NebulaCanvas from './core/vistas/NebulaCanvas';
+// Componentes React cargados dinámicamente con Lazy Loading (Mejora de performance móvil)
+const PragmaGames = React.lazy(() => import('./PragmaGames'));
+const NebulaCanvas = React.lazy(() => import('./core/vistas/NebulaCanvas'));
+const LogrosPanel = React.lazy(() => import('./logros/vistas/LogrosPanel'));
+const ArbolDeLaVidaCanvas = React.lazy(() => import('./cosmico/vistas/ArbolDeLaVidaCanvas'));
+const PerfilCosmico = React.lazy(() => import('./cosmico/vistas/PerfilCosmico'));
+const HabilidadesRoadmap = React.lazy(() => import('./habilidades/vistas/HabilidadesRoadmap'));
+const DashboardRuta = React.lazy(() => import('./ruta/vistas/DashboardRuta'));
+const MentorChat = React.lazy(() => import('./mentor/vistas/MentorChat'));
+const AmigosPanel = React.lazy(() => import('./amigos/vistas/AmigosPanel'));
+
 import { parsearInlineMarkdown, parsearMarkdownMentor, parsearRequisitos } from './core/controladores/markdown';
 import { LISTA_LOGROS } from './logros/modelos/logrosModel';
-import LogrosPanel from './logros/vistas/LogrosPanel';
-import ArbolDeLaVidaCanvas from './cosmico/vistas/ArbolDeLaVidaCanvas';
 import { obtenerPosicionesProcedurales } from './cosmico/controladores/posicionamiento';
-import PerfilCosmico from './cosmico/vistas/PerfilCosmico';
-import HabilidadesRoadmap from './habilidades/vistas/HabilidadesRoadmap';
-import DashboardRuta from './ruta/vistas/DashboardRuta';
-import MentorChat from './mentor/vistas/MentorChat';
-import AmigosPanel from './amigos/vistas/AmigosPanel';
 
 // Estilos de los Módulos
 import './logros/estilos/logros.css';
@@ -24,153 +25,222 @@ import './ruta/estilos/ruta.css';
 import './mentor/estilos/mentor.css';
 import './amigos/estilos/amigos.css';
 
+import { useEstudiante } from './core/contexts/EstudianteContext';
+import { useSocial } from './core/contexts/SocialContext';
+import { useGamificacion } from './core/contexts/GamificacionContext';
+import { useMentor } from './core/contexts/MentorContext';
+
 const API_BASE = import.meta.env.VITE_API_BASE || 'http://localhost:5000';
 
 function App() {
+  const {
+    estudiante,
+    setEstudiante,
+    tareas,
+    setTareas,
+    temario,
+    setTemario,
+    loading,
+    mensaje,
+    mostrarMensaje,
+    cargarEstado,
+    iniciarSesion,
+    cerrarSesion
+  } = useEstudiante();
+
+  const {
+    listaAmigos,
+    solicitudesPendientes,
+    inputIdAmigo,
+    setInputIdAmigo,
+    mensajeAmistad,
+    loadingAmigos,
+    mostrarSocialDropdown,
+    setMostrarSocialDropdown,
+    solicitudesVistas,
+    setSolicitudesVistas,
+    dueloActivo,
+    setDueloActivo,
+    amigoChatActivo,
+    setAmigoChatActivo,
+    mensajesChat,
+    nuevoMensaje,
+    setNuevoMensaje,
+    loadingChat,
+    retarAmigoActivo,
+    setRetarAmigoActivo,
+    tipoMatchDuelo,
+    setTipoMatchDuelo,
+    modosDueloSeleccionados,
+    setModosDueloSeleccionados,
+    duelosRecibidos,
+    dueloEnviadoActivo,
+    setDueloEnviadoActivo,
+    lenguajeDuelo,
+    setLenguajeDuelo,
+    nivelDuelo,
+    setNivelDuelo,
+    partidaDueloActiva,
+    setPartidaDueloActiva,
+    toastActivo,
+    setToastActivo,
+    cargarAmigosYSolicitudes,
+    enviarSolicitudAmistad,
+    responderSolicitudAmistad,
+    eliminarAmigo,
+    cargarMensajesChat,
+    enviarMensajeChat,
+    enviarInvitacionDuelo,
+    responderDuelo,
+    cargarDuelosPendientes
+  } = useSocial();
+
+  const {
+    juegoActivo,
+    setJuegoActivo,
+    modoJuego,
+    setModoJuego,
+    juegoData,
+    setJuegoData,
+    juegoLoading,
+    setJuegoLoading,
+    juegoResultado,
+    setJuegoResultado,
+    juegoSeleccion,
+    setJuegoSeleccion,
+    sorterLineas,
+    setSorterLineas,
+    fillRespuestas,
+    setFillRespuestas,
+    flashcardIdx,
+    setFlashcardIdx,
+    flashcardScore,
+    setFlashcardScore,
+    flashcardStreak,
+    setFlashcardStreak,
+    xpInfo,
+    setXpInfo,
+    typerInput,
+    setTyperInput,
+    typerStartTime,
+    setTyperStartTime,
+    typerErrors,
+    setTyperErrors,
+    typerWpm,
+    setTyperWpm,
+    typerAccuracy,
+    setTyperAccuracy,
+    memoryCards,
+    setMemoryCards,
+    memorySelected,
+    setMemorySelected,
+    memoryMoves,
+    setMemoryMoves,
+    gameTimer,
+    setGameTimer,
+    logrosDesbloqueados,
+    logroNotificado,
+    setLogroNotificado,
+    filtroLogros,
+    setFiltroLogros,
+    cargarLogros,
+    cargarXpInfo,
+    desbloquearLogro,
+    evaluarLogros
+  } = useGamificacion();
+
+  const {
+    ideaProyecto,
+    setIdeaProyecto,
+    githubUrlMentor,
+    setGithubUrlMentor,
+    planesMentor,
+    setPlanesMentor,
+    planActivo,
+    setPlanActivo,
+    mensajeChatMentor,
+    setMensajeChatMentor,
+    chatLoading,
+    mentorLoading,
+    tabMentorColumn,
+    setTabMentorColumn,
+    guiasAyuda,
+    guiaAyudaSeleccionada,
+    setGuiaAyudaSeleccionada,
+    regeneratingGuiaId,
+    perfilCognitivoExpandido,
+    setPerfilCognitivoExpandido,
+    personalidadMentor,
+    setPersonalidadMentor,
+    crearPlanMentor,
+    enviarMensajeChatMentor,
+    regenerarGuiaAyuda
+  } = useMentor();
+
   const [nombre, setNombre] = useState('');
   const [tecnologia, setTecnologia] = useState('JavaScript');
-  const [estudiante, setEstudiante] = useState(null);
-  const [tareas, setTareas] = useState([]);
-  const [temario, setTemario] = useState([]);
-  const [loading, setLoading] = useState(false);
   const [evaluating, setEvaluating] = useState(false);
   const [isRegenerating, setIsRegenerating] = useState(false);
   const [githubUrl, setGithubUrl] = useState('');
   const [tipoEntrega, setTipoEntrega] = useState('codigo'); // 'codigo' o 'github'
   const [codigoEntregado, setCodigoEntregado] = useState('');
-  const [mensaje, setMensaje] = useState({ texto: '', tipo: '' });
   const [mostrarTodoTemario, setMostrarTodoTemario] = useState(false);
 
-  // Estados de Amistad / Social (Firebase + Postgres)
-  const [listaAmigos, setListaAmigos] = useState([]);
-  const [solicitudesPendientes, setSolicitudesPendientes] = useState([]);
-  const [inputIdAmigo, setInputIdAmigo] = useState('');
-  const [mensajeAmistad, setMensajeAmistad] = useState({ texto: '', tipo: '' });
-  const [loadingAmigos, setLoadingAmigos] = useState(false);
-  const [mostrarSocialDropdown, setMostrarSocialDropdown] = useState(false);
-  const [solicitudesVistas, setSolicitudesVistas] = useState(() => {
-    try {
-      return JSON.parse(localStorage.getItem('solicitudes_vistas') || '[]');
-    } catch (e) {
-      return [];
-    }
-  });
-  const [dueloActivo, setDueloActivo] = useState(null); // { oponenteNombre: string, cargando: boolean, mision: string } o null
-  const [amigoChatActivo, setAmigoChatActivo] = useState(null);
-  const [mensajesChat, setMensajesChat] = useState([]);
-  const [nuevoMensaje, setNuevoMensaje] = useState('');
-  const [loadingChat, setLoadingChat] = useState(false);
-  const [retarAmigoActivo, setRetarAmigoActivo] = useState(null);
-  const [tipoMatchDuelo, setTipoMatchDuelo] = useState('1v1');
-  const [modosDueloSeleccionados, setModosDueloSeleccionados] = useState(['algoritmia']);
-  const [duelosRecibidos, setDuelosRecibidos] = useState([]);
-  const [dueloEnviadoActivo, setDueloEnviadoActivo] = useState(null);
-
-  // Estados para el Asistente de Proyectos (Mentor)
   const [vistaActiva, setVistaActiva] = useState('ruta'); // 'ruta' | 'mentor' | 'juegos' | 'habilidades'
   const [nivelSkillTree, setNivelSkillTree] = useState('Novato');
   const [habilidadSeleccionada, setHabilidadSeleccionada] = useState(null);
-  const [ideaProyecto, setIdeaProyecto] = useState('');
-  const [githubUrlMentor, setGithubUrlMentor] = useState('');
-  const [planesMentor, setPlanesMentor] = useState([]);
-  const [planActivo, setPlanActivo] = useState(null);
-  const [mensajeChatMentor, setMensajeChatMentor] = useState('');
-  const [chatLoading, setChatLoading] = useState(false);
-  const [mentorLoading, setMentorLoading] = useState(false);
-  const [tabMentorColumn, setTabMentorColumn] = useState('plan'); // 'plan' | 'guias'
-  const [guiasAyuda, setGuiasAyuda] = useState([]);
-  const [guiaAyudaSeleccionada, setGuiaAyudaSeleccionada] = useState(null);
-  const [regeneratingGuiaId, setRegeneratingGuiaId] = useState(null);
-  const [perfilCognitivoExpandido, setPerfilCognitivoExpandido] = useState(false);
-  const [personalidadMentor, setPersonalidadMentor] = useState('Riguroso');
 
-  // Estados de Gamificación
-  const [juegoActivo, setJuegoActivo] = useState(null);
-  const [modoJuego, setModoJuego] = useState('pragma'); // 'pragma' o 'arcade'
-  const [juegoData, setJuegoData] = useState(null);
-  const [juegoLoading, setJuegoLoading] = useState(false);
-  const [juegoResultado, setJuegoResultado] = useState(null);
-  const [juegoSeleccion, setJuegoSeleccion] = useState(null);
-  const [sorterLineas, setSorterLineas] = useState([]);
-  const [fillRespuestas, setFillRespuestas] = useState({});
-  const [flashcardIdx, setFlashcardIdx] = useState(0);
-  const [flashcardScore, setFlashcardScore] = useState(0);
-  const [flashcardStreak, setFlashcardStreak] = useState(0);
-  const [xpInfo, setXpInfo] = useState({ xp: 0, nivel_rpg: 1 });
+  const [isVisible, setIsVisible] = useState(true);
 
-  // Nuevos estados para Code Typer y Memory Match
-  const [typerInput, setTyperInput] = useState('');
-  const [typerStartTime, setTyperStartTime] = useState(null);
-  const [typerErrors, setTyperErrors] = useState(0);
-  const [typerWpm, setTyperWpm] = useState(0);
-  const [typerAccuracy, setTyperAccuracy] = useState(100);
-  const [memoryCards, setMemoryCards] = useState([]);
-  const [memorySelected, setMemorySelected] = useState([]);
-  const [memoryMoves, setMemoryMoves] = useState(0);
-  const [gameTimer, setGameTimer] = useState(null);
-
-  // Estados del sistema de logros
-  const [logrosDesbloqueados, setLogrosDesbloqueados] = useState([]);
-  const logrosRef = useRef([]);
   const chatEndRef = useRef(null);
-  const [logroNotificado, setLogroNotificado] = useState(null);
-  const [filtroLogros, setFiltroLogros] = useState('todos');
 
   useEffect(() => {
-    if (chatEndRef.current) {
-      chatEndRef.current.scrollIntoView({ behavior: 'smooth' });
-    }
-  }, [mensajesChat]);
-
-  // Cargar sesión guardada en localStorage al iniciar
-  useEffect(() => {
-    const sesionGuardada = localStorage.getItem('estudiante_sesion');
-    if (sesionGuardada) {
-      const parsed = JSON.parse(sesionGuardada);
-      setEstudiante(parsed);
-      cargarEstado(parsed.id);
-    }
+    const handleVisibilityChange = () => {
+      setIsVisible(!document.hidden);
+    };
+    document.addEventListener('visibilitychange', handleVisibilityChange);
+    return () => document.removeEventListener('visibilitychange', handleVisibilityChange);
   }, []);
 
-  // Polling para actualizar amigos y solicitudes entrantes cada 12 segundos
+  // Polling para actualizar amigos y solicitudes entrantes cada 12 segundos (suspendido si pestaña oculta)
   useEffect(() => {
-    if (!estudiante) return;
+    if (!estudiante || !isVisible) return;
     const interval = setInterval(() => {
       cargarAmigosYSolicitudes(estudiante.id);
     }, 12000);
     return () => clearInterval(interval);
-  }, [estudiante]);
+  }, [estudiante, isVisible]);
 
-  // Polling para actualizar chats activos cada 4 segundos
+  // Polling para actualizar chats activos cada 4 segundos (suspendido si pestaña oculta)
   useEffect(() => {
-    if (!estudiante || !amigoChatActivo) return;
+    if (!estudiante || !amigoChatActivo || !isVisible) return;
     cargarMensajesChat(amigoChatActivo.id);
     const interval = setInterval(() => {
       cargarMensajesChat(amigoChatActivo.id);
     }, 4000);
     return () => clearInterval(interval);
-  }, [estudiante, amigoChatActivo]);
+  }, [estudiante, amigoChatActivo, isVisible]);
 
-  // Polling para duelos pendientes recibidos cada 8 segundos
+  // Polling para duelos pendientes recibidos cada 8 segundos (suspendido si pestaña oculta)
   useEffect(() => {
-    if (!estudiante) return;
+    if (!estudiante || !isVisible) return;
     cargarDuelosPendientes(estudiante.id);
     const interval = setInterval(() => {
       cargarDuelosPendientes(estudiante.id);
     }, 8000);
     return () => clearInterval(interval);
-  }, [estudiante]);
+  }, [estudiante, isVisible]);
 
-  // Ping de presencia online cada 15 segundos
+  // Ping de presencia online cada 15 segundos (suspendido si pestaña oculta)
   useEffect(() => {
-    if (!estudiante) return;
+    if (!estudiante || !isVisible) return;
     const ping = () => {
       fetch(`${API_BASE}/api/estudiantes/${estudiante.id}/ping`, { method: 'POST' }).catch(() => {});
     };
     ping();
     const interval = setInterval(ping, 15000);
     return () => clearInterval(interval);
-  }, [estudiante]);
+  }, [estudiante, isVisible]);
 
   // Polling para monitorear aceptación de invitaciones de duelo enviadas (cada 3 segundos)
   useEffect(() => {
@@ -219,142 +289,6 @@ function App() {
     return () => clearInterval(interval);
   }, [gameTimer, juegoResultado]);
 
-  // Cargar guías de ayuda de forma aislada para el plan seleccionado
-  useEffect(() => {
-    if (planActivo) {
-      setTabMentorColumn('plan');
-      setGuiaAyudaSeleccionada(null);
-      cargarGuiasAyuda(planActivo.id);
-    } else {
-      setGuiasAyuda([]);
-      setGuiaAyudaSeleccionada(null);
-    }
-  }, [planActivo]);
-
-  const cargarGuiasAyuda = async (planId) => {
-    try {
-      const res = await fetch(`${API_BASE}/api/mentor/planes/${planId}/documentos`);
-      const data = await res.json();
-      if (res.ok) {
-        setGuiasAyuda(data);
-      }
-    } catch (err) {
-      console.error('Error al cargar guías de ayuda:', err);
-    }
-  };
-
-  const cargarLogros = async (id) => {
-    try {
-      const res = await fetch(`${API_BASE}/api/logros?estudiante_id=${id}`);
-      const data = await res.json();
-      if (res.ok && data.logros) {
-        const ids = data.logros.map(l => l.logro_id);
-        setLogrosDesbloqueados(ids);
-        logrosRef.current = ids;
-      }
-    } catch (err) {
-      console.error('Error al cargar logros:', err);
-    }
-  };
-
-  const desbloquearLogro = async (logroId) => {
-    if (!estudiante) return;
-    if (logrosRef.current.includes(logroId)) return;
-    
-    // Actualización inmediata para prevenir llamadas múltiples simultáneas
-    logrosRef.current = [...logrosRef.current, logroId];
-    setLogrosDesbloqueados([...logrosRef.current]);
-
-    try {
-      const res = await fetch(`${API_BASE}/api/logros/desbloquear`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ estudiante_id: estudiante.id, logro_id: logroId })
-      });
-      const data = await res.json();
-      if (res.ok && data.success) {
-        const logroDef = LISTA_LOGROS.find(l => l.id === logroId);
-        const detalle = logroDef || { titulo: '🌟 Logro Desbloqueado', desc: '¡Has superado un nuevo desafío!', tipo: 'bronce' };
-        
-        setLogroNotificado({
-          titulo: detalle.titulo,
-          desc: detalle.desc,
-          xp: data.xpGanada,
-          tipo: detalle.tipo
-        });
-
-        reproducirSonido('exito');
-
-        setTimeout(() => {
-          setLogroNotificado(null);
-        }, 5000);
-
-        await cargarXpInfo();
-      } else {
-        // Deshacer si falla en el servidor
-        logrosRef.current = logrosRef.current.filter(id => id !== logroId);
-        setLogrosDesbloqueados([...logrosRef.current]);
-      }
-    } catch (err) {
-      console.error('Error al desbloquear logro:', err);
-      // Deshacer si hay error de red
-      logrosRef.current = logrosRef.current.filter(id => id !== logroId);
-      setLogrosDesbloqueados([...logrosRef.current]);
-    }
-  };
-
-  const evaluarLogros = async (newXp = null, newRpg = null) => {
-    if (!estudiante) return;
-    
-    const juegos = parseInt(localStorage.getItem(`ia_profesor_juegos_completados_${estudiante.id}`) || '0', 10);
-    const trivias = parseInt(localStorage.getItem(`ia_profesor_trivias_correctas_${estudiante.id}`) || '0', 10);
-    const cambios = parseInt(localStorage.getItem(`ia_profesor_cambios_ruta_${estudiante.id}`) || '0', 10);
-    const mensajes = parseInt(localStorage.getItem(`ia_profesor_mensajes_mentor_${estudiante.id}`) || '0', 10);
-    const entregas = parseInt(localStorage.getItem(`ia_profesor_entregas_tareas_${estudiante.id}`) || '0', 10);
-    
-    const xpVal = newXp !== null ? newXp : (xpInfo ? xpInfo.xp : 0);
-    const rpgVal = newRpg !== null ? newRpg : (xpInfo ? xpInfo.nivel_rpg : 1);
-
-    if (juegos >= 1) await desbloquearLogro('primer_juego');
-    if (juegos >= 3) await desbloquearLogro('retos_3');
-    if (juegos >= 5) await desbloquearLogro('retos_5');
-    if (juegos >= 10) await desbloquearLogro('retos_10');
-
-    if (xpVal >= 10) await desbloquearLogro('xp_10');
-    if (xpVal >= 25) await desbloquearLogro('xp_25');
-    if (xpVal >= 50) await desbloquearLogro('xp_50');
-    if (xpVal >= 100) await desbloquearLogro('xp_100');
-    if (xpVal >= 200) await desbloquearLogro('xp_200');
-    if (xpVal >= 300) await desbloquearLogro('xp_300');
-    if (xpVal >= 500) await desbloquearLogro('xp_500');
-    if (xpVal >= 1000) await desbloquearLogro('xp_1000');
-
-    if (rpgVal >= 2) await desbloquearLogro('rpg_2');
-    if (rpgVal >= 3) await desbloquearLogro('rpg_3');
-    if (rpgVal >= 4) await desbloquearLogro('rpg_4');
-    if (rpgVal >= 5) await desbloquearLogro('rpg_5');
-    if (rpgVal >= 6) await desbloquearLogro('rpg_6');
-    if (rpgVal >= 7) await desbloquearLogro('rpg_7');
-    if (rpgVal >= 8) await desbloquearLogro('rpg_8');
-
-    if (trivias >= 1) await desbloquearLogro('trivias_correct');
-    if (trivias >= 3) await desbloquearLogro('trivias_3');
-    if (trivias >= 5) await desbloquearLogro('trivias_5');
-    if (trivias >= 10) await desbloquearLogro('trivias_10');
-
-    if (cambios >= 1) await desbloquearLogro('cambio_ruta');
-    if (cambios >= 3) await desbloquearLogro('cambio_ruta_3');
-    if (cambios >= 5) await desbloquearLogro('cambio_ruta_5');
-
-    if (mensajes >= 5) await desbloquearLogro('chat_mentor_5');
-    if (mensajes >= 10) await desbloquearLogro('chat_mentor_10');
-    if (mensajes >= 20) await desbloquearLogro('chat_mentor_20');
-
-    if (entregas >= 1) await desbloquearLogro('entrega_1');
-    if (entregas >= 3) await desbloquearLogro('entrega_3');
-    if (entregas >= 5) await desbloquearLogro('entrega_5');
-  };
-
   const irAVista = async (vista) => {
     setVistaActiva(vista);
     if (!estudiante) return;
@@ -369,307 +303,20 @@ function App() {
     }
   };
 
-  const cargarEstado = async (id) => {
-    try {
-      const res = await fetch(`${API_BASE}/api/estudiantes/${id}/estado`);
-      const data = await res.json();
-      if (res.ok) {
-        setEstudiante(data.estudiante);
-        setTareas(data.tareas);
-        setTemario(data.temario);
-        await cargarPlanesMentor(id);
-        await cargarLogros(id);
-        await cargarAmigosYSolicitudes(id);
-      } else {
-        mostrarMensaje(data.error || 'Error al cargar el estado', 'error');
-      }
-    } catch (err) {
-      console.error(err);
-      mostrarMensaje('No se pudo conectar con el servidor backend', 'error');
-    }
-  };
-
-  const cargarAmigosYSolicitudes = async (id) => {
-    try {
-      const [amigosRes, pendientesRes] = await Promise.all([
-        fetch(`${API_BASE}/api/amistades/listar/${id}`),
-        fetch(`${API_BASE}/api/amistades/pendientes/${id}`)
-      ]);
-      if (amigosRes.ok) {
-        const amigosData = await amigosRes.json();
-        setListaAmigos(amigosData);
-      }
-      if (pendientesRes.ok) {
-        const pendientesData = await pendientesRes.json();
-        setSolicitudesPendientes(pendientesData);
-        const pendientesIds = pendientesData.map(r => r.id);
-        setSolicitudesVistas(prev => {
-          const filtrados = prev.filter(id => pendientesIds.includes(id));
-          localStorage.setItem('solicitudes_vistas', JSON.stringify(filtrados));
-          return filtrados;
-        });
-      }
-    } catch (err) {
-      console.error('Error al cargar amigos/solicitudes:', err);
-    }
-  };
-
-  const enviarSolicitudAmistad = async (e) => {
-    e.preventDefault();
-    if (!inputIdAmigo.trim() || !estudiante) return;
-    setLoadingAmigos(true);
-    setMensajeAmistad({ texto: '', tipo: '' });
-    try {
-      const res = await fetch(`${API_BASE}/api/amistades/enviar`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ solicitante_id: estudiante.id, receptor_id: inputIdAmigo.trim() })
-      });
-      const data = await res.json();
-      if (res.ok) {
-        setMensajeAmistad({ texto: data.mensaje, tipo: 'success' });
-        setInputIdAmigo('');
-        cargarAmigosYSolicitudes(estudiante.id);
-      } else {
-        setMensajeAmistad({ texto: data.error || 'Error al enviar solicitud.', tipo: 'error' });
-      }
-    } catch (err) {
-      console.error(err);
-      setMensajeAmistad({ texto: 'Error de red al enviar la solicitud.', tipo: 'error' });
-    } finally {
-      setLoadingAmigos(false);
-    }
-  };
-
-  const responderSolicitudAmistad = async (solicitudId, accion) => {
-    if (!estudiante) return;
-    try {
-      const res = await fetch(`${API_BASE}/api/amistades/responder`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ solicitud_id: solicitudId, accion })
-      });
-      const data = await res.json();
-      if (res.ok) {
-        mostrarMensaje(data.mensaje, 'success');
-        cargarAmigosYSolicitudes(estudiante.id);
-      } else {
-        mostrarMensaje(data.error || 'Error al responder la solicitud.', 'error');
-      }
-    } catch (err) {
-      console.error(err);
-      mostrarMensaje('Error de red al responder.', 'error');
-    }
-  };
-
-  const eliminarAmigo = async (amigoId) => {
-    if (!estudiante) return;
-    if (!confirm('¿Estás seguro de que deseas eliminar a este amigo de tu lista táctica social?')) return;
-    try {
-      const res = await fetch(`${API_BASE}/api/amistades/eliminar`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ estudiante_id: estudiante.id, amigo_id: amigoId })
-      });
-      const data = await res.json();
-      if (res.ok) {
-        mostrarMensaje(data.mensaje, 'success');
-        cargarAmigosYSolicitudes(estudiante.id);
-      } else {
-        mostrarMensaje(data.error || 'Error al eliminar amigo.', 'error');
-      }
-    } catch (err) {
-      console.error(err);
-      mostrarMensaje('Error de red al eliminar amigo.', 'error');
-    }
-  };
-
-  const cargarMensajesChat = async (amigoId) => {
-    if (!estudiante) return;
-    try {
-      const res = await fetch(`${API_BASE}/api/chats/listar/${estudiante.id}/${amigoId}`);
-      if (res.ok) {
-        const data = await res.json();
-        setMensajesChat(data);
-      }
-    } catch (err) {
-      console.error("Error al cargar mensajes de chat:", err);
-    }
-  };
-
-  const enviarMensajeChat = async (e) => {
-    e.preventDefault();
-    if (!nuevoMensaje.trim() || !estudiante || !amigoChatActivo) return;
-    setLoadingChat(true);
-    try {
-      const res = await fetch(`${API_BASE}/api/chats/enviar`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          remitente_id: estudiante.id,
-          remitente_nombre: estudiante.nombre,
-          destinatario_id: amigoChatActivo.id,
-          destinatario_nombre: amigoChatActivo.nombre,
-          mensaje: nuevoMensaje.trim()
-        })
-      });
-      if (res.ok) {
-        setNuevoMensaje('');
-        await cargarMensajesChat(amigoChatActivo.id);
-      }
-    } catch (err) {
-      console.error(err);
-      mostrarMensaje('Error al enviar mensaje.', 'error');
-    } finally {
-      setLoadingChat(false);
-    }
-  };
-
-  const enviarInvitacionDuelo = async () => {
-    if (!estudiante || !retarAmigoActivo) return;
-    try {
-      const res = await fetch(`${API_BASE}/api/duelos/invitar`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          retador_id: estudiante.id,
-          retador_nombre: estudiante.nombre,
-          retado_id: retarAmigoActivo.id,
-          retado_nombre: retarAmigoActivo.nombre,
-          tipo_match: tipoMatchDuelo,
-          modos: modosDueloSeleccionados
-        })
-      });
-      const data = await res.json();
-      if (res.ok) {
-        mostrarMensaje(`Invitación de duelo enviada a ${retarAmigoActivo.nombre}`, 'success');
-        setDueloEnviadoActivo(data.duelo);
-        setRetarAmigoActivo(null);
-      } else {
-        mostrarMensaje(data.error || 'Error al enviar invitación.', 'error');
-      }
-    } catch (err) {
-      console.error(err);
-      mostrarMensaje('Error al enviar la invitación.', 'error');
-    }
-  };
-
-  const cargarDuelosPendientes = async (id) => {
-    try {
-      const res = await fetch(`${API_BASE}/api/duelos/pendientes/${id}`);
-      if (res.ok) {
-        const data = await res.json();
-        setDuelosRecibidos(data);
-      }
-    } catch (err) {
-      console.error("Error al obtener duelos pendientes:", err);
-    }
-  };
-
-  const responderDuelo = async (dueloId, accion) => {
-    try {
-      const res = await fetch(`${API_BASE}/api/duelos/responder`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ duelo_id: dueloId, accion })
-      });
-      if (res.ok) {
-        mostrarMensaje(`Duelo ${accion === 'aceptar' ? 'aceptado' : 'rechazado'}.`, 'success');
-        if (accion === 'aceptar') {
-          const duelo = duelosRecibidos.find(d => d.id === dueloId);
-          if (duelo) {
-            setDueloActivo({
-              oponenteNombre: duelo.retador_nombre,
-              cargando: false,
-              mision: `Duelo de Combate (${duelo.tipo_match.toUpperCase()}) - Modos: ${Array.isArray(duelo.modos) ? duelo.modos.join(', ').toUpperCase() : duelo.modos.toUpperCase()}`
-            });
-            setMostrarSocialDropdown(false);
-          }
-        }
-        if (estudiante) cargarDuelosPendientes(estudiante.id);
-      }
-    } catch (err) {
-      console.error(err);
-    }
-  };
-
-  const desafiarAmigo1vs1 = (amigo) => {
-    setRetarAmigoActivo(amigo);
-  };
-
-  const registrarPartidaOnline = async (ganada = false) => {
-    if (!estudiante) return;
-    try {
-      const pJugadas = (estudiante.partidas_jugadas || 0) + 1;
-      const pGanadas = (estudiante.partidas_ganadas || 0) + (ganada ? 1 : 0);
-      
-      const res = await fetch(`${API_BASE}/api/estudiantes/${estudiante.id}/stats`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          partidas_jugadas: pJugadas,
-          partidas_ganadas: pGanadas,
-          lenguaje_mas_dominado: estudiante.tecnologia_actual || 'JavaScript'
-        })
-      });
-      if (res.ok) {
-        setEstudiante(prev => ({
-          ...prev,
-          partidas_jugadas: pJugadas,
-          partidas_ganadas: pGanadas
-        }));
-      }
-    } catch (err) {
-      console.error("Error al registrar partida online:", err);
-    }
-  };
-
   const estaOnline = (ultimaConexion) => {
     if (!ultimaConexion) return false;
     const diff = Date.now() - new Date(ultimaConexion).getTime();
     return diff < 30000;
   };
 
-  const iniciarSesion = async (e) => {
+  const submitIniciarSesion = async (e) => {
     e.preventDefault();
     if (!nombre.trim()) return;
-
-    setLoading(true);
-    try {
-      const res = await fetch(`${API_BASE}/api/estudiantes`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ nombre, tecnologia })
-      });
-      const data = await res.json();
-
-      if (res.ok) {
-        setEstudiante(data);
-        localStorage.setItem('estudiante_sesion', JSON.stringify(data));
-        await cargarEstado(data.id);
-        mostrarMensaje(`¡Bienvenido de vuelta, ${data.nombre}!`, 'exito');
-      } else {
-        mostrarMensaje(data.error || 'Error al iniciar sesión', 'error');
-      }
-    } catch (err) {
-      console.error(err);
-      mostrarMensaje('Error de conexión con el backend', 'error');
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  const cerrarSesion = () => {
-    localStorage.removeItem('estudiante_sesion');
-    setEstudiante(null);
-    setTareas([]);
-    setTemario([]);
-    setNombre('');
+    await iniciarSesion(nombre, tecnologia);
   };
 
   const cambiarTecnologia = async (nuevaTech) => {
     if (!estudiante) return;
-    setLoading(true);
     try {
       const res = await fetch(`${API_BASE}/api/estudiantes`, {
         method: 'POST',
@@ -694,15 +341,11 @@ function App() {
     } catch (err) {
       console.error(err);
       mostrarMensaje('Error de conexión con el backend', 'error');
-    } finally {
-      setLoading(false);
     }
   };
 
   const generarNuevaTarea = async () => {
     if (!estudiante) return;
-
-    setLoading(true);
     try {
       const res = await fetch(`${API_BASE}/api/generar-tarea`, {
         method: 'POST',
@@ -714,7 +357,6 @@ function App() {
         })
       });
       const data = await res.json();
-
       if (res.ok) {
         mostrarMensaje('Nueva tarea conceptual y práctica generada con éxito', 'exito');
         await cargarEstado(estudiante.id);
@@ -724,19 +366,15 @@ function App() {
     } catch (err) {
       console.error(err);
       mostrarMensaje('Error de conexión con el backend', 'error');
-    } finally {
-      setLoading(false);
     }
   };
 
   const enviarEntrega = async (e, tareaId) => {
     e.preventDefault();
-    
     if (tipoEntrega === 'codigo' && !codigoEntregado.trim()) {
       mostrarMensaje('Por favor, pega el código de tu solución antes de enviarla.', 'error');
       return;
     }
-    
     if (tipoEntrega === 'github') {
       if (!githubUrl.trim()) return;
       const githubUrlRegex = /^https:\/\/github\.com\/[a-zA-Z0-9_.-]+\/[a-zA-Z0-9_.-]+(?:\.git)?\/?$/;
@@ -759,7 +397,6 @@ function App() {
         })
       });
       const data = await res.json();
-
       if (res.ok) {
         if (data.aprobada) {
           mostrarMensaje(`¡Excelente! Aprobado con ${data.entrega.puntaje}/100. Siguiente módulo desbloqueado.`, 'exito');
@@ -776,15 +413,9 @@ function App() {
 
         // Evaluar puntaje para logros de calificación
         const puntaje = data.entrega.puntaje;
-        if (puntaje === 100) {
-          await desbloquearLogro('calif_100');
-        }
-        if (puntaje >= 95) {
-          await desbloquearLogro('calif_95');
-        }
-        if (puntaje >= 90) {
-          await desbloquearLogro('calif_90');
-        }
+        if (puntaje === 100) await desbloquearLogro('calif_100');
+        if (puntaje >= 95) await desbloquearLogro('calif_95');
+        if (puntaje >= 90) await desbloquearLogro('calif_90');
         
         await evaluarLogros();
       } else {
@@ -801,7 +432,6 @@ function App() {
   const handleRegenerar = async () => {
     if (!tareaActiva) return;
     if (!window.confirm("¿Estás seguro de que deseas regenerar esta guía conceptual y el reto práctico? Se creará un nuevo documento con diferentes ejemplos y retos adaptados.")) return;
-    
     setIsRegenerating(true);
     try {
       const res = await fetch(`${API_BASE}/api/regenerar-tarea`, {
@@ -824,172 +454,6 @@ function App() {
     }
   };
 
-  const mostrarMensaje = (texto, tipo) => {
-    setMensaje({ texto, tipo });
-    setTimeout(() => setMensaje({ texto: '', tipo: '' }), 6000);
-  };
-
-  const cargarPlanesMentor = async (estId) => {
-    try {
-      const res = await fetch(`${API_BASE}/api/mentor/planes/${estId}`);
-      const data = await res.json();
-      if (res.ok) {
-        setPlanesMentor(data);
-      }
-    } catch (err) {
-      console.error(err);
-    }
-  };
-
-  const crearPlanMentor = async (e) => {
-    e.preventDefault();
-    if (!ideaProyecto.trim()) return;
-    setMentorLoading(true);
-    try {
-      const res = await fetch(`${API_BASE}/api/mentor/crear-plan`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          estudiante_id: estudiante.id,
-          idea_proyecto: ideaProyecto,
-          github_url: githubUrlMentor
-        })
-      });
-      const data = await res.json();
-      if (res.ok) {
-        setPlanesMentor(prev => [data, ...prev]);
-        setPlanActivo(data);
-        setIdeaProyecto('');
-        setGithubUrlMentor('');
-        mostrarMensaje('¡Plan de Implementación Académico Generado por el Mentor!', 'exito');
-        await desbloquearLogro('primer_mentor');
-      } else {
-        mostrarMensaje(data.error || 'Error al generar el plan', 'error');
-      }
-    } catch (err) {
-      console.error(err);
-      mostrarMensaje('Error al contactar con el mentor', 'error');
-    } finally {
-      setMentorLoading(false);
-    }
-  };
-
-  const enviarMensajeMentor = async (e) => {
-    e.preventDefault();
-    if (!mensajeChatMentor.trim() || !planActivo) return;
-    setChatLoading(true);
-    const mensajeEstudiante = mensajeChatMentor;
-    setMensajeChatMentor('');
-    
-    // Feedback visual inmediato en el chat
-    setPlanActivo(prev => ({
-      ...prev,
-      mensajes: [...prev.mensajes, { remitente: 'estudiante', texto: mensajeEstudiante, fecha: new Date().toISOString() }]
-    }));
-
-    try {
-      const res = await fetch(`${API_BASE}/api/mentor/chat`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          plan_id: planActivo.id,
-          mensaje: mensajeEstudiante,
-          personalidad: personalidadMentor
-        })
-      });
-      const data = await res.json();
-      if (res.ok) {
-        setPlanActivo(prev => ({
-          ...prev,
-          mensajes: data.mensajes
-        }));
-        setPlanesMentor(prev => prev.map(p => p.id === planActivo.id ? { ...p, mensajes: data.mensajes } : p));
-        // Recargar la lista de guías de ayuda al recibir la respuesta
-        await cargarGuiasAyuda(planActivo.id);
-        
-        // Incrementar mensajes del mentor en localStorage
-        const currentMsgs = parseInt(localStorage.getItem(`ia_profesor_mensajes_mentor_${estudiante.id}`) || '0', 10) + 1;
-        localStorage.setItem(`ia_profesor_mensajes_mentor_${estudiante.id}`, currentMsgs.toString());
-        await evaluarLogros();
-
-        // Cargar el estado del estudiante de forma asíncrona tras un breve delay para refrescar el perfil cognitivo
-        setTimeout(() => {
-          if (estudiante?.id) {
-            cargarEstado(estudiante.id);
-          }
-        }, 3000);
-      } else {
-        mostrarMensaje(data.error || 'Error al enviar mensaje al mentor', 'error');
-      }
-    } catch (err) {
-      console.error(err);
-      mostrarMensaje('Error de conexión con el mentor', 'error');
-    } finally {
-      setChatLoading(false);
-    }
-  };
-
-  const regenerarGuiaAyuda = async (docId) => {
-    if (!window.confirm("¿Deseas regenerar esta guía técnica de ayuda con una alternativa de diseño o solución ampliada?")) return;
-    setRegeneratingGuiaId(docId);
-    try {
-      const res = await fetch(`${API_BASE}/api/mentor/documentos/regenerar`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ documento_id: docId })
-      });
-      const data = await res.json();
-      if (res.ok) {
-        mostrarMensaje('Guía de ayuda técnica regenerada con éxito', 'exito');
-        
-        // Actualizar la lista de guías
-        setGuiasAyuda(prev => prev.map(g => g.id === docId ? {
-          ...g,
-          respuesta_mentor: data.respuesta_mentor,
-          documento_markdown: data.documento_markdown,
-          word_url: data.word_url
-        } : g));
-
-        // Si es la guía seleccionada actualmente, actualizar la vista previa
-        setGuiaAyudaSeleccionada(prev => prev?.id === docId ? {
-          ...prev,
-          respuesta_mentor: data.respuesta_mentor,
-          documento_markdown: data.documento_markdown,
-          word_url: data.word_url
-        } : prev);
-
-        // Actualizar también en el plan activo los mensajes del chat
-        if (planActivo) {
-          const mensajesActualizados = planActivo.mensajes.map(m => {
-            if (m.documento_ayuda && m.documento_ayuda.id === docId) {
-              return {
-                ...m,
-                texto: data.respuesta_mentor,
-                documento_ayuda: {
-                  ...m.documento_ayuda,
-                  titulo: m.documento_ayuda.titulo,
-                  word_url: data.word_url,
-                  markdown: data.documento_markdown
-                }
-              };
-            }
-            return m;
-          });
-          setPlanActivo(prev => ({ ...prev, mensajes: mensajesActualizados }));
-          setPlanesMentor(prev => prev.map(p => p.id === planActivo.id ? { ...p, mensajes: mensajesActualizados } : p));
-        }
-      } else {
-        mostrarMensaje(data.error || 'Error al regenerar la guía de ayuda', 'error');
-      }
-    } catch (err) {
-      console.error(err);
-      mostrarMensaje('Error de conexión al regenerar la guía', 'error');
-    } finally {
-      setRegeneratingGuiaId(null);
-    }
-  };
-
-  // Función para parsear observaciones con desglose de rúbrica
   const parseObservaciones = (obsRaw) => {
     try {
       const parsed = JSON.parse(obsRaw);
@@ -1000,26 +464,12 @@ function App() {
           comentarios: parsed.comentarios
         };
       }
-    } catch (e) {
-      // Ignorar error, tratar como texto plano
-    }
+    } catch (e) {}
     return {
       esEstructurado: false,
       comentarios: obsRaw
     };
   };
-
-  // Funciones de Gamificación
-  const cargarXpInfo = useCallback(() => {
-    if (!estudiante) return;
-    try {
-      const perfil = JSON.parse(estudiante.perfil_cognitivo || '{}');
-      setXpInfo({ xp: perfil.xp || 0, nivel_rpg: perfil.nivel_rpg || 1 });
-      setNivelSkillTree(estudiante.nivel_actual || 'Novato');
-    } catch { setXpInfo({ xp: 0, nivel_rpg: 1 }); }
-  }, [estudiante]);
-
-  useEffect(() => { cargarXpInfo(); }, [cargarXpInfo]);
 
   const JUEGOS = [
     { id: 'trivia', nombre: '🧠 Trivia Técnica', desc: 'Responde preguntas sobre conceptos clave', icon: Brain, xp: 20, endpoint: '/api/gamificacion/trivia' },
@@ -1068,7 +518,6 @@ function App() {
           setMemoryCards(inicializadas);
           setTyperStartTime(Date.now());
         } else if (juego.id === 'trivia') {
-          // Temporizador de Trivia
           setGameTimer(20);
         }
       } else {
@@ -1083,6 +532,7 @@ function App() {
       setJuegoLoading(false);
     }
   };
+
 
   const completarReto = async (tipoReto) => {
     if (!estudiante) return;
@@ -1670,7 +1120,7 @@ function App() {
               {/* Modal de Configuración de Duelo */}
               {retarAmigoActivo && (
                 <div className="social-modal-overlay animate-fade-in" style={{ zIndex: 400 }}>
-                  <div className="social-modal-card max-w-[450px]">
+                   <div className="social-modal-card max-w-[450px]">
                     <div className="social-modal-header" style={{ borderBottomColor: 'rgba(0, 255, 204, 0.4)' }}>
                       <div className="flex items-center gap-2">
                         <Swords size={18} className="text-[#00ffcc] animate-pulse" />
@@ -1685,6 +1135,59 @@ function App() {
                         <span className="text-slate-400">COMBATIENTE OBJETIVO: </span>
                         <span className="text-[#00ffcc] font-bold">{retarAmigoActivo.nombre}</span>
                       </div>
+
+                      <div className="flex flex-col gap-2">
+                        <label className="text-[#00ffcc] font-bold text-[10px] uppercase tracking-wider">TECNOLOGÍA DEL DESAFÍO</label>
+                        <select
+                          value={lenguajeDuelo}
+                          onChange={(e) => setLenguajeDuelo(e.target.value)}
+                          className="select-tech-header w-full p-2 rounded bg-slate-950 border border-slate-800 text-white focus:border-[#00ffcc] outline-none"
+                          style={{ height: '35px', padding: '0 10px' }}
+                        >
+                          <option value="JavaScript">JavaScript</option>
+                          <option value="Python">Python</option>
+                          <option value="Java">Java</option>
+                          <option value="React">React</option>
+                          <option value="Node.js">Node.js</option>
+                          <option value="Supabase">Supabase</option>
+                          <option value="HTML">HTML</option>
+                          <option value="CSS">CSS</option>
+                          <option value="C++">C++</option>
+                        </select>
+                      </div>
+
+                      {(() => {
+                        const JERARQUIA_NIVELES = ['Novato', 'Principiante', 'Intermedio', 'Experto'];
+                        const idxMaximo = JERARQUIA_NIVELES.indexOf(estudiante?.nivel_actual || 'Novato');
+                        const nivelesPermitidos = JERARQUIA_NIVELES.slice(0, idxMaximo !== -1 ? idxMaximo + 1 : 1);
+                        return (
+                          <div className="flex flex-col gap-2">
+                            <label className="text-[#00ffcc] font-bold text-[10px] uppercase tracking-wider font-mono">DIFICULTAD (MÁXIMO: {estudiante?.nivel_actual})</label>
+                            <div className="grid grid-cols-2 gap-2">
+                              {JERARQUIA_NIVELES.map((nivel) => {
+                                const permitido = nivelesPermitidos.includes(nivel);
+                                return (
+                                  <button
+                                    key={nivel}
+                                    type="button"
+                                    disabled={!permitido}
+                                    onClick={() => setNivelDuelo(nivel)}
+                                    className={`p-2 rounded border text-center transition text-[10px] font-mono uppercase ${
+                                      !permitido 
+                                        ? 'opacity-30 cursor-not-allowed bg-slate-950 border-slate-900 text-slate-600'
+                                        : nivelDuelo === nivel
+                                        ? 'bg-amber-500/15 border-amber-500 text-amber-500 font-bold'
+                                        : 'bg-slate-900 border-slate-800 text-slate-400 hover:border-slate-700'
+                                    }`}
+                                  >
+                                    {nivel}
+                                  </button>
+                                );
+                              })}
+                            </div>
+                          </div>
+                        );
+                      })()}
 
                       <div className="flex flex-col gap-2">
                         <label className="text-[#00ffcc] font-bold text-[10px] uppercase tracking-wider">TAMAÑO DEL ENCUENTRO</label>
@@ -1712,13 +1215,17 @@ function App() {
                       </div>
 
                       <div className="flex flex-col gap-2">
-                        <label className="text-[#00ffcc] font-bold text-[10px] uppercase tracking-wider">MODOS / ARENAS DE COMBATE</label>
-                        <div className="flex flex-col gap-2 bg-slate-950/40 p-2.5 rounded border border-slate-900">
+                        <label className="text-[#00ffcc] font-bold text-[10px] uppercase tracking-wider">MINIJUEGOS INCLUIDOS</label>
+                        <div className="flex flex-col gap-2 bg-slate-950/40 p-2.5 rounded border border-slate-900 max-h-[160px] overflow-y-auto pr-1">
                           {[
-                            { id: 'algoritmia', label: 'Algoritmia Extrema (Optimización)' },
-                            { id: 'refactorizacion', label: 'Refactorización Quantum' },
-                            { id: 'sql', label: 'Alineamiento de Base de Datos (SQL)' },
-                            { id: 'seguridad', label: 'Seguridad Ciberpunk (CSP & XSS)' }
+                            { id: 'trivia', label: 'Preguntas Técnicas (Trivia)' },
+                            { id: 'refactor', label: 'Bug Hunter (Refactor)' },
+                            { id: 'sorter', label: 'Code Sorter (Ordenar líneas)' },
+                            { id: 'fill-blank', label: 'Fill the Code (Completar espacios)' },
+                            { id: 'output', label: 'Output Predictor (Predicción)' },
+                            { id: 'flashcard', label: 'Flashcards de Conceptos' },
+                            { id: 'typer', label: 'Code Typer Speed (Tipeo)' },
+                            { id: 'memory', label: 'Memory Match (Parejas)' }
                           ].map((modo) => {
                             const seleccionado = modosDueloSeleccionados.includes(modo.id);
                             return (
@@ -1897,6 +1404,12 @@ function App() {
               </button>
             </div>
 
+            <React.Suspense fallback={
+              <div className="flex flex-col items-center justify-center p-12 text-gray-400 bg-gray-900/50 rounded-2xl border border-gray-800/80 backdrop-blur-md">
+                <RefreshCw className="animate-spin text-teal-400 mb-4" size={32} />
+                <p className="text-sm font-semibold tracking-wide uppercase">Cargando módulo de Pragma...</p>
+              </div>
+            }>
             {vistaActiva === 'ruta' ? (
               <DashboardRuta
                 indiceTemaActual={indiceTemaActual}
@@ -1949,7 +1462,7 @@ function App() {
               setPersonalidadMentor={setPersonalidadMentor}
               mensajeChatMentor={mensajeChatMentor}
               setMensajeChatMentor={setMensajeChatMentor}
-              enviarMensajeMentor={enviarMensajeMentor}
+              enviarMensajeMentor={enviarMensajeChatMentor}
             />
           ) : vistaActiva === 'habilidades' ? (
             <HabilidadesRoadmap
@@ -1993,6 +1506,8 @@ function App() {
                   onUpdateEstudiante={(estActualizado) => setEstudiante(estActualizado)}
                   backendUrl={API_BASE}
                   listaAmigos={listaAmigos}
+                  partidaDueloActiva={partidaDueloActiva}
+                  onLimpiarPartidaDuelo={() => setPartidaDueloActiva(null)}
                 />
               ) : (
                 /* RENDERIZADO DEL ARCADE DE MINIJUEGOS CLÁSICOS */
@@ -2371,6 +1886,7 @@ function App() {
               responderSolicitudAmistad={responderSolicitudAmistad}
             />
           ) : null}
+          </React.Suspense>
 
           {/* Modal de Duelo 1vs1 Táctico */}
           {dueloActivo && (
@@ -2451,6 +1967,33 @@ function App() {
                 </div>
                 <div className="toast-xp">
                   <span>+{logroNotificado.xp} XP</span>
+                </div>
+              </div>
+            </div>
+          )}
+
+          {/* Notificación Táctica en Tiempo Real (Solicitudes/Duelos) */}
+          {toastActivo && (
+            <div className="logro-toast-notification animate-slide-in oro" style={{ bottom: '24px', right: '24px', background: 'linear-gradient(135deg, rgba(15, 23, 42, 0.95), rgba(8, 14, 28, 0.98))', borderColor: '#00f3ff', borderStyle: 'solid', borderWidth: '1px', boxShadow: '0 0 15px rgba(0, 243, 255, 0.25)', minWidth: '320px' }}>
+              <div className="toast-glow" style={{ background: 'radial-gradient(circle at center, rgba(0, 243, 255, 0.2) 0%, transparent 70%)' }}></div>
+              <div className="toast-content flex items-center justify-between gap-4 w-full p-1">
+                <div className="toast-text flex-1">
+                  <span className="toast-meta text-[#00f3ff] text-[9px] tracking-widest block uppercase font-mono">{toastActivo.titulo}</span>
+                  <h4 className="text-white text-xs font-mono font-bold mt-1 leading-snug">{toastActivo.descripcion}</h4>
+                </div>
+                <div className="flex gap-2">
+                  <button 
+                    onClick={() => setToastActivo(null)}
+                    className="px-2.5 py-1.5 bg-slate-900/80 hover:bg-slate-800 text-[10px] text-slate-400 font-mono border border-slate-800 rounded transition-all"
+                  >
+                    DESCARTAR
+                  </button>
+                  <button 
+                    onClick={toastActivo.onAccion}
+                    className="px-3 py-1.5 bg-gradient-to-r from-cyan-500 to-[#00ffcc] text-slate-950 font-mono text-[10px] font-bold rounded shadow-[0_0_8px_rgba(0,255,204,0.3)] transition-all hover:scale-105"
+                  >
+                    {toastActivo.accionLabel}
+                  </button>
                 </div>
               </div>
             </div>
