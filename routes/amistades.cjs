@@ -285,8 +285,29 @@ router.post('/api/duelos/responder', async (req, res) => {
     if (!docSnap.exists()) return res.status(404).json({ error: 'Duelo no encontrado.' });
 
     const estadoFinal = accion === 'aceptar' ? 'aceptado' : 'rechazado';
-    await updateDoc(docRef, { estado: estadoFinal });
-    res.json({ success: true, mensaje: `Duelo ${estadoFinal} con éxito.` });
+    const dueloData = docSnap.data();
+    
+    let retos = dueloData.retos;
+    if (accion === 'aceptar' && (!retos || retos.length === 0)) {
+      const pragmaModule = require('./pragma.cjs');
+      const cat = Array.isArray(dueloData.modos) ? (dueloData.modos.includes('arcade') ? 'arcade' : 'mixed') : 'mixed';
+      retos = pragmaModule.generarRetosMultijugador 
+        ? pragmaModule.generarRetosMultijugador(cat, (dueloData.nivel || 'intermedio').toLowerCase())
+        : [];
+    }
+
+    const updates = { estado: estadoFinal };
+    if (retos && retos.length > 0) updates.retos = retos;
+    await updateDoc(docRef, updates);
+
+    const dueloActualizado = { ...dueloData, ...updates };
+
+    if (accion === 'aceptar' && global.enviarNotificacionSSE) {
+      global.enviarNotificacionSSE(dueloData.retador_id, 'duelo_aceptado', dueloActualizado);
+    }
+
+    res.json({ success: true, mensaje: `Duelo ${estadoFinal} con éxito.`, duelo: dueloActualizado });
+
   } catch (error) {
     console.error('Error al responder duelo:', error);
     res.status(500).json({ error: 'Error interno.' });

@@ -135,12 +135,42 @@ function LobbyView({ estudiante, backendUrl, onUpdate, listaAmigos = [], partida
         }
       ];
 
+      let retosDuelo = partidaDueloActiva.retos;
+      if (!retosDuelo || !Array.isArray(retosDuelo) || retosDuelo.length === 0) {
+        retosDuelo = [
+          {
+            id: 'trivia_d1',
+            tipo: 'trivia',
+            titulo: 'Algoritmos & Estructuras',
+            pregunta: '¿Cuál es la complejidad temporal promedio de búsqueda en un Map/Set hash?',
+            opciones: ['O(N)', 'O(log N)', 'O(1)', 'O(N log N)'],
+            correcta: 2
+          },
+          {
+            id: 'typer_d1',
+            tipo: 'typer',
+            titulo: 'Speedrun de Sintaxis',
+            codigo: 'const [duelo, setDuelo] = useState(true);',
+            descripcion: 'Escribe el snippet a máxima velocidad.'
+          },
+          {
+            id: 'zen_d1',
+            tipo: 'zen',
+            titulo: 'Caso Base Seguro',
+            descripcion: 'Escribe el caso base para evitar recursión infinita.',
+            codigoInicial: 'function fib(n) {\n  if (______) return n;\n  return fib(n - 1) + fib(n - 2);\n}',
+            codigoCorrecto: 'function fib(n) {\n  if (n <= 1) return n;\n  return fib(n - 1) + fib(n - 2);\n}',
+            guia: 'Ejemplo: n <= 1'
+          }
+        ];
+      }
+
       const matchState = {
         id: partidaDueloActiva.id,
-        retos: partidaDueloActiva.retos,
+        retos: retosDuelo,
         retoActualIndice: 0,
         userTriviaRespuestas: {},
-        userCodigoInput: partidaDueloActiva.retos[0]?.codigoInicial || '',
+        userCodigoInput: retosDuelo[0]?.codigoInicial || '',
         userProgress: 0,
         userErrors: 0,
         userFinished: false,
@@ -334,17 +364,17 @@ function LobbyView({ estudiante, backendUrl, onUpdate, listaAmigos = [], partida
   const timerRef = useRef(null);
   const matchIntervalRef = useRef(null);
 
-  // Retos disponibles en la simulación
+  // Retos completos disponibles en la simulación táctica multijugador
   const RETOS_MULTIPLAYER = {
     arcade: [
       {
         id: 'trivia_1',
         tipo: 'trivia',
         titulo: 'Complejidad Computacional',
-        pregunta: '¿Cuál es la complejidad temporal promedio de búsqueda en un Map/Set bien balanceado?',
+        pregunta: '¿Cuál es la complejidad temporal promedio de búsqueda en un Map/Set bien balanceado en V8?',
         opciones: ['O(N)', 'O(log N)', 'O(1)', 'O(N log N)'],
         correcta: 2,
-        explicacion: 'Las tablas Hash permiten acceso en O(1) promedio gracias a su función hash.'
+        explicacion: 'Las tablas Hash permiten acceso en O(1) promedio gracias a su función de hashing.'
       },
       {
         id: 'trivia_2',
@@ -356,45 +386,91 @@ function LobbyView({ estudiante, backendUrl, onUpdate, listaAmigos = [], partida
         explicacion: 'useCallback memoriza una función en lugar de su valor de retorno.'
       },
       {
-        id: 'trivia_3',
-        tipo: 'trivia',
-        titulo: 'Event Loop',
-        pregunta: '¿En qué orden se procesan las Microtareas (promesas) en comparación con las Macrotareas (setTimeout) en JS?',
-        opciones: [
-          'Se ejecutan después de las macrotareas',
-          'Tienen prioridad y se ejecutan antes del siguiente ciclo de macrotareas',
-          'Se ejecutan en paralelo en diferentes hilos',
-          'El navegador decide aleatoriamente'
+        id: 'output_1',
+        tipo: 'output',
+        titulo: 'Predicción de Salida: Coerción',
+        codigo: 'console.log(1 + +"2" + "2");',
+        opciones: ['"32"', '"122"', 'NaN', '3'],
+        correcta: 0,
+        explicacion: 'El operador unario +"2" convierte a número 2; 1 + 2 = 3; luego 3 + "2" resulta en "32".'
+      },
+      {
+        id: 'refactor_1',
+        tipo: 'refactor',
+        titulo: 'Auditoría de Bucle Infinito',
+        descripcion: 'Identifica la corrección para evitar el bucle infinito causado por la reasignación de i.',
+        codigo_con_bug: 'for (let i = 5; i >= 0; i--) {\n  if (i === 0) i = 5;\n}',
+        opciones_correcion: [
+          'for (let i = 5; i > 0; i--) { break; }',
+          'Eliminar "if (i === 0) i = 5;" para permitir que la condición i >= 0 finalice.',
+          'Cambiar el decremento i-- por i++.'
         ],
-        correcta: 1,
-        explicacion: 'La cola de microtareas se vacía por completo antes de ejecutar la siguiente macrotarea.'
+        correcta: 1
+      },
+      {
+        id: 'flashcard_1',
+        tipo: 'flashcard',
+        titulo: 'Fundamentos de Motor Web & JS',
+        flashcards: [
+          { afirmacion: 'Las microtareas (Promise.then) tienen prioridad sobre las macrotareas (setTimeout).', es_verdadero: true },
+          { afirmacion: 'Array.prototype.map muta el array original in-place.', es_verdadero: false },
+          { afirmacion: 'const en JavaScript previene la mutación de claves internas de un objeto.', es_verdadero: false }
+        ]
+      },
+      {
+        id: 'memory_1',
+        tipo: 'memory',
+        titulo: 'Matriz de Conceptos de Software',
+        cartas: [
+          { id: 'm1', matchingId: 'p1', texto: 'Closure', flipped: false, matched: false },
+          { id: 'm2', matchingId: 'p1', texto: 'Ámbito Léxico Recordado', flipped: false, matched: false },
+          { id: 'm3', matchingId: 'p2', texto: 'Idempotencia', flipped: false, matched: false },
+          { id: 'm4', matchingId: 'p2', texto: 'Mismo Resultado Siempre', flipped: false, matched: false }
+        ]
       }
     ],
     pragma: [
+      {
+        id: 'sorter_1',
+        tipo: 'sorter',
+        titulo: 'Pipeline Funcional de Arrays',
+        lineas: ['  .map(n => n * 2);', 'return numeros', '  .filter(n => n % 2 === 0)'],
+        lineas_ordenadas: ['return numeros', '  .filter(n => n % 2 === 0)', '  .map(n => n * 2);']
+      },
+      {
+        id: 'fill_1',
+        tipo: 'fill-blank',
+        titulo: 'Consumo Asíncrono de APIs',
+        codigo_con_huecos: 'const response = ___1___ fetch("/api/datos");\nconst payload = ___2___ response.json();',
+        respuestas: {
+          '1': 'await',
+          '2': 'await'
+        }
+      },
+      {
+        id: 'typer_1',
+        tipo: 'typer',
+        titulo: 'Speedrun: Declaración de Estado',
+        codigo: 'const [operador, setOperador] = useState(null);',
+        descripcion: 'Escribe el código React exactamente igual a máxima velocidad.'
+      },
       {
         id: 'zen_1',
         tipo: 'zen',
         titulo: 'Recursión Segura',
         descripcion: 'Completa la línea de control del caso base recursivo para evitar que un número negativo cause un Stack Overflow.',
-        codigoInicial: `function factorial(n) {
-  // Escribe aquí la validación correcta del parámetro n (n <= 0 o similar)
-  if (______) return 1;
-  return n * factorial(n - 1);
-}`,
+        codigoInicial: `function factorial(n) {\n  if (______) return 1;\n  return n * factorial(n - 1);\n}`,
+        codigoCorrecto: `function factorial(n) {\n  if (n <= 1) return 1;\n  return n * factorial(n - 1);\n}`,
         validador: (codigo) => codigo.includes('n <= 0') || codigo.includes('n < 1') || codigo.includes('n <= 1'),
-        guia: 'Ejemplo de entrada: n <= 0'
+        guia: 'Ejemplo de entrada: n <= 1'
       },
       {
         id: 'tinder_1',
         tipo: 'tinder',
         titulo: 'Centrado Flexible',
         descripcion: 'Escribe la propiedad CSS correcta para centrar verticalmente elementos dentro de un contenedor flexible con dirección de columna.',
-        codigoInicial: `.cyber-container {
-  display: flex;
-  flex-direction: column;
-  /* Centrar verticalmente en flex-direction: column */
-  justify-content: ______;
-}`,
+        codigoInicial: `.cyber-container {\n  display: flex;\n  flex-direction: column;\n  /* Centrar verticalmente en flex-direction: column */\n  justify-content: ______;\n}`,
+        codigoCorrecto: `.cyber-container {\n  display: flex;\n  flex-direction: column;\n  justify-content: center;\n}`,
         validador: (codigo) => codigo.includes('center') && codigo.includes('justify-content'),
         guia: 'Ejemplo de entrada: justify-content: center;'
       }
@@ -466,19 +542,51 @@ function LobbyView({ estudiante, backendUrl, onUpdate, listaAmigos = [], partida
     setShowMasterConfig(true);
   };
 
-  const confirmAndSearch = () => {
+  const confirmAndSearch = async () => {
     setShowMasterConfig(false);
     setSearching(true);
     setSearchTimer(0);
     setBattleResult(null);
 
+    // Intentar registrar ticket en backend de matchmaking
+    try {
+      fetch(`${backendUrl}/api/pragma/multiplayer/match/join`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          estudiante_id: estudiante.id,
+          tipo_match: matchType,
+          categoria: challengeCategory,
+          dificultad: difficulty
+        })
+      }).catch(err => console.warn('Matchmaking join fallback local:', err));
+    } catch (e) {
+      // Offline fallback
+    }
+
     let sec = 0;
-    timerRef.current = setInterval(() => {
+    timerRef.current = setInterval(async () => {
       sec++;
       setSearchTimer(sec);
 
-      // Encontrar partida después de 4 segundos
-      if (sec >= 4) {
+      // Sondear estado en backend
+      try {
+        const res = await fetch(`${backendUrl}/api/pragma/multiplayer/match/status/${estudiante.id}`);
+        if (res.ok) {
+          const data = await res.json();
+          if (data.status === 'completado' && data.matchResult) {
+            clearInterval(timerRef.current);
+            setSearching(false);
+            initiateActiveMatch(data.matchResult);
+            return;
+          }
+        }
+      } catch (err) {
+        // Silencioso
+      }
+
+      // Encontrar partida automáticamente a los 5 segundos (fallback local)
+      if (sec >= 5) {
         clearInterval(timerRef.current);
         setSearching(false);
         initiateActiveMatch();
@@ -486,21 +594,39 @@ function LobbyView({ estudiante, backendUrl, onUpdate, listaAmigos = [], partida
     }, 1000);
   };
 
-  const initiateActiveMatch = () => {
-    // Escoger los retos según la configuración del Master
+  const initiateActiveMatch = (backendMatch = null) => {
+    // Escoger los retos según la configuración del Master o del backend sincronizado
     let retosElegidos = [];
-    if (challengeCategory === 'arcade') {
-      retosElegidos = [...RETOS_MULTIPLAYER.arcade];
-    } else if (challengeCategory === 'pragma') {
-      retosElegidos = [...RETOS_MULTIPLAYER.pragma];
+    if (backendMatch && Array.isArray(backendMatch.retos) && backendMatch.retos.length > 0) {
+      retosElegidos = backendMatch.retos;
     } else {
-      retosElegidos = [...RETOS_MULTIPLAYER.arcade.slice(0, 2), RETOS_MULTIPLAYER.pragma[0]];
+      if (challengeCategory === 'arcade') {
+        retosElegidos = [...RETOS_MULTIPLAYER.arcade].sort(() => 0.5 - Math.random()).slice(0, 3);
+      } else if (challengeCategory === 'pragma') {
+        retosElegidos = [...RETOS_MULTIPLAYER.pragma].sort(() => 0.5 - Math.random()).slice(0, 3);
+      } else {
+        const a = [...RETOS_MULTIPLAYER.arcade].sort(() => 0.5 - Math.random()).slice(0, 2);
+        const p = [...RETOS_MULTIPLAYER.pragma].sort(() => 0.5 - Math.random()).slice(0, 2);
+        retosElegidos = [...a, ...p];
+      }
     }
 
     let finalPlayers = [];
     const maxSlots = matchType === '2v2' ? 2 : 4;
 
-    if (matchType === '1v1') {
+    if (backendMatch && Array.isArray(backendMatch.jugadores) && backendMatch.jugadores.length > 0) {
+      finalPlayers = backendMatch.jugadores.map((j, idx) => ({
+        id: j.id || `player_${idx}`,
+        nombre: j.nombre || `Operador ${idx + 1}`,
+        avatar: j.isBot ? '🤖' : (j.id === estudiante.id ? '⚡' : '🧬'),
+        team: idx % 2 === 0 ? 'orange' : 'blue',
+        isSelf: j.id === estudiante.id,
+        progress: 0,
+        errors: 0,
+        finished: false,
+        time: null
+      }));
+    } else if (matchType === '1v1') {
       const isMasterOrange = orangeSlots.some(s => s?.type === 'master');
       const masterTeam = isMasterOrange ? 'orange' : 'blue';
       const rivalTeam = masterTeam === 'orange' ? 'blue' : 'orange';
@@ -540,16 +666,18 @@ function LobbyView({ estudiante, backendUrl, onUpdate, listaAmigos = [], partida
     }
 
     const matchState = {
+      id: backendMatch?.salaId || `match_${Date.now()}`,
       retos: retosElegidos,
       retoActualIndice: 0,
       userTriviaRespuestas: {},
-      userCodigoInput: retosElegidos[0].tipo !== 'trivia' ? retosElegidos[0].codigoInicial : '',
+      userCodigoInput: retosElegidos[0]?.tipo !== 'trivia' ? (retosElegidos[0]?.codigoInicial || '') : '',
       userProgress: 0,
       userErrors: 0,
       userFinished: false,
       userTime: 0,
       timeLeft: 60,
-      players: finalPlayers
+      players: finalPlayers,
+      esRealtime: !!backendMatch
     };
 
     setActiveMatch(matchState);
@@ -873,6 +1001,13 @@ function LobbyView({ estudiante, backendUrl, onUpdate, listaAmigos = [], partida
   const cancelSearch = () => {
     clearInterval(timerRef.current);
     setSearching(false);
+    try {
+      fetch(`${backendUrl}/api/pragma/multiplayer/match/cancel`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ estudiante_id: estudiante.id })
+      }).catch(() => {});
+    } catch (e) {}
   };
 
   useEffect(() => {

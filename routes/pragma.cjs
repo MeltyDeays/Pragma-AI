@@ -95,8 +95,6 @@ const SYNTAX_TINDER_SNIPPETS = [
   }
 ];
 
-const BOTS_NOMBRES = ["ZeroCool", "NeoCoder", "Hackerman", "L33tGamer", "AcidBurn", "CrashOverride", "Plague", "CerealKiller"];
-
 async function obtenerPragmaProfile(estudianteId) {
   const docRef = doc(firestoreDb, 'profesor_estudiantes', estudianteId);
   const docSnap = await getDoc(docRef);
@@ -412,9 +410,180 @@ router.post('/api/pragma/tinder/votar', async (req, res) => {
   }
 });
 
+const BOTS_NOMBRES = [
+  'CYBER_PUNK', 'NEO_CODER', 'NULL_POINTER', 'SYNTAX_VIPER', 
+  'QUANTUM_DEV', 'ALGO_WARRIOR', 'BYTE_RUNNER', 'ZERO_DAY', 
+  'BINARY_SHADOW', 'PRAGMA_CORE', 'ZeroCool', 'Hackerman', 
+  'L33tGamer', 'AcidBurn', 'CrashOverride', 'Plague', 'CerealKiller'
+];
+
+const POOL_RETOS_MULTIJUGADOR = [
+  {
+    id: 'trivia_1',
+    tipo: 'trivia',
+    categoria: 'arcade',
+    titulo: 'Complejidad Computacional',
+    pregunta: '¿Cuál es la complejidad temporal promedio de búsqueda en un Map/Set bien balanceado en JavaScript/V8?',
+    opciones: ['O(N)', 'O(log N)', 'O(1)', 'O(N log N)'],
+    correcta: 2,
+    explicacion: 'Las tablas Hash permiten acceso en O(1) promedio gracias a su función de hashing.'
+  },
+  {
+    id: 'trivia_2',
+    tipo: 'trivia',
+    categoria: 'arcade',
+    titulo: 'React Hooks y Memorización',
+    pregunta: '¿Qué Hook de React se utiliza para memorizar la definición de una función y evitar recrearla en cada render?',
+    opciones: ['useMemo', 'useCallback', 'useRef', 'useEffect'],
+    correcta: 1,
+    explicacion: 'useCallback memoriza una instancia de función en lugar de su resultado evaluado.'
+  },
+  {
+    id: 'trivia_3',
+    tipo: 'trivia',
+    categoria: 'arcade',
+    titulo: 'Event Loop & Concurrencia',
+    pregunta: '¿En qué orden se procesan las Microtareas (Promise.then) frente a Macrotareas (setTimeout)?',
+    opciones: [
+      'Se ejecutan después de todas las macrotareas',
+      'Tienen prioridad y se procesan antes del siguiente ciclo de macrotareas',
+      'Se ejecutan en paralelo en subprocesos aislados',
+      'El motor elige aleatoriamente según carga'
+    ],
+    correcta: 1,
+    explicacion: 'La cola de microtareas se vacía por completo antes de continuar con la siguiente macrotarea.'
+  },
+  {
+    id: 'output_1',
+    tipo: 'output',
+    categoria: 'arcade',
+    titulo: 'Predicción de Salida: Coerción',
+    codigo: 'console.log(1 + +"2" + "2");',
+    opciones: ['"32"', '"122"', 'NaN', '3'],
+    correcta: 0,
+    explicacion: 'El operador unario +"2" convierte a número 2; 1 + 2 = 3; luego 3 + "2" resulta en "32".'
+  },
+  {
+    id: 'output_2',
+    tipo: 'output',
+    categoria: 'arcade',
+    titulo: 'Predicción de Salida: Scoping & Hoisting',
+    codigo: 'let a = 10;\n(() => {\n  let a = 20;\n  a += 5;\n})();\nconsole.log(a);',
+    opciones: ['25', '10', 'undefined', 'ReferenceError'],
+    correcta: 1,
+    explicacion: 'La variable a dentro de la IIFE está en su propio ámbito léxico; la variable externa permanece en 10.'
+  },
+  {
+    id: 'refactor_1',
+    tipo: 'refactor',
+    categoria: 'arcade',
+    titulo: 'Auditoría de Bucle Infinito',
+    descripcion: 'Identifica la corrección para evitar el bucle infinito causado por la reasignación de i.',
+    codigo_con_bug: 'for (let i = 5; i >= 0; i--) {\n  if (i === 0) i = 5;\n}',
+    opciones_correcion: [
+      'for (let i = 5; i > 0; i--) { break; }',
+      'Eliminar "if (i === 0) i = 5;" para permitir que la condición i >= 0 finalice.',
+      'Cambiar el decremento i-- por i++.'
+    ],
+    correcta: 1
+  },
+  {
+    id: 'sorter_1',
+    tipo: 'sorter',
+    categoria: 'pragma',
+    titulo: 'Pipeline Funcional de Arrays',
+    lineas: ['  .map(n => n * 2);', 'return numeros', '  .filter(n => n % 2 === 0)'],
+    lineas_ordenadas: ['return numeros', '  .filter(n => n % 2 === 0)', '  .map(n => n * 2);']
+  },
+  {
+    id: 'sorter_2',
+    tipo: 'sorter',
+    categoria: 'pragma',
+    titulo: 'Estructura Asíncrona con Try/Catch',
+    lineas: ['  } catch (err) {', '  try {', '    const res = await fetch(url);', '    console.error(err);', '  }'],
+    lineas_ordenadas: ['  try {', '    const res = await fetch(url);', '  } catch (err) {', '    console.error(err);', '  }']
+  },
+  {
+    id: 'fill_1',
+    tipo: 'fill-blank',
+    categoria: 'pragma',
+    titulo: 'Consumo Asíncrono de APIs',
+    codigo_con_huecos: 'const response = ___1___ fetch("/api/datos");\nconst payload = ___2___ response.json();',
+    respuestas: {
+      '1': 'await',
+      '2': 'await'
+    }
+  },
+  {
+    id: 'flashcard_1',
+    tipo: 'flashcard',
+    categoria: 'arcade',
+    titulo: 'Fundamentos de Motor Web & JS',
+    flashcards: [
+      { afirmacion: 'Las promesas no resueltas bloquean el hilo principal de Node.js indefinidamente.', es_verdadero: false },
+      { afirmacion: 'Array.prototype.map retorna un nuevo array sin mutar el original.', es_verdadero: true },
+      { afirmacion: 'const en JavaScript hace inmutables las propiedades internas de un objeto.', es_verdadero: false }
+    ]
+  },
+  {
+    id: 'typer_1',
+    tipo: 'typer',
+    categoria: 'pragma',
+    titulo: 'Speedrun: Estado Reactivo',
+    codigo: 'const [operador, setOperador] = useState(null);',
+    descripcion: 'Escribe la declaración del estado de React a máxima velocidad sin errores.'
+  },
+  {
+    id: 'memory_1',
+    tipo: 'memory',
+    categoria: 'arcade',
+    titulo: 'Matriz de Conceptos de Software',
+    cartas: [
+      { id: 'm1', matchingId: 'p1', texto: 'Closure', flipped: false, matched: false },
+      { id: 'm2', matchingId: 'p1', texto: 'Ámbito Léxico Recordado', flipped: false, matched: false },
+      { id: 'm3', matchingId: 'p2', texto: 'Idempotencia', flipped: false, matched: false },
+      { id: 'm4', matchingId: 'p2', texto: 'Mismo Resultado Siempre', flipped: false, matched: false }
+    ]
+  },
+  {
+    id: 'zen_1',
+    tipo: 'zen',
+    categoria: 'pragma',
+    titulo: 'Recursión Segura',
+    descripcion: 'Completa la línea de control del caso base recursivo para evitar un Stack Overflow.',
+    codigoInicial: 'function factorial(n) {\n  if (______) return 1;\n  return n * factorial(n - 1);\n}',
+    codigoCorrecto: 'function factorial(n) {\n  if (n <= 1) return 1;\n  return n * factorial(n - 1);\n}',
+    guia: 'Ejemplo: n <= 1'
+  },
+  {
+    id: 'tinder_1',
+    tipo: 'tinder',
+    categoria: 'pragma',
+    titulo: 'Alineación de Flexbox',
+    descripcion: 'Escribe la propiedad CSS correcta para centrar verticalmente en flex-direction: column.',
+    codigoInicial: '.cyber-container {\n  display: flex;\n  flex-direction: column;\n  justify-content: ______;\n}',
+    codigoCorrecto: '.cyber-container {\n  display: flex;\n  flex-direction: column;\n  justify-content: center;\n}',
+    guia: 'Ejemplo: center'
+  }
+];
+
+function generarRetosMultijugador(categoria = 'mixed', dificultad = 'intermedio') {
+  let pool = [...POOL_RETOS_MULTIJUGADOR];
+  if (categoria === 'arcade') {
+    pool = pool.filter(r => r.categoria === 'arcade');
+  } else if (categoria === 'pragma') {
+    pool = pool.filter(r => r.categoria === 'pragma');
+  }
+
+  // Barajar pool aleatoriamente
+  const shuffled = pool.sort(() => 0.5 - Math.random());
+  const count = dificultad === 'novato' ? 3 : dificultad === 'experto' ? 5 : 4;
+  return shuffled.slice(0, Math.min(count, shuffled.length));
+}
+
 // 7. LOBBY MULTIJUGADOR COMPETITIVO
 router.post('/api/pragma/multiplayer/match/join', async (req, res) => {
-  const { estudiante_id, tipo_match } = req.body;
+  const { estudiante_id, tipo_match, categoria, dificultad } = req.body;
   if (!estudiante_id) return res.status(400).json({ error: 'Falta estudiante_id' });
 
   try {
@@ -425,6 +594,8 @@ router.post('/api/pragma/multiplayer/match/join', async (req, res) => {
       estudiante_id,
       nombre: pragma.username || "Tú",
       tipo_match: tipo_match || "1v1",
+      categoria: categoria || "mixed",
+      dificultad: dificultad || "intermedio",
       rank_points: pragma.rank_points || 0,
       laser_color: pragma.equipped_cosmetics?.laser_color || "#00ffcc",
       map_skin: pragma.equipped_cosmetics?.map_skin || "default",
@@ -479,49 +650,38 @@ router.get('/api/pragma/multiplayer/match/status/:estudiante_id', async (req, re
     if (candidatos.length >= totalOponentesRealesNecesarios) {
       const oponentes = candidatos.slice(0, totalOponentesRealesNecesarios);
       const salaId = `sala_${crypto.randomUUID()}`;
+      const retosSincronizados = generarRetosMultijugador(ticket.categoria, ticket.dificultad);
       
       const jugadores = [
         { id: estudiante_id, nombre: ticket.nombre, rank_points: ticket.rank_points, laser_color: ticket.laser_color, map_skin: ticket.map_skin, isBot: false },
         ...oponentes.map(o => ({ id: o.estudiante_id, nombre: o.nombre, rank_points: o.rank_points, laser_color: o.laser_color, map_skin: o.map_skin, isBot: false }))
       ];
 
+      // Registrar partida activa en Firestore para sincronización de telemetría SSE
+      const partidaDocRef = doc(firestoreDb, 'pragma_partidas', salaId);
+      await setDoc(partidaDocRef, {
+        salaId,
+        participantes: [estudiante_id, ...oponentes.map(o => o.estudiante_id)],
+        retos: retosSincronizados,
+        creado_en: new Date().toISOString()
+      });
+
       const matchResult = {
         salaId,
         tipo_match: ticket.tipo_match,
         jugadores,
+        retos: retosSincronizados,
         mensaje: "¡Oponentes reales encontrados en red! Combate inicializado.",
-        victoria: Math.random() > 0.5,
-        rankGanado: 15,
-        xpGanada: 50
+        victoria: null,
+        rankGanado: 25,
+        shardsGanado: 10
       };
-
-      const pragma = await obtenerPragmaProfile(estudiante_id);
-      pragma.rank_points += matchResult.victoria ? 15 : 10;
-      pragma.inventory.silicon_shards += 3;
-      await guardarPragmaProfile(estudiante_id, pragma);
 
       await setDoc(docRef, { ...ticket, status: 'completado', matchResult });
 
       for (const op of oponentes) {
         const opDocRef = doc(firestoreDb, 'pragma_matchmaking', op.estudiante_id);
-        const opPragma = await obtenerPragmaProfile(op.estudiante_id);
-        
-        const opVictoria = !matchResult.victoria;
-        opPragma.rank_points += opVictoria ? 15 : 10;
-        opPragma.inventory.silicon_shards += 3;
-        await guardarPragmaProfile(op.estudiante_id, opPragma);
-
-        const opMatchResult = {
-          salaId,
-          tipo_match: ticket.tipo_match,
-          jugadores,
-          mensaje: "¡Oponentes reales encontrados en red! Combate inicializado.",
-          victoria: opVictoria,
-          rankGanado: 15,
-          xpGanada: 50
-        };
-
-        await setDoc(opDocRef, { ...op, status: 'completado', matchResult: opMatchResult });
+        await setDoc(opDocRef, { ...op, status: 'completado', matchResult });
       }
 
       return res.json({ status: 'completado', matchResult });
@@ -531,10 +691,11 @@ router.get('/api/pragma/multiplayer/match/status/:estudiante_id', async (req, re
     const ahora = new Date().getTime();
     const tiempoEsperaSegundos = (ahora - inicio) / 1000;
 
-    if (tiempoEsperaSegundos >= 6) {
+    if (tiempoEsperaSegundos >= 5) {
       const salaId = `sala_${crypto.randomUUID()}`;
       const oponentesBots = [];
       const totalBots = totalOponentesRealesNecesarios;
+      const retosSincronizados = generarRetosMultijugador(ticket.categoria, ticket.dificultad);
 
       for (let i = 0; i < totalBots; i++) {
         const botNombre = BOTS_NOMBRES[Math.floor(Math.random() * BOTS_NOMBRES.length)] + ` #${Math.floor(Math.random()*900 + 100)}`;
@@ -557,16 +718,12 @@ router.get('/api/pragma/multiplayer/match/status/:estudiante_id', async (req, re
         salaId,
         tipo_match: ticket.tipo_match,
         jugadores,
-        mensaje: "No se encontraron oponentes reales. Combate de entrenamiento con bots inicializado.",
-        victoria: Math.random() > 0.4,
-        rankGanado: 15,
-        xpGanada: 50
+        retos: retosSincronizados,
+        mensaje: "No se detectaron operadores adicionales en cola. Simulación táctica con agentes bot inicializada.",
+        victoria: null,
+        rankGanado: 25,
+        shardsGanado: 10
       };
-
-      const pragma = await obtenerPragmaProfile(estudiante_id);
-      pragma.rank_points += matchResult.victoria ? 15 : 10;
-      pragma.inventory.silicon_shards += 3;
-      await guardarPragmaProfile(estudiante_id, pragma);
 
       await setDoc(docRef, { ...ticket, status: 'completado', matchResult });
 
@@ -594,4 +751,70 @@ router.post('/api/pragma/multiplayer/match/cancel', async (req, res) => {
   }
 });
 
+// 8. TELEMETRÍA DE PROGRESO DE PARTIDAS EN TIEMPO REAL (SSE RELAY)
+router.post('/api/partidas/:id/progreso', async (req, res) => {
+  const { id } = req.params;
+  const { jugador_id, progreso, errores, tiempo, finalizado } = req.body;
+
+  if (!jugador_id) {
+    return res.status(400).json({ error: 'Falta jugador_id' });
+  }
+
+  try {
+    const docRef = doc(firestoreDb, 'pragma_partidas', id);
+    const snap = await getDoc(docRef);
+    let partida = snap.exists() ? snap.data() : { id, participantes: [], jugadores: {} };
+    partida.jugadores = partida.jugadores || {};
+    partida.jugadores[jugador_id] = {
+      progreso,
+      errores,
+      tiempo,
+      finalizado,
+      actualizado_en: new Date().toISOString()
+    };
+    await setDoc(docRef, partida, { merge: true });
+
+    // Notificar al rival si es un duelo social
+    const dueloRef = doc(firestoreDb, 'profesor_duelos', id);
+    const dueloSnap = await getDoc(dueloRef);
+    if (dueloSnap.exists()) {
+      const dueloData = dueloSnap.data();
+      const rivalId = dueloData.retador_id === jugador_id ? dueloData.retado_id : dueloData.retador_id;
+      if (global.enviarNotificacionSSE) {
+        global.enviarNotificacionSSE(rivalId, 'duelo_progreso', {
+          partida_id: id,
+          jugador_id,
+          progreso,
+          errores,
+          tiempo,
+          finalizado
+        });
+      }
+    } else if (partida.participantes && Array.isArray(partida.participantes)) {
+      // Si es sala multijugador de matchmaking, retransmitir a los demás participantes
+      for (const pId of partida.participantes) {
+        if (pId !== jugador_id && global.enviarNotificacionSSE) {
+          global.enviarNotificacionSSE(pId, 'duelo_progreso', {
+            partida_id: id,
+            jugador_id,
+            progreso,
+            errores,
+            tiempo,
+            finalizado
+          });
+        }
+      }
+    }
+
+    res.json({ success: true });
+  } catch (error) {
+    console.error('Error al registrar progreso de partida:', error);
+    res.status(500).json({ error: 'Error interno al registrar telemetría' });
+  }
+});
+
+router.generarRetosMultijugador = generarRetosMultijugador;
+
 module.exports = router;
+
+

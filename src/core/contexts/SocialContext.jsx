@@ -222,10 +222,10 @@ export function SocialProvider({ children }) {
         body: JSON.stringify({ duelo_id: dueloId, accion })
       });
       if (res.ok) {
+        const data = await res.json();
         mostrarMensaje(`Duelo ${accion === 'aceptar' ? 'aceptado' : 'rechazado'}.`, 'success');
-        if (accion === 'aceptar') {
-          // El padre se unirá a la partida
-          setPartidaDueloActiva({ id: dueloId });
+        if (accion === 'aceptar' && data.duelo) {
+          setPartidaDueloActiva(data.duelo);
         }
         if (estudiante) cargarDuelosPendientes(estudiante.id);
       }
@@ -287,6 +287,25 @@ export function SocialProvider({ children }) {
         cargarDuelosPendientes(estudiante.id);
       } catch (err) {
         console.error(err);
+      }
+    });
+
+    eventSource.addEventListener('duelo_aceptado', (e) => {
+      try {
+        const data = JSON.parse(e.data);
+        mostrarMensaje(`¡${data.retado_nombre} ha aceptado tu desafío! Entrando a la arena...`, 'success');
+        setPartidaDueloActiva(data);
+      } catch (err) {
+        console.error("Error al procesar duelo_aceptado:", err);
+      }
+    });
+
+    eventSource.addEventListener('duelo_progreso', (e) => {
+      try {
+        const data = JSON.parse(e.data);
+        window.dispatchEvent(new CustomEvent('pragma-progreso-rival', { detail: data }));
+      } catch (err) {
+        console.error("Error al recibir telemetría del rival:", err);
       }
     });
 
