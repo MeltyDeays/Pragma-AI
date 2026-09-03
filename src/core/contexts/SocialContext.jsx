@@ -246,11 +246,18 @@ export function SocialProvider({ children }) {
         mostrarMensaje(`Nueva solicitud de amistad de ${data.solicitante_nombre}`, 'success');
         setToastActivo({
           id: `amistad_${data.solicitud_id}`,
+          tipo: 'amistad',
           titulo: '🤝 SOLICITUD DE AMISTAD',
           descripcion: `${data.solicitante_nombre} quiere unirse a tu red social táctica.`,
+          countdownTotal: 15,
           accionLabel: 'ACEPTAR',
+          rechazarLabel: 'RECHAZAR',
           onAccion: () => {
             responderSolicitudAmistad(data.solicitud_id, 'aceptar');
+            setToastActivo(null);
+          },
+          onRechazar: () => {
+            responderSolicitudAmistad(data.solicitud_id, 'rechazar');
             setToastActivo(null);
           }
         });
@@ -276,11 +283,18 @@ export function SocialProvider({ children }) {
         mostrarMensaje(`¡Desafío entrante de ${data.retador_nombre}! Revisa tus combates pendientes.`, 'success');
         setToastActivo({
           id: `duelo_${data.id}`,
-          titulo: '⚔️ DESAFÍO ENTRANTE',
-          descripcion: `¡${data.retador_nombre} te ha desafiado en ${data.lenguaje} (${data.nivel})!`,
+          tipo: 'duelo',
+          titulo: '⚔️ DESAFÍO TÁCTICO ENTRANTE',
+          descripcion: `¡${data.retador_nombre} te ha desafiado en ${data.lenguaje || 'Código'} (${data.nivel || 'Intermedio'})!`,
+          countdownTotal: 15,
           accionLabel: 'COMBATIR',
+          rechazarLabel: 'DECLINAR',
           onAccion: () => {
             responderDuelo(data.id, 'aceptar');
+            setToastActivo(null);
+          },
+          onRechazar: () => {
+            responderDuelo(data.id, 'rechazar');
             setToastActivo(null);
           }
         });
@@ -295,8 +309,19 @@ export function SocialProvider({ children }) {
         const data = JSON.parse(e.data);
         mostrarMensaje(`¡${data.retado_nombre} ha aceptado tu desafío! Entrando a la arena...`, 'success');
         setPartidaDueloActiva(data);
+        setDueloEnviadoActivo(null);
       } catch (err) {
         console.error("Error al procesar duelo_aceptado:", err);
+      }
+    });
+
+    eventSource.addEventListener('duelo_rechazado', (e) => {
+      try {
+        const data = JSON.parse(e.data);
+        mostrarMensaje(`El operador ${data.retado_nombre || 'rival'} ha declinado la invitación de combate.`, 'error');
+        setDueloEnviadoActivo(null);
+      } catch (err) {
+        console.error("Error al procesar duelo_rechazado:", err);
       }
     });
 

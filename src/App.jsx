@@ -1890,6 +1890,8 @@ function App() {
               listaAmigos={listaAmigos}
               solicitudesPendientes={solicitudesPendientes}
               responderSolicitudAmistad={responderSolicitudAmistad}
+              desafiarAmigo1vs1={desafiarAmigo1vs1}
+              estaOnline={estaOnline}
             />
           ) : null}
           </React.Suspense>
@@ -1980,34 +1982,97 @@ function App() {
 
           {/* Notificación Táctica en Tiempo Real (Solicitudes/Duelos) */}
           {toastActivo && (
-            <div className="logro-toast-notification animate-slide-in oro" style={{ bottom: '24px', right: '24px', background: 'linear-gradient(135deg, rgba(15, 23, 42, 0.95), rgba(8, 14, 28, 0.98))', borderColor: '#00f3ff', borderStyle: 'solid', borderWidth: '1px', boxShadow: '0 0 15px rgba(0, 243, 255, 0.25)', minWidth: '320px' }}>
-              <div className="toast-glow" style={{ background: 'radial-gradient(circle at center, rgba(0, 243, 255, 0.2) 0%, transparent 70%)' }}></div>
-              <div className="toast-content flex items-center justify-between gap-4 w-full p-1">
-                <div className="toast-text flex-1">
-                  <span className="toast-meta text-[#00f3ff] text-[9px] tracking-widest block uppercase font-mono">{toastActivo.titulo}</span>
-                  <h4 className="text-white text-xs font-mono font-bold mt-1 leading-snug">{toastActivo.descripcion}</h4>
-                </div>
-                <div className="flex gap-2">
-                  <button 
-                    onClick={() => setToastActivo(null)}
-                    className="px-2.5 py-1.5 bg-slate-900/80 hover:bg-slate-800 text-[10px] text-slate-400 font-mono border border-slate-800 rounded transition-all"
-                  >
-                    DESCARTAR
-                  </button>
-                  <button 
-                    onClick={toastActivo.onAccion}
-                    className="px-3 py-1.5 bg-gradient-to-r from-cyan-500 to-[#00ffcc] text-slate-950 font-mono text-[10px] font-bold rounded shadow-[0_0_8px_rgba(0,255,204,0.3)] transition-all hover:scale-105"
-                  >
-                    {toastActivo.accionLabel}
-                  </button>
-                </div>
-              </div>
-            </div>
+            <TacticalToastNotification toastActivo={toastActivo} setToastActivo={setToastActivo} />
           )}
 
           </div>
         )}
       </main>
+    </div>
+  );
+}
+
+function TacticalToastNotification({ toastActivo, setToastActivo }) {
+  const totalSeconds = toastActivo.countdownTotal || 15;
+  const [segundosRestantes, setSegundosRestantes] = useState(totalSeconds);
+
+  useEffect(() => {
+    setSegundosRestantes(totalSeconds);
+    const interval = setInterval(() => {
+      setSegundosRestantes((prev) => {
+        if (prev <= 1) {
+          clearInterval(interval);
+          if (toastActivo.onRechazar) toastActivo.onRechazar();
+          else setToastActivo(null);
+          return 0;
+        }
+        return prev - 1;
+      });
+    }, 1000);
+
+    return () => clearInterval(interval);
+  }, [toastActivo.id, totalSeconds]);
+
+  const porcentaje = (segundosRestantes / totalSeconds) * 100;
+
+  return (
+    <div 
+      className="logro-toast-notification animate-slide-in oro tactical-toast-spec" 
+      style={{ 
+        bottom: '24px', 
+        right: '24px', 
+        background: 'linear-gradient(135deg, rgba(8, 14, 28, 0.98), rgba(2, 6, 23, 0.99))', 
+        borderColor: '#00f3ff', 
+        borderStyle: 'solid', 
+        borderWidth: '1px', 
+        boxShadow: '0 0 25px rgba(0, 243, 255, 0.3)', 
+        minWidth: '340px',
+        maxWidth: '420px',
+        borderRadius: '8px',
+        overflow: 'hidden',
+        position: 'fixed',
+        zIndex: 9999
+      }}
+    >
+      <div className="toast-glow" style={{ background: 'radial-gradient(circle at center, rgba(0, 243, 255, 0.15) 0%, transparent 70%)' }}></div>
+      <div className="p-3">
+        <div className="flex items-center justify-between gap-2 mb-1.5">
+          <span className="toast-meta text-[#00f3ff] text-[9px] tracking-widest block uppercase font-mono font-bold flex items-center gap-1.5">
+            <span className="w-2 h-2 rounded-full bg-[#00f3ff] animate-ping"></span>
+            {toastActivo.titulo}
+          </span>
+          <span className="font-mono text-[10px] text-amber-400 font-bold px-2 py-0.5 rounded bg-amber-500/10 border border-amber-500/30 animate-pulse">
+            ⏱️ {segundosRestantes}s
+          </span>
+        </div>
+        <h4 className="text-white text-xs font-mono font-bold leading-snug mb-3">
+          {toastActivo.descripcion}
+        </h4>
+        <div className="flex gap-2 justify-end items-center">
+          <button 
+            onClick={() => {
+              if (toastActivo.onRechazar) toastActivo.onRechazar();
+              else setToastActivo(null);
+            }}
+            className="px-3 py-1.5 bg-rose-950/80 hover:bg-rose-900/90 text-[10px] text-rose-300 font-mono font-bold border border-rose-500/40 rounded transition-all hover:scale-105 cursor-pointer"
+          >
+            {toastActivo.rechazarLabel || 'RECHAZAR'}
+          </button>
+          <button 
+            onClick={toastActivo.onAccion}
+            className="px-4 py-1.5 bg-gradient-to-r from-cyan-500 via-[#00ffcc] to-emerald-400 text-slate-950 font-mono text-[10px] font-extrabold rounded shadow-[0_0_12px_rgba(0,255,204,0.4)] transition-all hover:scale-105 active:scale-95 cursor-pointer"
+          >
+            {toastActivo.accionLabel || 'ACEPTAR'}
+          </button>
+        </div>
+      </div>
+      {/* Barra de progreso de cuenta regresiva */}
+      <div className="w-full bg-slate-900 h-1 overflow-hidden">
+        <div 
+          className="h-full bg-gradient-to-r from-rose-500 via-amber-400 to-[#00ffcc] transition-all duration-1000 ease-linear"
+          style={{ width: `${porcentaje}%` }}
+        />
+      </div>
     </div>
   );
 }

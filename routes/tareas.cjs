@@ -461,6 +461,88 @@ router.post('/api/generar-tarea', async (req, res) => {
                 ]
               })
             ]
+          }),
+          // 8. RÚBRICA FORMAL DE EVALUACIÓN Y CRITERIOS PONDERADOS
+          new docx.Paragraph({
+            children: [
+              new docx.TextRun({ text: "8. RÚBRICA FORMAL DE EVALUACIÓN Y PONDERACIÓN", bold: true, size: 24, color: "1E293B", font: "Segoe UI" })
+            ],
+            spacing: { before: 260, after: 120 }
+          }),
+          new docx.Paragraph({
+            children: [
+              new docx.TextRun({ text: "Esta guía y tarea práctica se evalúan de acuerdo a los siguientes estándares de calidad de la industria y la rúbrica pedagógica de Pragma AI:", size: 19, font: "Segoe UI", color: "475569" })
+            ],
+            spacing: { after: 140 }
+          }),
+          new docx.Table({
+            width: { size: 100, type: docx.WidthType.PERCENTAGE },
+            rows: [
+              new docx.TableRow({
+                tableHeader: true,
+                children: [
+                  new docx.TableCell({
+                    width: { size: 28, type: docx.WidthType.PERCENTAGE },
+                    children: [new docx.Paragraph({ children: [new docx.TextRun({ text: "CRITERIO DE EVALUACIÓN", bold: true, color: "FFFFFF", size: 18, font: "Segoe UI" })] })],
+                    shading: { fill: "1E293B" },
+                    margins: { top: 120, bottom: 120, left: 140, right: 140 }
+                  }),
+                  new docx.TableCell({
+                    width: { size: 16, type: docx.WidthType.PERCENTAGE },
+                    children: [new docx.Paragraph({ alignment: docx.AlignmentType.CENTER, children: [new docx.TextRun({ text: "PESO", bold: true, color: "FFFFFF", size: 18, font: "Segoe UI" })] })],
+                    shading: { fill: "1E293B" },
+                    margins: { top: 120, bottom: 120, left: 140, right: 140 }
+                  }),
+                  new docx.TableCell({
+                    width: { size: 56, type: docx.WidthType.PERCENTAGE },
+                    children: [new docx.Paragraph({ children: [new docx.TextRun({ text: "DESCRIPCIÓN Y DESEMPEÑO ESPERADO", bold: true, color: "FFFFFF", size: 18, font: "Segoe UI" })] })],
+                    shading: { fill: "1E293B" },
+                    margins: { top: 120, bottom: 120, left: 140, right: 140 }
+                  })
+                ]
+              }),
+              ...((data.rubrica_evaluacion && data.rubrica_evaluacion.length > 0) ? data.rubrica_evaluacion : [
+                { criterio: "Funcionalidad Técnica y Casos de Prueba", peso: "40%", descripcion: "La solución implementa fielmente los pasos descritos, compila/ejecuta sin fallos de sintaxis y supera todos los requerimientos funcionales." },
+                { criterio: "Arquitectura y Limpieza del Código", peso: "20%", descripcion: "Código legible, modular, con nombres semánticos, bajo acoplamiento y adhesión a convenciones estéticas del lenguaje." },
+                { criterio: "Resiliencia y Manejo de Errores", peso: "20%", descripcion: "Validación rigurosa de entradas y tipos, prevención de estados inconsistentes y captura controlada de excepciones." },
+                { criterio: "Eficiencia y Buenas Prácticas", peso: "20%", descripcion: "Uso óptimo de memoria y estructuras de datos (Big-O razonable) y alineación con los estándares profesionales del módulo." }
+              ]).map((rub, idx) =>
+                new docx.TableRow({
+                  children: [
+                    new docx.TableCell({
+                      width: { size: 28, type: docx.WidthType.PERCENTAGE },
+                      children: [new docx.Paragraph({ children: [new docx.TextRun({ text: rub.criterio, bold: true, color: "1E293B", size: 18, font: "Segoe UI" })] })],
+                      shading: { fill: idx % 2 === 0 ? "F8FAFC" : "FFFFFF" },
+                      borders: {
+                        top: { style: docx.BorderStyle.SINGLE, size: 4, color: "E2E8F0" },
+                        bottom: { style: docx.BorderStyle.SINGLE, size: 4, color: "E2E8F0" }
+                      },
+                      margins: { top: 90, bottom: 90, left: 140, right: 140 }
+                    }),
+                    new docx.TableCell({
+                      width: { size: 16, type: docx.WidthType.PERCENTAGE },
+                      children: [new docx.Paragraph({ alignment: docx.AlignmentType.CENTER, children: [new docx.TextRun({ text: rub.peso, bold: true, color: "0F766E", size: 18, font: "Segoe UI" })] })],
+                      shading: { fill: idx % 2 === 0 ? "F8FAFC" : "FFFFFF" },
+                      borders: {
+                        top: { style: docx.BorderStyle.SINGLE, size: 4, color: "E2E8F0" },
+                        bottom: { style: docx.BorderStyle.SINGLE, size: 4, color: "E2E8F0" }
+                      },
+                      margins: { top: 90, bottom: 90, left: 140, right: 140 }
+                    }),
+                    new docx.TableCell({
+                      width: { size: 56, type: docx.WidthType.PERCENTAGE },
+                      children: [new docx.Paragraph({ children: [new docx.TextRun({ text: rub.descripcion, color: "334155", size: 18, font: "Segoe UI" })] })],
+                      shading: { fill: idx % 2 === 0 ? "F8FAFC" : "FFFFFF" },
+                      borders: {
+                        top: { style: docx.BorderStyle.SINGLE, size: 4, color: "E2E8F0" },
+                        bottom: { style: docx.BorderStyle.SINGLE, size: 4, color: "E2E8F0" }
+                      },
+                      margins: { top: 90, bottom: 90, left: 140, right: 140 }
+                    })
+                  ]
+                })
+              )
+            ]
           })
         ]
       }]
@@ -479,6 +561,10 @@ router.post('/api/generar-tarea', async (req, res) => {
       INSERT INTO profesor_tareas (id, estudiante_id, titulo, tema, nivel, descripcion, conceptos_clave, tecnologia, word_url, estado)
       VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, 'Pendiente')
     `;
+    const payloadConceptos = {
+      conceptos: data.conceptos_clave,
+      rubrica: data.rubrica_evaluacion || []
+    };
     await client.query(insertQuery, [
       uuid,
       estudiante_id,
@@ -486,7 +572,7 @@ router.post('/api/generar-tarea', async (req, res) => {
       temaActual,
       nivelReal,
       data.descripcion,
-      JSON.stringify(data.conceptos_clave),
+      JSON.stringify(payloadConceptos),
       tecnologia,
       docUrl
     ]);
@@ -498,6 +584,7 @@ router.post('/api/generar-tarea', async (req, res) => {
       nivel: nivelReal,
       descripcion: data.descripcion,
       conceptos_clave: data.conceptos_clave,
+      rubrica: data.rubrica_evaluacion || [],
       tecnologia: tecnologia,
       word_url: docUrl,
       estado: 'Pendiente'
@@ -892,6 +979,88 @@ router.post('/api/regenerar-tarea', async (req, res) => {
                 ]
               })
             ]
+          }),
+          // 8. RÚBRICA FORMAL DE EVALUACIÓN Y CRITERIOS PONDERADOS
+          new docx.Paragraph({
+            children: [
+              new docx.TextRun({ text: "8. RÚBRICA FORMAL DE EVALUACIÓN Y PONDERACIÓN", bold: true, size: 24, color: "1E293B", font: "Segoe UI" })
+            ],
+            spacing: { before: 260, after: 120 }
+          }),
+          new docx.Paragraph({
+            children: [
+              new docx.TextRun({ text: "Esta guía y tarea práctica se evalúan de acuerdo a los siguientes estándares de calidad de la industria y la rúbrica pedagógica de Pragma AI:", size: 19, font: "Segoe UI", color: "475569" })
+            ],
+            spacing: { after: 140 }
+          }),
+          new docx.Table({
+            width: { size: 100, type: docx.WidthType.PERCENTAGE },
+            rows: [
+              new docx.TableRow({
+                tableHeader: true,
+                children: [
+                  new docx.TableCell({
+                    width: { size: 28, type: docx.WidthType.PERCENTAGE },
+                    children: [new docx.Paragraph({ children: [new docx.TextRun({ text: "CRITERIO DE EVALUACIÓN", bold: true, color: "FFFFFF", size: 18, font: "Segoe UI" })] })],
+                    shading: { fill: "1E293B" },
+                    margins: { top: 120, bottom: 120, left: 140, right: 140 }
+                  }),
+                  new docx.TableCell({
+                    width: { size: 16, type: docx.WidthType.PERCENTAGE },
+                    children: [new docx.Paragraph({ alignment: docx.AlignmentType.CENTER, children: [new docx.TextRun({ text: "PESO", bold: true, color: "FFFFFF", size: 18, font: "Segoe UI" })] })],
+                    shading: { fill: "1E293B" },
+                    margins: { top: 120, bottom: 120, left: 140, right: 140 }
+                  }),
+                  new docx.TableCell({
+                    width: { size: 56, type: docx.WidthType.PERCENTAGE },
+                    children: [new docx.Paragraph({ children: [new docx.TextRun({ text: "DESCRIPCIÓN Y DESEMPEÑO ESPERADO", bold: true, color: "FFFFFF", size: 18, font: "Segoe UI" })] })],
+                    shading: { fill: "1E293B" },
+                    margins: { top: 120, bottom: 120, left: 140, right: 140 }
+                  })
+                ]
+              }),
+              ...((data.rubrica_evaluacion && data.rubrica_evaluacion.length > 0) ? data.rubrica_evaluacion : [
+                { criterio: "Funcionalidad Técnica y Casos de Prueba", peso: "40%", descripcion: "La solución implementa fielmente los pasos descritos, compila/ejecuta sin fallos de sintaxis y supera todos los requerimientos funcionales." },
+                { criterio: "Arquitectura y Limpieza del Código", peso: "20%", descripcion: "Código legible, modular, con nombres semánticos, bajo acoplamiento y adhesión a convenciones estéticas del lenguaje." },
+                { criterio: "Resiliencia y Manejo de Errores", peso: "20%", descripcion: "Validación rigurosa de entradas y tipos, prevención de estados inconsistentes y captura controlada de excepciones." },
+                { criterio: "Eficiencia y Buenas Prácticas", peso: "20%", descripcion: "Uso óptimo de memoria y estructuras de datos (Big-O razonable) y alineación con los estándares profesionales del módulo." }
+              ]).map((rub, idx) =>
+                new docx.TableRow({
+                  children: [
+                    new docx.TableCell({
+                      width: { size: 28, type: docx.WidthType.PERCENTAGE },
+                      children: [new docx.Paragraph({ children: [new docx.TextRun({ text: rub.criterio, bold: true, color: "1E293B", size: 18, font: "Segoe UI" })] })],
+                      shading: { fill: idx % 2 === 0 ? "F8FAFC" : "FFFFFF" },
+                      borders: {
+                        top: { style: docx.BorderStyle.SINGLE, size: 4, color: "E2E8F0" },
+                        bottom: { style: docx.BorderStyle.SINGLE, size: 4, color: "E2E8F0" }
+                      },
+                      margins: { top: 90, bottom: 90, left: 140, right: 140 }
+                    }),
+                    new docx.TableCell({
+                      width: { size: 16, type: docx.WidthType.PERCENTAGE },
+                      children: [new docx.Paragraph({ alignment: docx.AlignmentType.CENTER, children: [new docx.TextRun({ text: rub.peso, bold: true, color: "0F766E", size: 18, font: "Segoe UI" })] })],
+                      shading: { fill: idx % 2 === 0 ? "F8FAFC" : "FFFFFF" },
+                      borders: {
+                        top: { style: docx.BorderStyle.SINGLE, size: 4, color: "E2E8F0" },
+                        bottom: { style: docx.BorderStyle.SINGLE, size: 4, color: "E2E8F0" }
+                      },
+                      margins: { top: 90, bottom: 90, left: 140, right: 140 }
+                    }),
+                    new docx.TableCell({
+                      width: { size: 56, type: docx.WidthType.PERCENTAGE },
+                      children: [new docx.Paragraph({ children: [new docx.TextRun({ text: rub.descripcion, color: "334155", size: 18, font: "Segoe UI" })] })],
+                      shading: { fill: idx % 2 === 0 ? "F8FAFC" : "FFFFFF" },
+                      borders: {
+                        top: { style: docx.BorderStyle.SINGLE, size: 4, color: "E2E8F0" },
+                        bottom: { style: docx.BorderStyle.SINGLE, size: 4, color: "E2E8F0" }
+                      },
+                      margins: { top: 90, bottom: 90, left: 140, right: 140 }
+                    })
+                  ]
+                })
+              )
+            ]
           })
         ]
       }]
@@ -920,15 +1089,19 @@ router.post('/api/regenerar-tarea', async (req, res) => {
       SET titulo = $1, descripcion = $2, conceptos_clave = $3, word_url = $4
       WHERE id = $5
     `;
+    const payloadConceptos = {
+      conceptos: data.conceptos_clave,
+      rubrica: data.rubrica_evaluacion || []
+    };
     await client.query(updateQuery, [
       data.titulo,
       data.descripcion,
-      JSON.stringify(data.conceptos_clave),
+      JSON.stringify(payloadConceptos),
       docUrl,
       tarea_id
     ]);
 
-    res.json({ success: true, word_url: docUrl });
+    res.json({ success: true, word_url: docUrl, rubrica: data.rubrica_evaluacion || [] });
   } catch (error) {
     console.error("Error al regenerar tarea:", error);
     res.status(500).json({ error: 'Error interno del servidor al regenerar el documento' });

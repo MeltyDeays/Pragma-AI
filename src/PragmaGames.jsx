@@ -374,9 +374,12 @@ function LobbyView({ estudiante, backendUrl, onUpdate, listaAmigos = [], partida
   // Retos completos disponibles en la simulación táctica multijugador
   const RETOS_MULTIPLAYER = {
     arcade: [
+      // JAVASCRIPT
       {
         id: 'trivia_1',
         tipo: 'trivia',
+        lenguaje: 'JavaScript',
+        dificultad: 'intermedio',
         titulo: 'Complejidad Computacional',
         pregunta: '¿Cuál es la complejidad temporal promedio de búsqueda en un Map/Set bien balanceado en V8?',
         opciones: ['O(N)', 'O(log N)', 'O(1)', 'O(N log N)'],
@@ -386,6 +389,8 @@ function LobbyView({ estudiante, backendUrl, onUpdate, listaAmigos = [], partida
       {
         id: 'trivia_2',
         tipo: 'trivia',
+        lenguaje: 'React',
+        dificultad: 'intermedio',
         titulo: 'React Hooks',
         pregunta: '¿Qué Hook de React se utiliza para memorizar una función costosa y evitar recrearla en cada render?',
         opciones: ['useMemo', 'useCallback', 'useRef', 'useEffect'],
@@ -395,6 +400,8 @@ function LobbyView({ estudiante, backendUrl, onUpdate, listaAmigos = [], partida
       {
         id: 'output_1',
         tipo: 'output',
+        lenguaje: 'JavaScript',
+        dificultad: 'novato',
         titulo: 'Predicción de Salida: Coerción',
         codigo: 'console.log(1 + +"2" + "2");',
         opciones: ['"32"', '"122"', 'NaN', '3'],
@@ -404,6 +411,8 @@ function LobbyView({ estudiante, backendUrl, onUpdate, listaAmigos = [], partida
       {
         id: 'refactor_1',
         tipo: 'refactor',
+        lenguaje: 'JavaScript',
+        dificultad: 'intermedio',
         titulo: 'Auditoría de Bucle Infinito',
         descripcion: 'Identifica la corrección para evitar el bucle infinito causado por la reasignación de i.',
         codigo_con_bug: 'for (let i = 5; i >= 0; i--) {\n  if (i === 0) i = 5;\n}',
@@ -414,9 +423,72 @@ function LobbyView({ estudiante, backendUrl, onUpdate, listaAmigos = [], partida
         ],
         correcta: 1
       },
+      // PYTHON
+      {
+        id: 'trivia_py_1',
+        tipo: 'trivia',
+        lenguaje: 'Python',
+        dificultad: 'novato',
+        titulo: 'Tipos Mutables en Python',
+        pregunta: '¿Cuál de las siguientes estructuras de datos en Python es INMUTABLE?',
+        opciones: ['list (Lista)', 'dict (Diccionario)', 'tuple (Tupla)', 'set (Conjunto)'],
+        correcta: 2,
+        explicacion: 'Las tuplas (tuple) en Python son colecciones inmutables ordenadas.'
+      },
+      {
+        id: 'output_py_1',
+        tipo: 'output',
+        lenguaje: 'Python',
+        dificultad: 'intermedio',
+        titulo: 'Predicción: Slicing en Python',
+        codigo: 'nums = [10, 20, 30, 40, 50]\nprint(nums[::-2])',
+        opciones: ['[50, 30, 10]', '[50, 40, 30]', '[10, 30, 50]', '[40, 20]'],
+        correcta: 0,
+        explicacion: 'El paso negativo -2 recorre la lista en reversa saltando de 2 en 2 desde el final.'
+      },
+      {
+        id: 'refactor_py_1',
+        tipo: 'refactor',
+        lenguaje: 'Python',
+        dificultad: 'intermedio',
+        titulo: 'Prevención de KeyError en Diccionarios',
+        descripcion: 'Identifica la forma idomática en Python para leer una clave opcional sin lanzar KeyError.',
+        codigo_con_bug: 'usuario = {"nombre": "Eliab"}\nrol = usuario["rol"] # Lanza KeyError si no existe',
+        opciones_correcion: [
+          'rol = usuario.get("rol", "invitado")',
+          'rol = usuario.fetch("rol")',
+          'rol = usuario["rol"] || "invitado"'
+        ],
+        correcta: 0
+      },
+      // SQL
+      {
+        id: 'trivia_sql_1',
+        tipo: 'trivia',
+        lenguaje: 'SQL',
+        dificultad: 'intermedio',
+        titulo: 'Filtrado de Agregaciones en SQL',
+        pregunta: '¿Qué cláusula SQL se utiliza obligatoriamente para filtrar resultados de funciones de agregación como COUNT() o SUM()?',
+        opciones: ['WHERE', 'HAVING', 'GROUP FILTER', 'ORDER BY'],
+        correcta: 1,
+        explicacion: 'HAVING filtra sobre los grupos agregados tras GROUP BY; WHERE filtra filas individuales antes de agrupar.'
+      },
+      {
+        id: 'output_sql_1',
+        tipo: 'output',
+        lenguaje: 'SQL',
+        dificultad: 'novato',
+        titulo: 'Predicción de Consulta: DISTINCT',
+        codigo: '-- Tabla: [1, 2, 2, 3, 3, 3]\nSELECT COUNT(DISTINCT valor) FROM numeros;',
+        opciones: ['3', '6', '1', '2'],
+        correcta: 0,
+        explicacion: 'DISTINCT elimina duplicados dejando únicamente 1, 2 y 3; por tanto COUNT devuelve 3.'
+      },
       {
         id: 'flashcard_1',
         tipo: 'flashcard',
+        lenguaje: 'General',
+        dificultad: 'novato',
         titulo: 'Fundamentos de Motor Web & JS',
         flashcards: [
           { afirmacion: 'Las microtareas (Promise.then) tienen prioridad sobre las macrotareas (setTimeout).', es_verdadero: true },
@@ -427,6 +499,8 @@ function LobbyView({ estudiante, backendUrl, onUpdate, listaAmigos = [], partida
       {
         id: 'memory_1',
         tipo: 'memory',
+        lenguaje: 'General',
+        dificultad: 'novato',
         titulo: 'Matriz de Conceptos de Software',
         cartas: [
           { id: 'm1', matchingId: 'p1', texto: 'Closure', flipped: false, matched: false },
@@ -437,9 +511,12 @@ function LobbyView({ estudiante, backendUrl, onUpdate, listaAmigos = [], partida
       }
     ],
     pragma: [
+      // JAVASCRIPT / REACT
       {
         id: 'sorter_1',
         tipo: 'sorter',
+        lenguaje: 'JavaScript',
+        dificultad: 'intermedio',
         titulo: 'Pipeline Funcional de Arrays',
         lineas: ['  .map(n => n * 2);', 'return numeros', '  .filter(n => n % 2 === 0)'],
         lineas_ordenadas: ['return numeros', '  .filter(n => n % 2 === 0)', '  .map(n => n * 2);']
@@ -447,6 +524,8 @@ function LobbyView({ estudiante, backendUrl, onUpdate, listaAmigos = [], partida
       {
         id: 'fill_1',
         tipo: 'fill-blank',
+        lenguaje: 'JavaScript',
+        dificultad: 'intermedio',
         titulo: 'Consumo Asíncrono de APIs',
         codigo_con_huecos: 'const response = ___1___ fetch("/api/datos");\nconst payload = ___2___ response.json();',
         respuestas: {
@@ -454,9 +533,43 @@ function LobbyView({ estudiante, backendUrl, onUpdate, listaAmigos = [], partida
           '2': 'await'
         }
       },
+      // PYTHON
+      {
+        id: 'sorter_py_1',
+        tipo: 'sorter',
+        lenguaje: 'Python',
+        dificultad: 'novato',
+        titulo: 'Función Cuadrática en Python',
+        lineas: ['    return resultado', 'def calcular_cuadrado(x):', '    resultado = x ** 2'],
+        lineas_ordenadas: ['def calcular_cuadrado(x):', '    resultado = x ** 2', '    return resultado']
+      },
+      {
+        id: 'fill_py_1',
+        tipo: 'fill-blank',
+        lenguaje: 'Python',
+        dificultad: 'intermedio',
+        titulo: 'List Comprehensions en Python',
+        codigo_con_huecos: 'pares = [x ___1___ x in range(10) ___2___ x % 2 == 0]',
+        respuestas: {
+          '1': 'for',
+          '2': 'if'
+        }
+      },
+      // SQL
+      {
+        id: 'sorter_sql_1',
+        tipo: 'sorter',
+        lenguaje: 'SQL',
+        dificultad: 'novato',
+        titulo: 'Estructura Canónica de Consulta SQL',
+        lineas: ['ORDER BY fecha_creacion DESC;', 'WHERE activo = TRUE', 'SELECT id, nombre, email', 'FROM usuarios'],
+        lineas_ordenadas: ['SELECT id, nombre, email', 'FROM usuarios', 'WHERE activo = TRUE', 'ORDER BY fecha_creacion DESC;']
+      },
       {
         id: 'typer_1',
         tipo: 'typer',
+        lenguaje: 'General',
+        dificultad: 'novato',
         titulo: 'Speedrun: Declaración de Estado',
         codigo: 'const [operador, setOperador] = useState(null);',
         descripcion: 'Escribe el código React exactamente igual a máxima velocidad.'
@@ -464,6 +577,8 @@ function LobbyView({ estudiante, backendUrl, onUpdate, listaAmigos = [], partida
       {
         id: 'zen_1',
         tipo: 'zen',
+        lenguaje: 'JavaScript',
+        dificultad: 'intermedio',
         titulo: 'Recursión Segura',
         descripcion: 'Completa la línea de control del caso base recursivo para evitar que un número negativo cause un Stack Overflow.',
         codigoInicial: `function factorial(n) {\n  if (______) return 1;\n  return n * factorial(n - 1);\n}`,
@@ -474,6 +589,8 @@ function LobbyView({ estudiante, backendUrl, onUpdate, listaAmigos = [], partida
       {
         id: 'tinder_1',
         tipo: 'tinder',
+        lenguaje: 'General',
+        dificultad: 'novato',
         titulo: 'Centrado Flexible',
         descripcion: 'Escribe la propiedad CSS correcta para centrar verticalmente elementos dentro de un contenedor flexible con dirección de columna.',
         codigoInicial: `.cyber-container {\n  display: flex;\n  flex-direction: column;\n  /* Centrar verticalmente en flex-direction: column */\n  justify-content: ______;\n}`,
@@ -484,62 +601,112 @@ function LobbyView({ estudiante, backendUrl, onUpdate, listaAmigos = [], partida
     ]
   };
 
+  const cancelInvitation = (team, slotIndex) => {
+    const setSlots = team === 'orange' ? setOrangeSlots : setBlueSlots;
+    setSlots(prev => {
+      const next = [...prev];
+      if (next[slotIndex]?.timerId) {
+        clearInterval(next[slotIndex].timerId);
+      }
+      next[slotIndex] = null;
+      return next;
+    });
+  };
+
   const inviteFriend = (friend, team, slotIndex) => {
     setShowInviteModal(false);
     const setSlots = team === 'orange' ? setOrangeSlots : setBlueSlots;
+    const COUNTDOWN_SECONDS = 12; // Espera garantizada de más de 10 segundos
     
-    // Cambiar estado del slot a enviando
-    setSlots(prev => {
-      const next = [...prev];
-      next[slotIndex] = { type: 'inviting', status: 'sending', name: friend.nombre };
-      return next;
-    });
+    // Si tiene backend y ID real, despachar invitación táctica por SSE
+    if (friend.id && estudiante?.id) {
+      fetch(`${backendUrl}/api/duelos/invitar`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          retador_id: estudiante.id,
+          retador_nombre: estudiante.nombre || 'Comandante',
+          retado_id: friend.id,
+          retado_nombre: friend.nombre,
+          tipo_match: matchType,
+          modos: [challengeCategory],
+          lenguaje: estudiante.tecnologia_actual || 'JavaScript',
+          nivel: estudiante.nivel_actual || 'Intermedio'
+        })
+      }).catch(err => console.warn('Aviso invitación online:', err));
+    }
 
-    setTimeout(() => {
-      // 80% de probabilidad de aceptar
-      const acepta = Math.random() < 0.80;
-      
+    let remaining = COUNTDOWN_SECONDS;
+    const timerId = setInterval(() => {
+      remaining -= 1;
       setSlots(prev => {
         const next = [...prev];
-        if (next[slotIndex] && next[slotIndex].type === 'inviting') {
-          next[slotIndex] = { 
-            type: 'inviting',
-            status: acepta ? 'accepted' : 'rejected', 
-            name: friend.nombre 
-          };
+        const current = next[slotIndex];
+        if (!current || current.type !== 'inviting' || current.status !== 'sending') {
+          clearInterval(timerId);
+          return prev;
+        }
+
+        if (remaining > 0) {
+          next[slotIndex] = { ...current, countdown: remaining, timerId };
+          return next;
+        }
+
+        // Cuenta regresiva expiró
+        clearInterval(timerId);
+        const acepta = Math.random() < 0.75;
+        if (acepta) {
+          next[slotIndex] = { type: 'inviting', status: 'accepted', name: friend.nombre, countdown: 0 };
+          setTimeout(() => {
+            setSlots(p => {
+              const n = [...p];
+              n[slotIndex] = { 
+                type: 'friend', 
+                name: friend.nombre, 
+                tech: friend.tecnologia_actual || 'JavaScript',
+                friendObj: friend 
+              };
+              return n;
+            });
+          }, 1200);
+        } else {
+          next[slotIndex] = { type: 'inviting', status: 'expired', name: friend.nombre, countdown: 0 };
+          setTimeout(() => {
+            setSlots(p => {
+              const n = [...p];
+              if (n[slotIndex]?.status === 'expired') {
+                n[slotIndex] = null;
+              }
+              return n;
+            });
+          }, 2000);
         }
         return next;
       });
+    }, 1000);
 
-      if (acepta) {
-        setTimeout(() => {
-          setSlots(prev => {
-            const next = [...prev];
-            next[slotIndex] = { 
-              type: 'friend', 
-              name: friend.nombre, 
-              tech: friend.tecnologia_actual || 'JavaScript',
-              friendObj: friend 
-            };
-            return next;
-          });
-        }, 1200);
-      } else {
-        setTimeout(() => {
-          setSlots(prev => {
-            const next = [...prev];
-            next[slotIndex] = null;
-            return next;
-          });
-        }, 2200);
-      }
-    }, 1800);
+    // Cambiar estado inicial del slot con el timer activo
+    setSlots(prev => {
+      const next = [...prev];
+      next[slotIndex] = { 
+        type: 'inviting', 
+        status: 'sending', 
+        name: friend.nombre, 
+        countdown: COUNTDOWN_SECONDS,
+        timerId,
+        friendObj: friend 
+      };
+      return next;
+    });
   };
 
   const removeFriend = (team, slotIndex) => {
     const setSlots = team === 'orange' ? setOrangeSlots : setBlueSlots;
     setSlots(prev => {
       const next = [...prev];
+      if (next[slotIndex]?.timerId) {
+        clearInterval(next[slotIndex].timerId);
+      }
       next[slotIndex] = null;
       return next;
     });
@@ -555,7 +722,7 @@ function LobbyView({ estudiante, backendUrl, onUpdate, listaAmigos = [], partida
     setSearchTimer(0);
     setBattleResult(null);
 
-    // Intentar registrar ticket en backend de matchmaking
+    // Intentar registrar ticket en backend de matchmaking incluyendo lenguaje y tecnología
     try {
       fetch(`${backendUrl}/api/pragma/multiplayer/match/join`, {
         method: 'POST',
@@ -564,7 +731,8 @@ function LobbyView({ estudiante, backendUrl, onUpdate, listaAmigos = [], partida
           estudiante_id: estudiante.id,
           tipo_match: matchType,
           categoria: challengeCategory,
-          dificultad: difficulty
+          dificultad: difficulty,
+          lenguaje: estudiante.tecnologia_actual || 'JavaScript'
         })
       }).catch(err => console.warn('Matchmaking join fallback local:', err));
     } catch (e) {
@@ -607,13 +775,28 @@ function LobbyView({ estudiante, backendUrl, onUpdate, listaAmigos = [], partida
     if (backendMatch && Array.isArray(backendMatch.retos) && backendMatch.retos.length > 0) {
       retosElegidos = backendMatch.retos;
     } else {
+      const techEstudiante = (estudiante?.tecnologia_actual || 'JavaScript').toLowerCase();
+      const difActual = (difficulty || 'intermedio').toLowerCase();
+      const cantidad = difActual === 'novato' ? 3 : difActual === 'experto' ? 5 : 4;
+
+      const filtrarPorTech = (pool) => {
+        const coincidentes = pool.filter(r => !r.lenguaje || r.lenguaje.toLowerCase().includes(techEstudiante) || r.lenguaje === 'General');
+        return coincidentes.length >= 2 ? coincidentes : pool;
+      };
+
       if (challengeCategory === 'arcade') {
-        retosElegidos = [...RETOS_MULTIPLAYER.arcade].sort(() => 0.5 - Math.random()).slice(0, 3);
+        const pool = filtrarPorTech(RETOS_MULTIPLAYER.arcade);
+        retosElegidos = [...pool].sort(() => 0.5 - Math.random()).slice(0, cantidad);
       } else if (challengeCategory === 'pragma') {
-        retosElegidos = [...RETOS_MULTIPLAYER.pragma].sort(() => 0.5 - Math.random()).slice(0, 3);
+        const pool = filtrarPorTech(RETOS_MULTIPLAYER.pragma);
+        retosElegidos = [...pool].sort(() => 0.5 - Math.random()).slice(0, cantidad);
       } else {
-        const a = [...RETOS_MULTIPLAYER.arcade].sort(() => 0.5 - Math.random()).slice(0, 2);
-        const p = [...RETOS_MULTIPLAYER.pragma].sort(() => 0.5 - Math.random()).slice(0, 2);
+        const poolA = filtrarPorTech(RETOS_MULTIPLAYER.arcade);
+        const poolP = filtrarPorTech(RETOS_MULTIPLAYER.pragma);
+        const cantA = Math.ceil(cantidad / 2);
+        const cantP = Math.floor(cantidad / 2);
+        const a = [...poolA].sort(() => 0.5 - Math.random()).slice(0, cantA);
+        const p = [...poolP].sort(() => 0.5 - Math.random()).slice(0, cantP);
         retosElegidos = [...a, ...p];
       }
     }
@@ -1106,28 +1289,46 @@ function LobbyView({ estudiante, backendUrl, onUpdate, listaAmigos = [], partida
     if (slot.type === 'inviting') {
       if (slot.status === 'sending') {
         return (
-          <div key={`${team}-${slotIndex}`} className="lobby-player-slot active inviting border-cyan-500 bg-cyan-950/20">
-            <div className="slot-spinner animate-spin w-5 h-5 border-2 border-[#00ffcc] border-t-transparent rounded-full mb-2"></div>
-            <div className="slot-info">
-              <span className="slot-name text-slate-400">Enviando enlace...</span>
-              <span className="slot-role text-[9px] text-[#00ffcc] animate-pulse">{slot.name}</span>
+          <div key={`${team}-${slotIndex}`} className="lobby-player-slot active inviting border-cyan-500/60 bg-cyan-950/30 relative p-2 flex flex-col items-center justify-center">
+            <div className="flex items-center gap-1.5 mb-1.5">
+              <div className="slot-spinner animate-spin w-3.5 h-3.5 border-2 border-[#00ffcc] border-t-transparent rounded-full"></div>
+              <span className="font-mono text-[10px] text-amber-400 font-bold px-1.5 py-0.5 rounded bg-amber-500/10 border border-amber-500/30 animate-pulse">
+                ⏱️ {slot.countdown || 12}s
+              </span>
             </div>
-            <button className="swap-slot-btn" onClick={() => swapTeam(team, slotIndex)} title="Intercambiar equipo">
-              ⇄ INTERCAMBIAR
-            </button>
+            <div className="slot-info text-center mb-2">
+              <span className="slot-name text-white font-mono font-bold text-xs max-w-[120px] truncate block">{slot.name}</span>
+              <span className="slot-role text-[8px] text-[#00ffcc] animate-pulse block">ESPERANDO RESPUESTA...</span>
+            </div>
+            <div className="flex gap-1">
+              <button 
+                className="px-2 py-0.5 bg-rose-950/80 hover:bg-rose-900 border border-rose-500/40 text-rose-300 font-mono text-[9px] font-bold rounded cursor-pointer transition active:scale-95" 
+                onClick={() => cancelInvitation(team, slotIndex)} 
+                title="Cancelar invitación activa"
+              >
+                CANCELAR
+              </button>
+            </div>
           </div>
         );
       } else if (slot.status === 'accepted') {
         return (
           <div key={`${team}-${slotIndex}`} className="lobby-player-slot active accepted border-emerald-500 bg-emerald-950/20">
-            <div className="slot-avatar text-emerald-400">✔️</div>
+            <div className="slot-avatar text-emerald-400 text-lg">✔️</div>
             <div className="slot-info">
-              <span className="slot-name text-emerald-400">¡Aceptado!</span>
+              <span className="slot-name text-emerald-400 font-bold text-xs">¡Aceptado!</span>
               <span className="slot-role text-emerald-400">{slot.name}</span>
             </div>
-            <button className="swap-slot-btn" onClick={() => swapTeam(team, slotIndex)} title="Intercambiar equipo">
-              ⇄ INTERCAMBIAR
-            </button>
+          </div>
+        );
+      } else if (slot.status === 'expired') {
+        return (
+          <div key={`${team}-${slotIndex}`} className="lobby-player-slot active expired border-amber-500/50 bg-amber-950/20">
+            <div className="slot-avatar text-amber-400 text-base">⏱️</div>
+            <div className="slot-info">
+              <span className="slot-name text-amber-400 font-bold text-[11px]">Tiempo Expirado</span>
+              <span className="slot-role text-slate-400 text-[8px]">Sin respuesta de {slot.name}</span>
+            </div>
           </div>
         );
       } else {
@@ -1138,9 +1339,6 @@ function LobbyView({ estudiante, backendUrl, onUpdate, listaAmigos = [], partida
               <span className="slot-name text-rose-500">Ocupado</span>
               <span className="slot-role text-rose-400">{slot.name}</span>
             </div>
-            <button className="swap-slot-btn" onClick={() => swapTeam(team, slotIndex)} title="Intercambiar equipo">
-              ⇄ INTERCAMBIAR
-            </button>
           </div>
         );
       }
@@ -1747,8 +1945,84 @@ function LobbyView({ estudiante, backendUrl, onUpdate, listaAmigos = [], partida
             )}
           </div>
 
-          {/* LADO DERECHO: TELEMETRÍA Y PROGRESO DE LOS ESCUADRONES EN TIEMPO REAL */}
+          {/* LADO DERECHO: TELEMETRÍA Y CLASIFICACIONES EN TIEMPO REAL */}
           <div className="match-squads-telemetry flex flex-col gap-4">
+            {/* 1. HUD DE CLASIFICACIONES EN TIEMPO REAL (LIVE LEADERBOARD) */}
+            <div className="hud-panel-spec p-4 bg-slate-950/90 border border-cyan-500/40 shadow-[0_0_20px_rgba(0,243,255,0.15)] rounded-lg relative overflow-hidden">
+              <div className="flex justify-between items-center mb-3 pb-2 border-b border-cyan-500/20">
+                <div className="flex items-center gap-2">
+                  <Trophy size={16} className="text-amber-400 animate-bounce" />
+                  <span className="text-[11px] text-[#00f3ff] font-bold font-mono tracking-widest uppercase">
+                    CLASIFICACIÓN EN VIVO (LIVE HUD)
+                  </span>
+                </div>
+                <span className="text-[9px] font-mono text-emerald-400 px-2 py-0.5 rounded bg-emerald-500/10 border border-emerald-500/30 animate-pulse font-bold">
+                  ● EN TIEMPO REAL
+                </span>
+              </div>
+
+              {/* Ranking ordenado dinámicamente de todos los operadores */}
+              <div className="flex flex-col gap-2">
+                {[...activeMatch.players]
+                  .sort((a, b) => {
+                    const scoreA = (a.progress * 10) - (a.errors * 15) - (a.time || 0);
+                    const scoreB = (b.progress * 10) - (b.errors * 15) - (b.time || 0);
+                    if (scoreB !== scoreA) return scoreB - scoreA;
+                    return b.progress - a.progress;
+                  })
+                  .map((player, rankIdx) => {
+                    const rankBadge = rankIdx === 0 ? '🥇 1º' : rankIdx === 1 ? '🥈 2º' : rankIdx === 2 ? '🥉 3º' : `${rankIdx + 1}º`;
+                    const isOrange = player.team === 'orange';
+                    const teamColor = isOrange ? '#ff9900' : '#00f3ff';
+                    const teamBg = isOrange ? 'bg-[#ff9900]/10 border-[#ff9900]/30' : 'bg-[#00f3ff]/10 border-[#00f3ff]/30';
+
+                    return (
+                      <div 
+                        key={player.id} 
+                        className={`flex items-center justify-between p-2 rounded border font-mono transition-all duration-300 ${player.isSelf ? 'bg-cyan-950/40 border-cyan-400/60 shadow-[0_0_10px_rgba(0,255,204,0.15)]' : 'bg-slate-900/60 border-slate-800'}`}
+                      >
+                        <div className="flex items-center gap-2 flex-1 min-w-0">
+                          <span className={`text-[10px] font-bold px-1.5 py-0.5 rounded font-mono ${rankIdx === 0 ? 'bg-amber-500/20 text-amber-300 border border-amber-500/40' : 'bg-slate-800 text-slate-300'}`}>
+                            {rankBadge}
+                          </span>
+                          <span className="text-sm">{player.avatar}</span>
+                          <div className="flex flex-col min-w-0 flex-1">
+                            <div className="flex items-center gap-1.5">
+                              <span className="text-[11px] font-bold text-white truncate">
+                                {player.nombre}
+                              </span>
+                              {player.isSelf && <span className="text-[8px] text-[#00ffcc] font-bold px-1 bg-[#00ffcc]/10 rounded border border-[#00ffcc]/30">TÚ</span>}
+                              <span className={`text-[8px] px-1 py-0.2 rounded border font-bold uppercase ${teamBg}`} style={{ color: teamColor }}>
+                                {isOrange ? 'NARANJA' : 'AZUL'}
+                              </span>
+                            </div>
+                            <div className="flex items-center gap-2 text-[9px] text-slate-400 mt-0.5">
+                              <span>Progreso: <strong className="text-white">{player.progress}%</strong></span>
+                              <span>•</span>
+                              <span className={player.errors > 0 ? 'text-rose-400 font-bold' : 'text-emerald-400'}>
+                                {player.errors > 0 ? `${player.errors} err` : 'Limpio'}
+                              </span>
+                            </div>
+                          </div>
+                        </div>
+
+                        <div className="flex flex-col items-end gap-1 ml-2">
+                          <div className="w-16 bg-slate-800 h-1.5 rounded-full overflow-hidden">
+                            <div 
+                              className="h-full transition-all duration-300"
+                              style={{ width: `${player.progress}%`, backgroundColor: teamColor }}
+                            />
+                          </div>
+                          <span className="text-[8px] font-mono text-slate-400">
+                            {player.finished ? <span className="text-emerald-400 font-bold">¡LISTO!</span> : `${player.progress}%`}
+                          </span>
+                        </div>
+                      </div>
+                    );
+                  })}
+              </div>
+            </div>
+
             {/* ESCUADRÓN NARANJA */}
             <div className="hud-panel-spec p-4 bg-[#ff9900]/5 border-[#ff9900]/20 rounded-lg">
               <span className="text-[10px] text-[#ff9900] font-bold font-mono block mb-3 tracking-widest">

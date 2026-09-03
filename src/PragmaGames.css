@@ -2300,3 +2300,20 @@
   text-transform: uppercase;
 }
 
+/* Tactical Toast Notification Spec */
+.tactical-toast-spec {
+  backdrop-filter: blur(16px);
+  position: relative;
+}
+
+.tactical-toast-spec::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 1px;
+  background: linear-gradient(90deg, transparent, #00f3ff, #00ffcc, transparent);
+}
+
+

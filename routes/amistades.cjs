@@ -225,7 +225,7 @@ router.get('/api/chats/listar/:remitente_id/:destinatario_id', async (req, res) 
 
 // --- DUELOS ---
 router.post('/api/duelos/invitar', async (req, res) => {
-  const { retador_id, retador_nombre, retado_id, retado_nombre, tipo_match, modos } = req.body;
+  const { retador_id, retador_nombre, retado_id, retado_nombre, tipo_match, modos, lenguaje, nivel } = req.body;
   if (!retador_id || !retado_id || !tipo_match || !modos) {
     return res.status(400).json({ error: 'Faltan parámetros.' });
   }
@@ -241,6 +241,8 @@ router.post('/api/duelos/invitar', async (req, res) => {
       retado_nombre: retado_nombre || 'Retado',
       tipo_match,
       modos,
+      lenguaje: lenguaje || 'JavaScript',
+      nivel: nivel || 'Intermedio',
       estado: 'pendiente',
       creado_en: new Date().toISOString()
     };
@@ -249,8 +251,9 @@ router.post('/api/duelos/invitar', async (req, res) => {
     if (global.enviarNotificacionSSE) {
       global.enviarNotificacionSSE(retado_id, 'nuevo_duelo', {
         retador_nombre,
-        lenguaje: tipo_match,
-        nivel: modos,
+        lenguaje: dueloData.lenguaje,
+        nivel: dueloData.nivel,
+        tipo_match,
         id: dueloId
       });
     }
@@ -263,14 +266,19 @@ router.post('/api/duelos/invitar', async (req, res) => {
 });
 
 router.get('/api/duelos/pendientes/:estudiante_id', async (req, res) => {
+  const { estudiante_id } = req.params;
+
   try {
-    const q = query(collection(firestoreDb, 'profesor_duelos'), where('retado_id', '==', req.params.estudiante_id), where('estado', '==', 'pendiente'));
+    const q = query(
+      collection(firestoreDb, 'profesor_duelos'),
+      where('retado_id', '==', estudiante_id),
+      where('estado', '==', 'pendiente')
+    );
     const snap = await getDocs(q);
-    const duelos = [];
-    snap.forEach(doc => duelos.push(doc.data()));
-    res.json(duelos);
+    const duelos = snap.docs.map(d => ({ id: d.id, ...d.data() }));
+    res.json({ duelos });
   } catch (error) {
-    console.error('Error al obtener duelos:', error);
+    console.error('Error al obtener duelos pendientes:', error);
     res.status(500).json({ error: 'Error interno.' });
   }
 });
@@ -292,7 +300,7 @@ router.post('/api/duelos/responder', async (req, res) => {
       const pragmaModule = require('./pragma.cjs');
       const cat = Array.isArray(dueloData.modos) ? (dueloData.modos.includes('arcade') ? 'arcade' : 'mixed') : 'mixed';
       retos = pragmaModule.generarRetosMultijugador 
-        ? pragmaModule.generarRetosMultijugador(cat, (dueloData.nivel || 'intermedio').toLowerCase())
+        ? pragmaModule.generarRetosMultijugador(cat, (dueloData.nivel || 'intermedio').toLowerCase(), dueloData.lenguaje || 'JavaScript')
         : [];
     }
 
@@ -304,6 +312,8 @@ router.post('/api/duelos/responder', async (req, res) => {
 
     if (accion === 'aceptar' && global.enviarNotificacionSSE) {
       global.enviarNotificacionSSE(dueloData.retador_id, 'duelo_aceptado', dueloActualizado);
+    } else if (accion === 'rechazar' && global.enviarNotificacionSSE) {
+      global.enviarNotificacionSSE(dueloData.retador_id, 'duelo_rechazado', dueloActualizado);
     }
 
     res.json({ success: true, mensaje: `Duelo ${estadoFinal} con éxito.`, duelo: dueloActualizado });

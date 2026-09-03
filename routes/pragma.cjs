@@ -418,10 +418,13 @@ const BOTS_NOMBRES = [
 ];
 
 const POOL_RETOS_MULTIJUGADOR = [
+  // --- JAVASCRIPT / WEB ---
   {
     id: 'trivia_1',
     tipo: 'trivia',
     categoria: 'arcade',
+    lenguaje: 'JavaScript',
+    dificultad: 'intermedio',
     titulo: 'Complejidad Computacional',
     pregunta: '¿Cuál es la complejidad temporal promedio de búsqueda en un Map/Set bien balanceado en JavaScript/V8?',
     opciones: ['O(N)', 'O(log N)', 'O(1)', 'O(N log N)'],
@@ -432,6 +435,8 @@ const POOL_RETOS_MULTIJUGADOR = [
     id: 'trivia_2',
     tipo: 'trivia',
     categoria: 'arcade',
+    lenguaje: 'React',
+    dificultad: 'intermedio',
     titulo: 'React Hooks y Memorización',
     pregunta: '¿Qué Hook de React se utiliza para memorizar la definición de una función y evitar recrearla en cada render?',
     opciones: ['useMemo', 'useCallback', 'useRef', 'useEffect'],
@@ -442,6 +447,8 @@ const POOL_RETOS_MULTIJUGADOR = [
     id: 'trivia_3',
     tipo: 'trivia',
     categoria: 'arcade',
+    lenguaje: 'JavaScript',
+    dificultad: 'experto',
     titulo: 'Event Loop & Concurrencia',
     pregunta: '¿En qué orden se procesan las Microtareas (Promise.then) frente a Macrotareas (setTimeout)?',
     opciones: [
@@ -454,9 +461,23 @@ const POOL_RETOS_MULTIJUGADOR = [
     explicacion: 'La cola de microtareas se vacía por completo antes de continuar con la siguiente macrotarea.'
   },
   {
+    id: 'trivia_js_novato',
+    tipo: 'trivia',
+    categoria: 'arcade',
+    lenguaje: 'JavaScript',
+    dificultad: 'novato',
+    titulo: 'Tipos Primitivos en JavaScript',
+    pregunta: '¿Cuál es el resultado de evaluar `typeof NaN` en JavaScript?',
+    opciones: ['"number"', '"nan"', '"undefined"', '"object"'],
+    correcta: 0,
+    explicacion: 'En la especificación IEEE 754 de JavaScript, NaN (Not-a-Number) es técnicamente de tipo numérico.'
+  },
+  {
     id: 'output_1',
     tipo: 'output',
     categoria: 'arcade',
+    lenguaje: 'JavaScript',
+    dificultad: 'intermedio',
     titulo: 'Predicción de Salida: Coerción',
     codigo: 'console.log(1 + +"2" + "2");',
     opciones: ['"32"', '"122"', 'NaN', '3'],
@@ -467,6 +488,8 @@ const POOL_RETOS_MULTIJUGADOR = [
     id: 'output_2',
     tipo: 'output',
     categoria: 'arcade',
+    lenguaje: 'JavaScript',
+    dificultad: 'experto',
     titulo: 'Predicción de Salida: Scoping & Hoisting',
     codigo: 'let a = 10;\n(() => {\n  let a = 20;\n  a += 5;\n})();\nconsole.log(a);',
     opciones: ['25', '10', 'undefined', 'ReferenceError'],
@@ -477,6 +500,8 @@ const POOL_RETOS_MULTIJUGADOR = [
     id: 'refactor_1',
     tipo: 'refactor',
     categoria: 'arcade',
+    lenguaje: 'JavaScript',
+    dificultad: 'novato',
     titulo: 'Auditoría de Bucle Infinito',
     descripcion: 'Identifica la corrección para evitar el bucle infinito causado por la reasignación de i.',
     codigo_con_bug: 'for (let i = 5; i >= 0; i--) {\n  if (i === 0) i = 5;\n}',
@@ -491,6 +516,8 @@ const POOL_RETOS_MULTIJUGADOR = [
     id: 'sorter_1',
     tipo: 'sorter',
     categoria: 'pragma',
+    lenguaje: 'JavaScript',
+    dificultad: 'novato',
     titulo: 'Pipeline Funcional de Arrays',
     lineas: ['  .map(n => n * 2);', 'return numeros', '  .filter(n => n % 2 === 0)'],
     lineas_ordenadas: ['return numeros', '  .filter(n => n % 2 === 0)', '  .map(n => n * 2);']
@@ -499,6 +526,8 @@ const POOL_RETOS_MULTIJUGADOR = [
     id: 'sorter_2',
     tipo: 'sorter',
     categoria: 'pragma',
+    lenguaje: 'JavaScript',
+    dificultad: 'intermedio',
     titulo: 'Estructura Asíncrona con Try/Catch',
     lineas: ['  } catch (err) {', '  try {', '    const res = await fetch(url);', '    console.error(err);', '  }'],
     lineas_ordenadas: ['  try {', '    const res = await fetch(url);', '  } catch (err) {', '    console.error(err);', '  }']
@@ -507,6 +536,8 @@ const POOL_RETOS_MULTIJUGADOR = [
     id: 'fill_1',
     tipo: 'fill-blank',
     categoria: 'pragma',
+    lenguaje: 'JavaScript',
+    dificultad: 'intermedio',
     titulo: 'Consumo Asíncrono de APIs',
     codigo_con_huecos: 'const response = ___1___ fetch("/api/datos");\nconst payload = ___2___ response.json();',
     respuestas: {
@@ -518,9 +549,11 @@ const POOL_RETOS_MULTIJUGADOR = [
     id: 'flashcard_1',
     tipo: 'flashcard',
     categoria: 'arcade',
+    lenguaje: 'JavaScript',
+    dificultad: 'intermedio',
     titulo: 'Fundamentos de Motor Web & JS',
     flashcards: [
-      { afirmacion: 'Las promesas no resueltas bloquean el hilo principal de Node.js indefinidamente.', es_verdadero: false },
+      { afirmacion: 'Las microtareas (Promise.then) tienen prioridad sobre las macrotareas (setTimeout).', es_verdadero: true },
       { afirmacion: 'Array.prototype.map retorna un nuevo array sin mutar el original.', es_verdadero: true },
       { afirmacion: 'const en JavaScript hace inmutables las propiedades internas de un objeto.', es_verdadero: false }
     ]
@@ -529,6 +562,8 @@ const POOL_RETOS_MULTIJUGADOR = [
     id: 'typer_1',
     tipo: 'typer',
     categoria: 'pragma',
+    lenguaje: 'React',
+    dificultad: 'novato',
     titulo: 'Speedrun: Estado Reactivo',
     codigo: 'const [operador, setOperador] = useState(null);',
     descripcion: 'Escribe la declaración del estado de React a máxima velocidad sin errores.'
@@ -537,6 +572,8 @@ const POOL_RETOS_MULTIJUGADOR = [
     id: 'memory_1',
     tipo: 'memory',
     categoria: 'arcade',
+    lenguaje: 'General',
+    dificultad: 'novato',
     titulo: 'Matriz de Conceptos de Software',
     cartas: [
       { id: 'm1', matchingId: 'p1', texto: 'Closure', flipped: false, matched: false },
@@ -549,6 +586,8 @@ const POOL_RETOS_MULTIJUGADOR = [
     id: 'zen_1',
     tipo: 'zen',
     categoria: 'pragma',
+    lenguaje: 'JavaScript',
+    dificultad: 'novato',
     titulo: 'Recursión Segura',
     descripcion: 'Completa la línea de control del caso base recursivo para evitar un Stack Overflow.',
     codigoInicial: 'function factorial(n) {\n  if (______) return 1;\n  return n * factorial(n - 1);\n}',
@@ -559,31 +598,283 @@ const POOL_RETOS_MULTIJUGADOR = [
     id: 'tinder_1',
     tipo: 'tinder',
     categoria: 'pragma',
+    lenguaje: 'HTML/CSS',
+    dificultad: 'novato',
     titulo: 'Alineación de Flexbox',
     descripcion: 'Escribe la propiedad CSS correcta para centrar verticalmente en flex-direction: column.',
     codigoInicial: '.cyber-container {\n  display: flex;\n  flex-direction: column;\n  justify-content: ______;\n}',
     codigoCorrecto: '.cyber-container {\n  display: flex;\n  flex-direction: column;\n  justify-content: center;\n}',
     guia: 'Ejemplo: center'
+  },
+
+  // --- PYTHON ---
+  {
+    id: 'py_trivia_1',
+    tipo: 'trivia',
+    categoria: 'arcade',
+    lenguaje: 'Python',
+    dificultad: 'novato',
+    titulo: 'Tipos de Datos en Python',
+    pregunta: '¿Cuál de las siguientes estructuras de datos es INMUTABLE en Python?',
+    opciones: ['list', 'dict', 'tuple', 'set'],
+    correcta: 2,
+    explicacion: 'Las tuplas (tuple) son inmutables una vez creadas, a diferencia de listas, diccionarios o conjuntos.'
+  },
+  {
+    id: 'py_output_1',
+    tipo: 'output',
+    categoria: 'arcade',
+    lenguaje: 'Python',
+    dificultad: 'novato',
+    titulo: 'Slicing con Pasos Negativos',
+    codigo: 'cadena = "PRAGMA"\nprint(cadena[::-1])',
+    opciones: ['"AMGARP"', '"PRAGMA"', '"P"', 'SyntaxError'],
+    correcta: 0,
+    explicacion: 'El paso -1 en el slicing de Python invierte la secuencia de caracteres por completo.'
+  },
+  {
+    id: 'py_refactor_1',
+    tipo: 'refactor',
+    categoria: 'arcade',
+    lenguaje: 'Python',
+    dificultad: 'intermedio',
+    titulo: 'Parámetro por Defecto Mutable',
+    descripcion: 'Corrige la función para evitar que la lista compartida persista entre llamadas sucesivas.',
+    codigo_con_bug: 'def agregar_item(item, items=[]):\n    items.append(item)\n    return items',
+    opciones_correcion: [
+      'def agregar_item(item, items=None):\n    if items is None: items = []\n    items.append(item)\n    return items',
+      'def agregar_item(item, items=()):\n    items += (item,)\n    return items',
+      'Cambiar items.append por items.insert(0, item)'
+    ],
+    correcta: 0
+  },
+  {
+    id: 'py_sorter_1',
+    tipo: 'sorter',
+    categoria: 'pragma',
+    lenguaje: 'Python',
+    dificultad: 'novato',
+    titulo: 'Estructura de Manejo de Archivos (Context Manager)',
+    lineas: ['    contenido = f.read()', 'with open("datos.txt", "r") as f:', 'print(contenido)'],
+    lineas_ordenadas: ['with open("datos.txt", "r") as f:', '    contenido = f.read()', 'print(contenido)']
+  },
+  {
+    id: 'py_fill_1',
+    tipo: 'fill-blank',
+    categoria: 'pragma',
+    lenguaje: 'Python',
+    dificultad: 'intermedio',
+    titulo: 'List Comprehensions Filtradas',
+    codigo_con_huecos: 'pares = [x * 2 ___1___ x in numeros ___2___ x % 2 == 0]',
+    respuestas: {
+      '1': 'for',
+      '2': 'if'
+    }
+  },
+  {
+    id: 'py_flashcard_1',
+    tipo: 'flashcard',
+    categoria: 'arcade',
+    lenguaje: 'Python',
+    dificultad: 'intermedio',
+    titulo: 'Arquitectura y Runtime de Python',
+    flashcards: [
+      { afirmacion: 'El Global Interpreter Lock (GIL) de CPython previene la ejecución concurrente nativa de bytecode de múltiples hilos en una misma CPU.', es_verdadero: true },
+      { afirmacion: 'Los generadores con yield cargan toda la secuencia a memoria RAM inmediatamente.', es_verdadero: false },
+      { afirmacion: '__init__ es el método constructor que asigna memoria antes de __new__.', es_verdadero: false }
+    ]
+  },
+  {
+    id: 'py_typer_1',
+    tipo: 'typer',
+    categoria: 'pragma',
+    lenguaje: 'Python',
+    dificultad: 'novato',
+    titulo: 'Definición de Función Python',
+    codigo: 'def calcular_promedio(valores): return sum(valores) / len(valores)',
+    descripcion: 'Escribe la función de cálculo en una línea respetando la sintaxis Python.'
+  },
+
+  // --- SQL & BASES DE DATOS ---
+  {
+    id: 'sql_trivia_1',
+    tipo: 'trivia',
+    categoria: 'arcade',
+    lenguaje: 'SQL',
+    dificultad: 'novato',
+    titulo: 'Cláusulas de Agregación',
+    pregunta: '¿Cuál es la diferencia fundamental entre las cláusulas WHERE y HAVING en SQL estándar?',
+    opciones: [
+      'WHERE filtra registros antes de agrupar; HAVING filtra sobre grupos creados por GROUP BY',
+      'WHERE solo funciona con números; HAVING con texto',
+      'HAVING se evalúa antes de FROM',
+      'No hay diferencia, son sinónimos'
+    ],
+    correcta: 0,
+    explicacion: 'WHERE se ejecuta antes del agrupamiento sobre filas individuales, mientras que HAVING evalúa condiciones sobre agregados tras GROUP BY.'
+  },
+  {
+    id: 'sql_output_1',
+    tipo: 'output',
+    categoria: 'arcade',
+    lenguaje: 'SQL',
+    dificultad: 'intermedio',
+    titulo: 'Comportamiento de COUNT con NULL',
+    codigo: '-- Tabla: estudiantes\n-- id | mentor_id\n--  1 | 10\n--  2 | NULL\n--  3 | 20\nSELECT COUNT(*), COUNT(mentor_id) FROM estudiantes;',
+    opciones: ['3, 2', '3, 3', '2, 2', 'Error de sintaxis'],
+    correcta: 0,
+    explicacion: 'COUNT(*) cuenta todas las filas de la tabla; COUNT(columna) ignora las filas donde el valor es NULL.'
+  },
+  {
+    id: 'sql_refactor_1',
+    tipo: 'refactor',
+    categoria: 'arcade',
+    lenguaje: 'SQL',
+    dificultad: 'intermedio',
+    titulo: 'Error Común de GROUP BY',
+    descripcion: 'Corrige la consulta que produce un error por columnas no agregadas en SELECT.',
+    codigo_con_bug: 'SELECT departamento, categoria, AVG(salario)\nFROM empleados\nGROUP BY departamento;',
+    opciones_correcion: [
+      'SELECT departamento, categoria, AVG(salario) FROM empleados GROUP BY departamento, categoria;',
+      'Eliminar AVG(salario) de la consulta.',
+      'Cambiar GROUP BY por ORDER BY departamento;'
+    ],
+    correcta: 0
+  },
+  {
+    id: 'sql_sorter_1',
+    tipo: 'sorter',
+    categoria: 'pragma',
+    lenguaje: 'SQL',
+    dificultad: 'intermedio',
+    titulo: 'Orden Lógico de Ejecución de una Consulta SQL',
+    lineas: ['SELECT id, nombre', 'WHERE activo = true', 'FROM usuarios', 'ORDER BY nombre ASC'],
+    lineas_ordenadas: ['FROM usuarios', 'WHERE activo = true', 'SELECT id, nombre', 'ORDER BY nombre ASC']
+  },
+  {
+    id: 'sql_fill_1',
+    tipo: 'fill-blank',
+    categoria: 'pragma',
+    lenguaje: 'SQL',
+    dificultad: 'novato',
+    titulo: 'Unión de Tablas con Left Join',
+    codigo_con_huecos: 'SELECT u.nombre, o.total\nFROM usuarios u\n___1___ JOIN ordenes o ___2___ u.id = o.usuario_id;',
+    respuestas: {
+      '1': 'LEFT',
+      '2': 'ON'
+    }
+  },
+  {
+    id: 'sql_flashcard_1',
+    tipo: 'flashcard',
+    categoria: 'arcade',
+    lenguaje: 'SQL',
+    dificultad: 'experto',
+    titulo: 'Principios ACID & Índices de Rendimiento',
+    flashcards: [
+      { afirmacion: 'El principio de Aislamiento (Isolation) garantiza que transacciones concurrentes no interfieran entre sí.', es_verdadero: true },
+      { afirmacion: 'Crear un índice B-Tree acelera las consultas de lectura sin ningún impacto en las operaciones de escritura (INSERT/UPDATE).', es_verdadero: false },
+      { afirmacion: 'Una clave foránea con ON DELETE CASCADE elimina automáticamente los registros dependientes de la tabla hija.', es_verdadero: true }
+    ]
+  },
+  {
+    id: 'sql_typer_1',
+    tipo: 'typer',
+    categoria: 'pragma',
+    lenguaje: 'SQL',
+    dificultad: 'novato',
+    titulo: 'Consulta de Inserción SQL',
+    codigo: 'INSERT INTO usuarios (nombre, email) VALUES (\'Ada\', \'ada@pragma.ai\');',
+    descripcion: 'Escribe la sentencia de inserción respetando comillas y delimitadores.'
+  },
+
+  // --- EXPERTO (ARQUITECTURA & SEGURIDAD) ---
+  {
+    id: 'exp_trivia_1',
+    tipo: 'trivia',
+    categoria: 'arcade',
+    lenguaje: 'General',
+    dificultad: 'experto',
+    titulo: 'Consistencia Distribuida (Teorema CAP)',
+    pregunta: 'Según el Teorema CAP, en presencia de una partición de red (P), ¿qué compromiso debe elegir un sistema distribuido?',
+    opciones: [
+      'Elegir entre Consistencia (C) o Disponibilidad (A)',
+      'Elegir entre Rendimiento o Seguridad',
+      'Garantizar los tres atributos simultáneamente mediante consenso Paxos',
+      'Descartar la partición de red forzando reinicio de nodos'
+    ],
+    correcta: 0,
+    explicacion: 'En un sistema distribuido con partición de red inevitable, se debe sacrificar consistencia estricta o disponibilidad total.'
+  },
+  {
+    id: 'exp_refactor_1',
+    tipo: 'refactor',
+    categoria: 'arcade',
+    lenguaje: 'JavaScript',
+    dificultad: 'experto',
+    titulo: 'Vulnerabilidad Reentrancy / Race Condition',
+    descripcion: 'Identifica la corrección para evitar condiciones de carrera en balances concurrentes.',
+    codigo_con_bug: 'async function transferir(origen, destino, monto) {\n  const saldo = await obtenerSaldo(origen);\n  if (saldo >= monto) {\n    await enviarDinero(destino, monto);\n    await debitarSaldo(origen, monto);\n  }\n}',
+    opciones_correcion: [
+      'Debitar el saldo antes de enviar el dinero (Patrón Checks-Effects-Interactions) o usar una transacción atómica con bloqueo optimista/pesimista.',
+      'Añadir un setTimeout de 100ms antes de enviarDinero.',
+      'Convertir la función en síncrona eliminando async/await.'
+    ],
+    correcta: 0
   }
 ];
 
-function generarRetosMultijugador(categoria = 'mixed', dificultad = 'intermedio') {
+function generarRetosMultijugador(categoria = 'mixed', dificultad = 'intermedio', lenguaje = 'JavaScript') {
   let pool = [...POOL_RETOS_MULTIJUGADOR];
+  
+  // 1. Filtrar por categoría (arcade, pragma, mixed)
   if (categoria === 'arcade') {
     pool = pool.filter(r => r.categoria === 'arcade');
   } else if (categoria === 'pragma') {
     pool = pool.filter(r => r.categoria === 'pragma');
   }
 
-  // Barajar pool aleatoriamente
-  const shuffled = pool.sort(() => 0.5 - Math.random());
-  const count = dificultad === 'novato' ? 3 : dificultad === 'experto' ? 5 : 4;
+  // 2. Filtrar por lenguaje y tecnología del estudiante
+  const langQuery = (lenguaje || 'JavaScript').trim().toLowerCase();
+  const poolFiltradoLenguaje = pool.filter(r => {
+    const rLang = (r.lenguaje || 'General').toLowerCase();
+    if (rLang === 'general') return true;
+    if (rLang === langQuery) return true;
+    if (langQuery.includes('react') && (rLang === 'react' || rLang === 'javascript')) return true;
+    if (langQuery.includes('node') && (rLang === 'javascript' || rLang === 'general')) return true;
+    if (langQuery.includes('html') && (rLang === 'html/css' || rLang === 'javascript')) return true;
+    if (langQuery.includes('css') && (rLang === 'html/css' || rLang === 'javascript')) return true;
+    return false;
+  });
+
+  const poolBase = poolFiltradoLenguaje.length >= 3 ? poolFiltradoLenguaje : pool;
+
+  // 3. Filtrar por nivel de dificultad del estudiante
+  const difQuery = (dificultad || 'intermedio').trim().toLowerCase();
+  let poolDificultad = poolBase.filter(r => {
+    const rDif = (r.dificultad || 'intermedio').toLowerCase();
+    if (difQuery === 'novato' || difQuery === 'principiante') {
+      return rDif === 'novato' || rDif === 'intermedio';
+    }
+    if (difQuery === 'experto') {
+      return rDif === 'experto' || rDif === 'intermedio';
+    }
+    return true;
+  });
+
+  if (poolDificultad.length < 3) {
+    poolDificultad = poolBase;
+  }
+
+  // 4. Barajar pool aleatoriamente y seleccionar según dificultad
+  const shuffled = poolDificultad.sort(() => 0.5 - Math.random());
+  const count = (difQuery === 'novato' || difQuery === 'principiante') ? 3 : difQuery === 'experto' ? 5 : 4;
   return shuffled.slice(0, Math.min(count, shuffled.length));
 }
 
 // 7. LOBBY MULTIJUGADOR COMPETITIVO
 router.post('/api/pragma/multiplayer/match/join', async (req, res) => {
-  const { estudiante_id, tipo_match, categoria, dificultad } = req.body;
+  const { estudiante_id, tipo_match, categoria, dificultad, lenguaje } = req.body;
   if (!estudiante_id) return res.status(400).json({ error: 'Falta estudiante_id' });
 
   try {
@@ -596,6 +887,7 @@ router.post('/api/pragma/multiplayer/match/join', async (req, res) => {
       tipo_match: tipo_match || "1v1",
       categoria: categoria || "mixed",
       dificultad: dificultad || "intermedio",
+      lenguaje: lenguaje || pragma.tecnologia_actual || "JavaScript",
       rank_points: pragma.rank_points || 0,
       laser_color: pragma.equipped_cosmetics?.laser_color || "#00ffcc",
       map_skin: pragma.equipped_cosmetics?.map_skin || "default",
@@ -650,7 +942,7 @@ router.get('/api/pragma/multiplayer/match/status/:estudiante_id', async (req, re
     if (candidatos.length >= totalOponentesRealesNecesarios) {
       const oponentes = candidatos.slice(0, totalOponentesRealesNecesarios);
       const salaId = `sala_${crypto.randomUUID()}`;
-      const retosSincronizados = generarRetosMultijugador(ticket.categoria, ticket.dificultad);
+      const retosSincronizados = generarRetosMultijugador(ticket.categoria, ticket.dificultad, ticket.lenguaje || 'JavaScript');
       
       const jugadores = [
         { id: estudiante_id, nombre: ticket.nombre, rank_points: ticket.rank_points, laser_color: ticket.laser_color, map_skin: ticket.map_skin, isBot: false },
@@ -695,7 +987,7 @@ router.get('/api/pragma/multiplayer/match/status/:estudiante_id', async (req, re
       const salaId = `sala_${crypto.randomUUID()}`;
       const oponentesBots = [];
       const totalBots = totalOponentesRealesNecesarios;
-      const retosSincronizados = generarRetosMultijugador(ticket.categoria, ticket.dificultad);
+      const retosSincronizados = generarRetosMultijugador(ticket.categoria, ticket.dificultad, ticket.lenguaje || 'JavaScript');
 
       for (let i = 0; i < totalBots; i++) {
         const botNombre = BOTS_NOMBRES[Math.floor(Math.random() * BOTS_NOMBRES.length)] + ` #${Math.floor(Math.random()*900 + 100)}`;

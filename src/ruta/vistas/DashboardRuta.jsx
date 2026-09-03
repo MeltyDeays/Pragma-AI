@@ -90,6 +90,32 @@ export default function DashboardRuta({
               </div>
             </div>
 
+            {tareaActiva.rubrica && Array.isArray(tareaActiva.rubrica) && tareaActiva.rubrica.length > 0 && (
+              <div className="task-rubric-card mt-5 mb-5 p-4 rounded-lg bg-slate-950/80 border border-indigo-500/30 font-mono">
+                <div className="flex items-center justify-between mb-3 border-b border-indigo-500/20 pb-2">
+                  <span className="text-xs font-bold text-indigo-400 flex items-center gap-2 uppercase tracking-wider">
+                    <Target size={15} className="text-[#00ffcc]" /> Rúbrica Pedagógica de Evaluación
+                  </span>
+                  <span className="text-[10px] text-slate-400">100% Ponderado</span>
+                </div>
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+                  {tareaActiva.rubrica.map((item, idx) => (
+                    <div key={idx} className="p-3 bg-slate-900/70 border border-slate-800 rounded flex flex-col justify-between">
+                      <div className="flex justify-between items-start mb-1">
+                        <span className="text-xs text-white font-bold">{item.criterio}</span>
+                        <span className="text-[10px] text-[#00ffcc] font-bold px-1.5 py-0.5 rounded bg-cyan-950/50 border border-cyan-500/30">
+                          {item.peso}
+                        </span>
+                      </div>
+                      <p className="text-[11px] text-slate-300 mt-1 leading-relaxed">
+                        {item.descripcion || item.excelente || 'Criterio técnico de calidad de código.'}
+                      </p>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            )}
+
             <div className="download-area">
               <div className="download-info">
                 <BookOpen className="icon-doc" />

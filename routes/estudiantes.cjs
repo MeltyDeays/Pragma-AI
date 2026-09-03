@@ -194,8 +194,17 @@ router.get('/api/estudiantes/:id/estado', async (req, res) => {
         if (!techTarea) techTarea = estudiante.tecnologia_actual;
       }
 
+      let conceptosParsed = tarea.conceptos_clave;
+      let rubricaParsed = null;
+      if (conceptosParsed && typeof conceptosParsed === 'object' && !Array.isArray(conceptosParsed) && conceptosParsed.conceptos) {
+        rubricaParsed = conceptosParsed.rubrica;
+        conceptosParsed = conceptosParsed.conceptos;
+      }
+
       tareas.push({
         ...tarea,
+        conceptos_clave: conceptosParsed,
+        rubrica: rubricaParsed,
         tecnologia: techTarea,
         word_url: wordUrl,
         entregas: entregas
