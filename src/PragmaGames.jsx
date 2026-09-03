@@ -117,6 +117,7 @@ function LobbyView({ estudiante, backendUrl, onUpdate, listaAmigos = [], partida
           avatar: '⚡',
           team: 'orange',
           isSelf: true,
+          isBot: false,
           progress: 0,
           errors: 0,
           finished: false,
@@ -128,6 +129,7 @@ function LobbyView({ estudiante, backendUrl, onUpdate, listaAmigos = [], partida
           avatar: '🕶️',
           team: 'blue',
           isSelf: false,
+          isBot: false,
           progress: 0,
           errors: 0,
           finished: false,
@@ -354,7 +356,12 @@ function LobbyView({ estudiante, backendUrl, onUpdate, listaAmigos = [], partida
       setTyperWpm(0);
       setTyperAccuracy(100);
     } else if (currentChallenge.tipo === 'memory') {
-      setMemoryCards(currentChallenge.cartas || []);
+      const clonedCards = (currentChallenge.cartas || []).map(c => ({
+        ...c,
+        flipped: false,
+        matched: false
+      }));
+      setMemoryCards([...clonedCards].sort(() => 0.5 - Math.random()));
       setMemorySelected([]);
       setMemoryMoves(0);
     }
@@ -621,6 +628,7 @@ function LobbyView({ estudiante, backendUrl, onUpdate, listaAmigos = [], partida
         avatar: j.isBot ? '🤖' : (j.id === estudiante.id ? '⚡' : '🧬'),
         team: idx % 2 === 0 ? 'orange' : 'blue',
         isSelf: j.id === estudiante.id,
+        isBot: !!j.isBot,
         progress: 0,
         errors: 0,
         finished: false,
@@ -704,12 +712,12 @@ function LobbyView({ estudiante, backendUrl, onUpdate, listaAmigos = [], partida
               progress: prev.userProgress,
               errors: prev.userErrors,
               finished: prev.userFinished,
-              time: prev.userFinished ? p.time : (p.time || 0) + 1
+              time: prev.userFinished ? (p.time != null ? p.time : prev.userTime) : (p.time || 0) + 1
             };
           }
 
-          if (prev.esRealtime) {
-            // En una partida en tiempo real, el progreso del oponente se actualiza mediante eventos SSE
+          if (prev.esRealtime && !p.isBot) {
+            // En una partida en tiempo real, el progreso del oponente real se actualiza mediante eventos SSE
             return p;
           }
 
@@ -784,12 +792,33 @@ function LobbyView({ estudiante, backendUrl, onUpdate, listaAmigos = [], partida
 
     setActiveMatch(prev => {
       if (!prev) return null;
+
+      const updatedPlayers = prev.players.map(p => {
+        if (p.isSelf) {
+          return {
+            ...p,
+            progress: nextUserProgress,
+            errors: nextErrors,
+            finished: nextFinished,
+            time: nextFinished ? (p.time != null ? p.time : prev.userTime) : p.time
+          };
+        }
+        return p;
+      });
+
+      const allFinished = updatedPlayers.every(p => p.finished);
+      if (allFinished && matchIntervalRef.current) {
+        clearInterval(matchIntervalRef.current);
+        setTimeout(() => calculateFinalResult({ ...prev, players: updatedPlayers, userProgress: nextUserProgress, userErrors: nextErrors, userFinished: nextFinished }), 500);
+      }
+
       return {
         ...prev,
         userProgress: nextUserProgress,
         userErrors: nextErrors,
         retoActualIndice: nextChallengeIndex,
         userFinished: nextFinished,
+        players: updatedPlayers,
         userCodigoInput: nextChallenge && nextChallenge.tipo !== 'trivia' ? (nextChallenge.codigoInicial || '') : ''
       };
     });
@@ -940,13 +969,21 @@ function LobbyView({ estudiante, backendUrl, onUpdate, listaAmigos = [], partida
 
     // Calcular puntaje de cada jugador
     const finalPlayers = finalState.players.map(p => {
-      const completionScore = p.progress * 10;
-      const errorPenalty = p.errors * 15;
-      const timePenalty = (p.time || 60) * 2;
+      const pProgress = p.isSelf ? (finalState.userProgress != null ? finalState.userProgress : p.progress) : p.progress;
+      const pErrors = p.isSelf ? (finalState.userErrors != null ? finalState.userErrors : p.errors) : p.errors;
+      const pTime = p.isSelf 
+        ? (p.time != null ? p.time : (finalState.userTime || 60)) 
+        : (p.time || 60);
+      const completionScore = pProgress * 10;
+      const errorPenalty = pErrors * 15;
+      const timePenalty = pTime * 2;
       const finalScore = Math.max(0, completionScore - errorPenalty - timePenalty);
 
       return {
         ...p,
+        progress: pProgress,
+        errors: pErrors,
+        time: pTime,
         score: Math.round(finalScore)
       };
     });
@@ -954,16 +991,23 @@ function LobbyView({ estudiante, backendUrl, onUpdate, listaAmigos = [], partida
     // Ordenar de mayor a menor puntuación
     finalPlayers.sort((a, b) => b.score - a.score);
 
-    // Calcular puntaje total del equipo
+    // Identificar el equipo del usuario
+    const selfPlayer = finalPlayers.find(p => p.isSelf);
+    const myTeam = selfPlayer ? selfPlayer.team : 'orange';
+
+    // Calcular puntaje total de los equipos
     const orangeTeamScore = finalPlayers.filter(p => p.team === 'orange').reduce((acc, curr) => acc + curr.score, 0);
     const blueTeamScore = finalPlayers.filter(p => p.team === 'blue').reduce((acc, curr) => acc + curr.score, 0);
 
-    const victoria = orangeTeamScore >= blueTeamScore;
+    const myTeamScore = myTeam === 'orange' ? orangeTeamScore : blueTeamScore;
+    const rivalTeamScore = myTeam === 'orange' ? blueTeamScore : orangeTeamScore;
+
+    const victoria = myTeamScore >= rivalTeamScore;
     const rankPointsGained = victoria ? 25 : 10;
     const shardsGained = victoria ? 10 : 3;
 
     // Actualizar perfil del estudiante
-    const profileCopy = { ...estudiante.pragma_profile };
+    const profileCopy = { ...(estudiante.pragma_profile || {}) };
     profileCopy.rank_points = (profileCopy.rank_points || 0) + rankPointsGained;
     profileCopy.inventory = profileCopy.inventory || {};
     profileCopy.inventory.silicon_shards = (profileCopy.inventory.silicon_shards || 0) + shardsGained;
@@ -986,8 +1030,8 @@ function LobbyView({ estudiante, backendUrl, onUpdate, listaAmigos = [], partida
     setBattleResult({
       victoria,
       mensaje: victoria 
-        ? `¡Victoria del Equipo Naranja! Tu escuadrón dominó la simulación por velocidad y limpieza de código.` 
-        : `Derrota. El Escuadrón Azul resolvió los retos de forma más óptima y limpia.`,
+        ? `¡Victoria del Escuadrón ${myTeam === 'orange' ? 'Naranja' : 'Azul'}! Tu escuadrón dominó la simulación por velocidad y precisión.` 
+        : `Derrota. El Escuadrón Rival (${myTeam === 'orange' ? 'Azul' : 'Naranja'}) resolvió los retos de forma más óptima.`,
       scoreDetalle: finalPlayers,
       orangeTeamScore,
       blueTeamScore,
@@ -1014,6 +1058,13 @@ function LobbyView({ estudiante, backendUrl, onUpdate, listaAmigos = [], partida
     return () => {
       clearInterval(timerRef.current);
       clearInterval(matchIntervalRef.current);
+      try {
+        fetch(`${backendUrl}/api/pragma/multiplayer/match/cancel`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ estudiante_id: estudiante.id })
+        }).catch(() => {});
+      } catch (e) {}
     };
   }, []);
 
@@ -1698,10 +1749,10 @@ function LobbyView({ estudiante, backendUrl, onUpdate, listaAmigos = [], partida
 
           {/* LADO DERECHO: TELEMETRÍA Y PROGRESO DE LOS ESCUADRONES EN TIEMPO REAL */}
           <div className="match-squads-telemetry flex flex-col gap-4">
-            {/* ESCUADRÓN NARANJA (TU EQUIPO) */}
+            {/* ESCUADRÓN NARANJA */}
             <div className="hud-panel-spec p-4 bg-[#ff9900]/5 border-[#ff9900]/20 rounded-lg">
               <span className="text-[10px] text-[#ff9900] font-bold font-mono block mb-3 tracking-widest">
-                ESCUADRÓN NARANJA (ALIADOS)
+                ESCUADRÓN NARANJA {activeMatch.players.some(p => p.team === 'orange' && p.isSelf) ? '(TU ESCUADRÓN)' : '(RIVALES)'}
               </span>
 
               <div className="flex flex-col gap-3">
@@ -1709,7 +1760,7 @@ function LobbyView({ estudiante, backendUrl, onUpdate, listaAmigos = [], partida
                   <div key={player.id} className="player-progress-bar-spec font-mono">
                     <div className="flex justify-between items-center text-[10px] mb-1">
                       <span className="text-white font-bold flex items-center gap-1">
-                        {player.avatar} {player.nombre} {player.isSelf && <span className="text-[9px] text-[#00ffcc]">(Tú)</span>}
+                        {player.avatar} {player.nombre} {player.isSelf && <span className="text-[9px] text-[#00ffcc] font-bold">(Tú)</span>}
                       </span>
                       <span className={player.errors > 0 ? 'text-rose-500' : 'text-slate-400'}>
                         {player.errors > 0 ? `⚠️ ${player.errors} err` : 'Limpio'}
@@ -1730,18 +1781,18 @@ function LobbyView({ estudiante, backendUrl, onUpdate, listaAmigos = [], partida
               </div>
             </div>
 
-            {/* ESCUADRÓN AZUL (ENEMIGOS) */}
+            {/* ESCUADRÓN AZUL */}
             <div className="hud-panel-spec p-4 bg-[#00f3ff]/5 border-[#00f3ff]/20 rounded-lg">
               <span className="text-[10px] text-[#00f3ff] font-bold font-mono block mb-3 tracking-widest">
-                ESCUADRÓN AZUL (RIVALES)
+                ESCUADRÓN AZUL {activeMatch.players.some(p => p.team === 'blue' && p.isSelf) ? '(TU ESCUADRÓN)' : '(RIVALES)'}
               </span>
 
               <div className="flex flex-col gap-3">
                 {activeMatch.players.filter(p => p.team === 'blue').map(player => (
                   <div key={player.id} className="player-progress-bar-spec font-mono">
                     <div className="flex justify-between items-center text-[10px] mb-1">
-                      <span className="text-white font-bold">
-                        {player.avatar} {player.nombre}
+                      <span className="text-white font-bold flex items-center gap-1">
+                        {player.avatar} {player.nombre} {player.isSelf && <span className="text-[9px] text-[#00ffcc] font-bold">(Tú)</span>}
                       </span>
                       <span className={player.errors > 0 ? 'text-rose-500' : 'text-slate-400'}>
                         {player.errors > 0 ? `⚠️ ${player.errors} err` : 'Limpio'}

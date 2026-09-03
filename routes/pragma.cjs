@@ -725,6 +725,14 @@ router.get('/api/pragma/multiplayer/match/status/:estudiante_id', async (req, re
         shardsGanado: 10
       };
 
+      const partidaDocRef = doc(firestoreDb, 'pragma_partidas', salaId);
+      await setDoc(partidaDocRef, {
+        salaId,
+        participantes: [estudiante_id],
+        retos: retosSincronizados,
+        creado_en: new Date().toISOString()
+      });
+
       await setDoc(docRef, { ...ticket, status: 'completado', matchResult });
 
       return res.json({ status: 'completado', matchResult });
