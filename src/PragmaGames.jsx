@@ -33,40 +33,100 @@ export default function PragmaGames({ estudiante, onUpdateEstudiante, backendUrl
 
   return (
     <div className="pragma-container">
-      {/* Encabezado del Perfil Pragma */}
+      {/* Encabezado del Perfil del Jugador */}
       <div className="pragma-header-panel">
         <div className="pragma-user-badge">
-          <div className="avatar-glowing" style={{ borderColor: pragmaProfile.equipped_cosmetics.laser_color }}>
+          <div className="avatar-glowing" style={{ borderColor: pragmaProfile.equipped_cosmetics?.laser_color || '#6366f1' }}>
             <span className="avatar-txt">⚡</span>
           </div>
           <div>
-            <h3>{estudiante.nombre} <span className="rank-badge">Rango {Math.floor(pragmaProfile.rank_points / 100) + 1}</span></h3>
-            <p className="rank-pts">{pragmaProfile.rank_points} RP • Cosmético: {pragmaProfile.equipped_cosmetics.map_skin}</p>
+            <div className="flex items-center gap-2">
+              <h3 className="user-name">{estudiante.nombre}</h3>
+              <span className="rank-badge">
+                Rango {Math.floor(pragmaProfile.rank_points / 100) + 1}
+              </span>
+            </div>
+            <div className="user-meta flex items-center gap-2 mt-1 text-xs">
+              <span className="text-amber-400 font-semibold">{pragmaProfile.rank_points} RP</span>
+              <span className="text-slate-500">•</span>
+              <span className="text-slate-300 font-medium">{estudiante.tecnologia_actual || 'Full Stack'}</span>
+            </div>
           </div>
         </div>
         
-        {/* Inventario Rápido */}
+        {/* Inventario Rápido de Recursos */}
         <div className="pragma-inventory-strip">
-          <div className="inv-item" title="Silicon Shards">💎 {pragmaProfile.inventory.silicon_shards} Shards</div>
-          <div className="inv-item" title="Memory Threads">🧵 {pragmaProfile.inventory.memory_threads} Threads</div>
-          <div className="inv-item" title="Logic Cores">🔮 {pragmaProfile.inventory.logic_cores} Cores</div>
-          <div className="inv-item" title="JS Essence">🟨 {pragmaProfile.inventory.javascript_essence || 0} JS</div>
-          <div className="inv-item" title="Python Essence">🟦 {pragmaProfile.inventory.python_essence || 0} Py</div>
-          <div className="inv-item" title="SQL Essence">🟩 {pragmaProfile.inventory.sql_essence || 0} SQL</div>
+          <div className="inv-item shard" title="Silicon Shards">
+            <span className="inv-icon">💎</span>
+            <span className="inv-val">{pragmaProfile.inventory.silicon_shards || 0}</span>
+            <span className="inv-lbl">Shards</span>
+          </div>
+          <div className="inv-item thread" title="Memory Threads">
+            <span className="inv-icon">🧵</span>
+            <span className="inv-val">{pragmaProfile.inventory.memory_threads || 0}</span>
+            <span className="inv-lbl">Threads</span>
+          </div>
+          <div className="inv-item core" title="Logic Cores">
+            <span className="inv-icon">🔮</span>
+            <span className="inv-val">{pragmaProfile.inventory.logic_cores || 0}</span>
+            <span className="inv-lbl">Cores</span>
+          </div>
+          <div className="inv-item js" title="Esencia JavaScript">
+            <span className="inv-icon">🟨</span>
+            <span className="inv-val">{pragmaProfile.inventory.javascript_essence || 0}</span>
+            <span className="inv-lbl">JS</span>
+          </div>
+          <div className="inv-item py" title="Esencia Python">
+            <span className="inv-icon">🟦</span>
+            <span className="inv-val">{pragmaProfile.inventory.python_essence || 0}</span>
+            <span className="inv-lbl">Py</span>
+          </div>
+          <div className="inv-item sql" title="Esencia SQL">
+            <span className="inv-icon">🟩</span>
+            <span className="inv-val">{pragmaProfile.inventory.sql_essence || 0}</span>
+            <span className="inv-lbl">SQL</span>
+          </div>
         </div>
       </div>
 
-      {/* Sub-Navegación Ciberpunk */}
+      {/* Sub-Navegación Moderna de Minijuegos */}
       <div className="pragma-nav-strip">
-        <button className={selectedSubTab === 'lobby' ? 'active' : ''} onClick={() => setSelectedSubTab('lobby')}>⚔️ Multijugador</button>
-        <button className={selectedSubTab === 'copiloto' ? 'active' : ''} onClick={() => setSelectedSubTab('copiloto')}>🤖 Copiloto</button>
-        <button className={selectedSubTab === 'zen' ? 'active' : ''} onClick={() => setSelectedSubTab('zen')}>🧘 Modo Zen</button>
-        <button className={selectedSubTab === 'taberna' ? 'active' : ''} onClick={() => setSelectedSubTab('taberna')}>🍺 La Taberna</button>
-        <button className={selectedSubTab === 'forja' ? 'active' : ''} onClick={() => setSelectedSubTab('forja')}>🔨 La Forja</button>
-        <button className={selectedSubTab === 'runas' ? 'active' : ''} onClick={() => setSelectedSubTab('runas')}>📖 Grimorio</button>
-        <button className={selectedSubTab === 'tinder' ? 'active' : ''} onClick={() => setSelectedSubTab('tinder')}>🔥 Tinder Code</button>
-        <button className={selectedSubTab === 'defense' ? 'active' : ''} onClick={() => setSelectedSubTab('defense')}>🛡️ Defense</button>
-        <button className={selectedSubTab === 'dungeon' ? 'active' : ''} onClick={() => setSelectedSubTab('dungeon')}>🗝️ SQL Dungeon</button>
+        <button className={selectedSubTab === 'lobby' ? 'active' : ''} onClick={() => setSelectedSubTab('lobby')}>
+          <span className="tab-icon">⚔️</span>
+          <span>Multijugador</span>
+        </button>
+        <button className={selectedSubTab === 'copiloto' ? 'active' : ''} onClick={() => setSelectedSubTab('copiloto')}>
+          <span className="tab-icon">🤖</span>
+          <span>Copiloto</span>
+        </button>
+        <button className={selectedSubTab === 'zen' ? 'active' : ''} onClick={() => setSelectedSubTab('zen')}>
+          <span className="tab-icon">🧘</span>
+          <span>Modo Zen</span>
+        </button>
+        <button className={selectedSubTab === 'taberna' ? 'active' : ''} onClick={() => setSelectedSubTab('taberna')}>
+          <span className="tab-icon">🍺</span>
+          <span>La Taberna</span>
+        </button>
+        <button className={selectedSubTab === 'forja' ? 'active' : ''} onClick={() => setSelectedSubTab('forja')}>
+          <span className="tab-icon">🔨</span>
+          <span>La Forja</span>
+        </button>
+        <button className={selectedSubTab === 'runas' ? 'active' : ''} onClick={() => setSelectedSubTab('runas')}>
+          <span className="tab-icon">📖</span>
+          <span>Grimorio</span>
+        </button>
+        <button className={selectedSubTab === 'tinder' ? 'active' : ''} onClick={() => setSelectedSubTab('tinder')}>
+          <span className="tab-icon">🔥</span>
+          <span>Tinder Code</span>
+        </button>
+        <button className={selectedSubTab === 'defense' ? 'active' : ''} onClick={() => setSelectedSubTab('defense')}>
+          <span className="tab-icon">🛡️</span>
+          <span>Defense</span>
+        </button>
+        <button className={selectedSubTab === 'dungeon' ? 'active' : ''} onClick={() => setSelectedSubTab('dungeon')}>
+          <span className="tab-icon">🗝️</span>
+          <span>SQL Dungeon</span>
+        </button>
       </div>
 
       {/* Pantalla Activa */}
@@ -1364,26 +1424,27 @@ function LobbyView({ estudiante, backendUrl, onUpdate, listaAmigos = [], partida
   };
 
   return (
-    <div className="lobby-panel glass-panel codewars-arena-panel crt-overlay">
-      <div className="hud-corner top-left"></div>
-      <div className="hud-corner top-right"></div>
-      <div className="hud-corner bottom-left"></div>
-      <div className="hud-corner bottom-right"></div>
-
+    <div className="lobby-panel glass-panel codewars-arena-panel">
       {/* CABECERA MULTIJUGADOR */}
       <div className="arena-header">
-        <div>
-          <h2 className="arena-title">CODEWARS: MULTIPLAYER ARENA</h2>
-          <div className="arena-sub-telemetry">
-            <span>STATUS: <span className="text-green text-glow">ONLINE</span></span>
-            <span style={{ marginLeft: '15px' }}>LOBBY: <span className="text-cyan text-glow">ALPHA-7</span></span>
+        <div className="flex items-center gap-3">
+          <div className="w-10 h-10 rounded-xl bg-indigo-500/10 border border-indigo-500/20 flex items-center justify-center text-xl">
+            ⚔️
+          </div>
+          <div>
+            <h2 className="arena-title">Arena Multijugador</h2>
+            <div className="arena-sub-telemetry">
+              <span className="text-emerald-400 font-semibold">● Servidores Online</span>
+              <span className="mx-2 text-slate-600">•</span>
+              <span className="text-slate-400">Lobby Global: Alpha-7</span>
+            </div>
           </div>
         </div>
 
         {searching && (
           <div className="queue-timer-badge">
             <span className="pulse-dot"></span>
-            COLA ACTIVA: {matchType} | {Math.floor(searchTimer / 60).toString().padStart(2, '0')}:{(searchTimer % 60).toString().padStart(2, '0')}
+            Buscando Partida: {matchType} | {Math.floor(searchTimer / 60).toString().padStart(2, '0')}:{(searchTimer % 60).toString().padStart(2, '0')}
           </div>
         )}
       </div>
@@ -1391,20 +1452,23 @@ function LobbyView({ estudiante, backendUrl, onUpdate, listaAmigos = [], partida
       {/* 1. SECCIÓN DE CREACIÓN DE LOBBY / GRUPO */}
       {!searching && !activeMatch && !battleResult && !showMasterConfig && (
         <div className="setup-container-spec">
-          <p className="panel-desc">Empareja tu código con oponentes en tiempo real. Configura el modo de simulación táctica:</p>
+          <p className="panel-desc">Compite o colabora con otros desarrolladores en tiempo real resolviendo desafíos algorítmicos:</p>
           
           <div className="match-options-spec">
             <button className={`mode-card-btn duel ${matchType === '1v1' ? 'active' : ''}`} onClick={() => setMatchType('1v1')}>
+              <span className="mode-icon">⚡</span>
               <span className="mode-title">1v1</span>
-              <span className="mode-sub">DUEL</span>
+              <span className="mode-sub">Duelo Directo</span>
             </button>
             <button className={`mode-card-btn team-match ${matchType === '2v2' ? 'active' : ''}`} onClick={() => setMatchType('2v2')}>
+              <span className="mode-icon">👥</span>
               <span className="mode-title">2v2</span>
-              <span className="mode-sub">TEAM MATCH</span>
+              <span className="mode-sub">Parejas</span>
             </button>
             <button className={`mode-card-btn squad ${matchType === '4v4' ? 'active' : ''}`} onClick={() => setMatchType('4v4')}>
+              <span className="mode-icon">🛡️</span>
               <span className="mode-title">4v4</span>
-              <span className="mode-sub">SQUAD BATTLE</span>
+              <span className="mode-sub">Escuadras</span>
             </button>
           </div>
 
@@ -1415,8 +1479,8 @@ function LobbyView({ estudiante, backendUrl, onUpdate, listaAmigos = [], partida
                 {/* LADO IZQUIERDO: EQUIPO NARANJA */}
                 <div className="vs-team-column orange-team-column">
                   <div className="vs-team-header orange">
-                    <span className="team-glow-text">🛡️ ESCUADRÓN NARANJA</span>
-                    <span className="team-size-counter font-mono">
+                    <span className="team-glow-text">🛡️ Equipo Naranja</span>
+                    <span className="team-size-counter">
                       {orangeSlots.filter((s, idx) => s !== null && idx < (matchType === '2v2' ? 2 : 4)).length} / {matchType === '2v2' ? 2 : 4}
                     </span>
                   </div>
@@ -1435,8 +1499,8 @@ function LobbyView({ estudiante, backendUrl, onUpdate, listaAmigos = [], partida
                 {/* LADO DERECHO: EQUIPO AZUL */}
                 <div className="vs-team-column blue-team-column">
                   <div className="vs-team-header blue">
-                    <span className="team-glow-text text-cyan">🔮 ESCUADRÓN AZUL</span>
-                    <span className="team-size-counter font-mono">
+                    <span className="team-glow-text">🔮 Equipo Azul</span>
+                    <span className="team-size-counter">
                       {blueSlots.filter((s, idx) => s !== null && idx < (matchType === '2v2' ? 2 : 4)).length} / {matchType === '2v2' ? 2 : 4}
                     </span>
                   </div>
@@ -1449,7 +1513,8 @@ function LobbyView({ estudiante, backendUrl, onUpdate, listaAmigos = [], partida
           )}
 
           <button className="btn-action-hud start-search-btn-hud mt-6" onClick={startMatchmaking}>
-            INICIALIZAR MATCHMAKING
+            <Play size={16} fill="white" />
+            <span>Iniciar Búsqueda de Partida</span>
           </button>
         </div>
       )}
@@ -1459,26 +1524,28 @@ function LobbyView({ estudiante, backendUrl, onUpdate, listaAmigos = [], partida
         <div className="cyber-modal-overlay">
           <div className="cyber-modal hud-panel-spec">
             <div className="panel-header-spec justify-between flex items-center mb-3">
-              <h3 className="text-[#00ffcc] font-mono font-bold text-xs tracking-wider">🌐 PROTOCOLO DE CONEXIÓN SOCIAL</h3>
+              <h3 className="text-white font-semibold text-sm flex items-center gap-2">
+                <span>👥</span> Invitar Amigo a la Partida
+              </h3>
               <button 
                 onClick={() => {
                   setShowInviteModal(false);
                   setFriendSearchQuery('');
                 }} 
-                className="text-rose-500 hover:text-rose-400 p-1"
+                className="text-slate-400 hover:text-white p-1 rounded-lg hover:bg-slate-800 transition"
               >
                 <X size={16} />
               </button>
             </div>
 
-            {/* BARRA DE BÚSQUEDA CYBERPUNK */}
+            {/* BARRA DE BÚSQUEDA */}
             <div className="search-bar-container mb-4">
               <input 
                 type="text" 
-                placeholder="BUSCAR OPERADOR SOCIAL POR NOMBRE O TECNOLOGÍA..." 
+                placeholder="Buscar amigo por nombre o tecnología..." 
                 value={friendSearchQuery}
                 onChange={(e) => setFriendSearchQuery(e.target.value)}
-                className="cyber-input font-mono text-xs w-full p-2.5 rounded bg-slate-950 border border-slate-800 text-white focus:border-[#00ffcc] outline-none"
+                className="w-full p-2.5 rounded-xl bg-slate-900 border border-slate-700/60 text-white placeholder-slate-500 text-xs focus:border-indigo-500 outline-none transition"
               />
             </div>
 
@@ -1487,7 +1554,7 @@ function LobbyView({ estudiante, backendUrl, onUpdate, listaAmigos = [], partida
                 amigo.nombre.toLowerCase().includes(friendSearchQuery.toLowerCase()) ||
                 (amigo.tecnologia_actual && amigo.tecnologia_actual.toLowerCase().includes(friendSearchQuery.toLowerCase()))
               ).length === 0 ? (
-                <p className="text-xs text-slate-500 text-center py-8 font-mono">No se encontraron operadores disponibles.</p>
+                <p className="text-xs text-slate-400 text-center py-8">No se encontraron amigos disponibles.</p>
               ) : (
                 listaAmigos.filter(amigo => 
                   amigo.nombre.toLowerCase().includes(friendSearchQuery.toLowerCase()) ||
@@ -1979,7 +2046,7 @@ function LobbyView({ estudiante, backendUrl, onUpdate, listaAmigos = [], partida
                     return (
                       <div 
                         key={player.id} 
-                        className={`flex items-center justify-between p-2 rounded border font-mono transition-all duration-300 ${player.isSelf ? 'bg-cyan-950/40 border-cyan-400/60 shadow-[0_0_10px_rgba(0,255,204,0.15)]' : 'bg-slate-900/60 border-slate-800'}`}
+                        className={`flex items-center justify-between p-2 rounded-xl border transition-all duration-300 ${player.isSelf ? 'bg-indigo-600/15 border-indigo-500/50 shadow-md shadow-indigo-500/10' : 'bg-slate-900/60 border-slate-800'}`}
                       >
                         <div className="flex items-center gap-2 flex-1 min-w-0">
                           <span className={`text-[10px] font-bold px-1.5 py-0.5 rounded font-mono ${rankIdx === 0 ? 'bg-amber-500/20 text-amber-300 border border-amber-500/40' : 'bg-slate-800 text-slate-300'}`}>
@@ -2122,7 +2189,7 @@ function LobbyView({ estudiante, backendUrl, onUpdate, listaAmigos = [], partida
 
           {/* TABLA DETALLADA DE POSICIONES */}
           <div className="detailed-scoreboard-hud text-left mt-6 max-w-[800px] mx-auto">
-            <span className="text-[10px] text-[#00ffcc] font-mono tracking-widest block mb-3 text-center">TABLA TÁCTICA DE OPERADORES</span>
+            <span className="text-xs text-indigo-300 font-semibold tracking-wide block mb-3 text-center">TABLA DE POSICIONES FINAL</span>
             <div className="scoreboard-grid flex flex-col gap-2">
               {battleResult.scoreDetalle.map((player, idx) => (
                 <div 

@@ -1483,27 +1483,29 @@ function App() {
             />
           ) : vistaActiva === 'juegos' ? (
             <div className="juegos-seccion-contenedor animate-fade-in">
-              {/* Selector de Modo de Juego */}
-              <div className="juegos-mode-selector-panel">
-                <button 
-                  className={`juegos-mode-tab ${modoJuego === 'pragma' ? 'active' : ''}`}
-                  onClick={() => setModoJuego('pragma')}
-                >
-                  <Gamepad2 size={14} />
-                  <span>PROYECTO PRAGMA</span>
-                  <span className="mode-desc-tag">ARENA & CAMPAÑA CIBERPUNK</span>
-                </button>
-                <button 
-                  className={`juegos-mode-tab ${modoJuego === 'arcade' ? 'active' : ''}`}
-                  onClick={() => {
-                    setModoJuego('arcade');
-                    setJuegoActivo(null);
-                  }}
-                >
-                  <Trophy size={14} />
-                  <span>ARCADE CLÁSICO</span>
-                  <span className="mode-desc-tag">MINIJUEGOS INDIVIDUALES</span>
-                </button>
+              {/* Selector de Modo de Juego Moderno */}
+              <div className="flex justify-center w-full mb-3">
+                <div className="juegos-mode-selector-panel">
+                  <button 
+                    className={`juegos-mode-tab ${modoJuego === 'pragma' ? 'active' : ''}`}
+                    onClick={() => setModoJuego('pragma')}
+                  >
+                    <Gamepad2 size={16} />
+                    <span>Arena Pragma</span>
+                    <span className="mode-desc-tag">Multijugador & Campaña</span>
+                  </button>
+                  <button 
+                    className={`juegos-mode-tab ${modoJuego === 'arcade' ? 'active' : ''}`}
+                    onClick={() => {
+                      setModoJuego('arcade');
+                      setJuegoActivo(null);
+                    }}
+                  >
+                    <Trophy size={16} />
+                    <span>Arcade Individual</span>
+                    <span className="mode-desc-tag">Práctica Rápida</span>
+                  </button>
+                </div>
               </div>
 
               {modoJuego === 'pragma' ? (
