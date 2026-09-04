@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { BookOpen, Download, RefreshCw, Send, Code, Target, Award, Check } from 'lucide-react';
 import { parsearRequisitos } from '../../core/controladores/markdown';
 import { descargarDocumentoPDF } from '../../core/controladores/pdfGenerator';
+import CodeCompilerTerminal from '../componentes/CodeCompilerTerminal';
 
 export default function DashboardRuta({
   indiceTemaActual,
@@ -94,7 +95,7 @@ export default function DashboardRuta({
               <div className="task-rubric-card mt-5 mb-5 p-4 rounded-lg bg-slate-950/80 border border-indigo-500/30 font-mono">
                 <div className="flex items-center justify-between mb-3 border-b border-indigo-500/20 pb-2">
                   <span className="text-xs font-bold text-indigo-400 flex items-center gap-2 uppercase tracking-wider">
-                    <Target size={15} className="text-[#00ffcc]" /> Rúbrica Pedagógica de Evaluación
+                    <Target size={15} className="text-indigo-400" /> Rúbrica Pedagógica de Evaluación
                   </span>
                   <span className="text-[10px] text-slate-400">100% Ponderado</span>
                 </div>
@@ -103,7 +104,7 @@ export default function DashboardRuta({
                     <div key={idx} className="p-3 bg-slate-900/70 border border-slate-800 rounded flex flex-col justify-between">
                       <div className="flex justify-between items-start mb-1">
                         <span className="text-xs text-white font-bold">{item.criterio}</span>
-                        <span className="text-[10px] text-[#00ffcc] font-bold px-1.5 py-0.5 rounded bg-cyan-950/50 border border-cyan-500/30">
+                        <span className="text-[10px] text-emerald-400 font-bold px-1.5 py-0.5 rounded bg-emerald-950/50 border border-emerald-500/30">
                           {item.peso}
                         </span>
                       </div>
@@ -258,27 +259,15 @@ export default function DashboardRuta({
 
               {tipoEntrega === 'codigo' ? (
                 <div className="codigo-submission-area" style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
-                  <p style={{ color: 'var(--color-text-muted)', fontSize: '13px' }}>Escribe o pega directamente el código fuente de tu solución en el editor inferior.</p>
-                  <textarea
-                    placeholder="// Pega tu código de solución aquí..."
-                    value={codigoEntregado}
-                    onChange={(e) => setCodigoEntregado(e.target.value)}
-                    required
+                  <p style={{ color: 'var(--color-text-muted)', fontSize: '13px' }}>
+                    Escribe, prueba y depura tu solución en el compilador interactivo. Cuando esté lista, haz clic en "Evaluar Código Pegado".
+                  </p>
+                  <CodeCompilerTerminal
+                    codigo={codigoEntregado}
+                    onChange={setCodigoEntregado}
+                    tecnologia={tareaActiva?.tema || estudiante?.tecnologia_actual || 'JavaScript'}
+                    tareaActiva={tareaActiva}
                     disabled={evaluating}
-                    style={{
-                      width: '100%',
-                      minHeight: '260px',
-                      background: 'var(--bg-input)',
-                      color: '#a855f7',
-                      fontFamily: 'Consolas, monospace',
-                      fontSize: '14px',
-                      padding: '16px',
-                      border: '1px solid var(--border-light)',
-                      borderRadius: '12px',
-                      outline: 'none',
-                      resize: 'vertical',
-                      boxSizing: 'border-box'
-                    }}
                   />
                   <button type="submit" className="btn-submit-delivery" disabled={evaluating} style={{ width: '100%', padding: '14px' }}>
                     {evaluating ? (

@@ -1,0 +1,486 @@
+/* ==========================================================================
+   compiler.css — Pragma AI Code Compiler & Interactive Terminal
+   Conforme a game-ui-standards.md: Estética moderna, limpia y elegante (Slate / Indigo).
+   Cero elementos cyberpunk, scanlines o efectos neón chillones.
+   ========================================================================== */
+
+/* Contenedor principal del compilador y terminal */
+.code-compiler-container {
+  display: flex;
+  flex-direction: column;
+  background: rgba(15, 23, 42, 0.95);
+  border: 1px solid rgba(51, 65, 85, 0.5);
+  border-radius: 14px;
+  overflow: hidden;
+  box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.5), 0 8px 10px -6px rgba(0, 0, 0, 0.5);
+  font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+  margin-top: 6px;
+  margin-bottom: 12px;
+}
+
+/* Barra superior de herramientas y selector de lenguaje */
+.compiler-toolbar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 10px 16px;
+  background: rgba(15, 23, 42, 0.9);
+  border-bottom: 1px solid rgba(51, 65, 85, 0.4);
+  gap: 12px;
+  flex-wrap: wrap;
+}
+
+.compiler-toolbar-left {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.compiler-lang-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 4px 10px;
+  border-radius: 9999px;
+  font-size: 11px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  background: rgba(99, 102, 241, 0.1);
+  color: #818cf8;
+  border: 1px solid rgba(99, 102, 241, 0.25);
+}
+
+.compiler-lang-select {
+  background: rgba(30, 41, 59, 0.8);
+  color: #e2e8f0;
+  border: 1px solid rgba(51, 65, 85, 0.6);
+  border-radius: 8px;
+  padding: 6px 12px;
+  font-size: 12px;
+  font-weight: 500;
+  outline: none;
+  cursor: pointer;
+  transition: border-color 0.15s ease, background 0.15s ease;
+}
+
+.compiler-lang-select:hover {
+  border-color: rgba(99, 102, 241, 0.5);
+  background: rgba(30, 41, 59, 1);
+}
+
+.compiler-lang-select:focus {
+  border-color: #6366f1;
+  box-shadow: 0 0 0 2px rgba(99, 102, 241, 0.2);
+}
+
+.compiler-toolbar-right {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+/* Botón principal de Ejecución de Código */
+.btn-compiler-run {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 7px 16px;
+  border-radius: 8px;
+  font-size: 13px;
+  font-weight: 600;
+  color: #ffffff;
+  background: linear-gradient(135deg, #4f46e5 0%, #7c3aed 100%);
+  border: 1px solid rgba(129, 140, 248, 0.3);
+  box-shadow: 0 4px 12px rgba(79, 70, 229, 0.3);
+  cursor: pointer;
+  transition: all 0.15s ease;
+  user-select: none;
+}
+
+.btn-compiler-run:hover:not(:disabled) {
+  background: linear-gradient(135deg, #4338ca 0%, #6d28d9 100%);
+  box-shadow: 0 4px 16px rgba(79, 70, 229, 0.4);
+  transform: translateY(-1px);
+}
+
+.btn-compiler-run:active:not(:disabled) {
+  transform: translateY(0);
+}
+
+.btn-compiler-run:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+  transform: none;
+}
+
+.btn-compiler-secondary {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 7px 12px;
+  border-radius: 8px;
+  font-size: 12px;
+  font-weight: 500;
+  color: #94a3b8;
+  background: rgba(30, 41, 59, 0.6);
+  border: 1px solid rgba(51, 65, 85, 0.5);
+  cursor: pointer;
+  transition: all 0.15s ease;
+}
+
+.btn-compiler-secondary:hover:not(:disabled) {
+  color: #f1f5f9;
+  background: rgba(51, 65, 85, 0.8);
+  border-color: rgba(100, 116, 139, 0.6);
+}
+
+.btn-compiler-secondary:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.compiler-shortcut-hint {
+  font-size: 11px;
+  color: #64748b;
+  margin-left: 4px;
+  font-family: monospace;
+}
+
+/* ==========================================================================
+   CodeEditor — Área de edición de código con números de línea
+   ========================================================================== */
+.code-editor-wrapper {
+  position: relative;
+  display: flex;
+  min-height: 280px;
+  max-height: 480px;
+  background: #090d16;
+  border-bottom: 1px solid rgba(51, 65, 85, 0.4);
+  overflow: hidden;
+}
+
+/* Canal lateral para números de línea */
+.code-editor-gutter {
+  width: 48px;
+  flex-shrink: 0;
+  padding: 16px 8px 16px 0;
+  background: #070a12;
+  border-right: 1px solid rgba(51, 65, 85, 0.3);
+  color: #475569;
+  font-family: 'JetBrains Mono', 'Fira Code', 'Consolas', monospace;
+  font-size: 13px;
+  line-height: 20px;
+  text-align: right;
+  user-select: none;
+  overflow: hidden;
+}
+
+.code-editor-line-num {
+  height: 20px;
+  display: block;
+}
+
+/* Superficie de edición */
+.code-editor-surface {
+  position: relative;
+  flex: 1;
+  overflow: auto;
+}
+
+.code-editor-pre,
+.code-editor-textarea {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  margin: 0;
+  padding: 16px;
+  font-family: 'JetBrains Mono', 'Fira Code', 'Consolas', monospace;
+  font-size: 13px;
+  line-height: 20px;
+  tab-size: 2;
+  white-space: pre;
+  word-wrap: normal;
+  box-sizing: border-box;
+}
+
+.code-editor-pre {
+  pointer-events: none;
+  z-index: 1;
+  color: #e2e8f0;
+  overflow: hidden;
+}
+
+.code-editor-pre code {
+  font-family: inherit;
+  font-size: inherit;
+  line-height: inherit;
+}
+
+.code-editor-textarea {
+  z-index: 2;
+  background: transparent;
+  color: transparent;
+  caret-color: #818cf8;
+  border: none;
+  outline: none;
+  resize: none;
+  overflow: auto;
+}
+
+.code-editor-textarea::selection {
+  background: rgba(99, 102, 241, 0.25);
+  color: transparent;
+}
+
+/* Tokens de Syntax Highlighting */
+.token-keyword { color: #818cf8; font-weight: 600; }
+.token-string { color: #34d399; }
+.token-number { color: #fbbf24; }
+.token-boolean { color: #f472b6; font-weight: 500; }
+.token-comment { color: #64748b; font-style: italic; }
+.token-function { color: #60a5fa; }
+.token-operator { color: #38bdf8; }
+.token-punctuation { color: #94a3b8; }
+.token-tag { color: #f87171; }
+.token-attribute { color: #c084fc; }
+
+/* ==========================================================================
+   ConsoleTerminal — Consola integrada con estados y tabla SQL
+   ========================================================================== */
+.console-terminal-container {
+  display: flex;
+  flex-direction: column;
+  background: #090d16;
+  border-top: 1px solid rgba(51, 65, 85, 0.3);
+}
+
+.console-terminal-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 8px 16px;
+  background: rgba(15, 23, 42, 0.7);
+  border-bottom: 1px solid rgba(51, 65, 85, 0.3);
+  font-size: 11px;
+}
+
+.console-status-group {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.console-title {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  color: #94a3b8;
+}
+
+.console-status-pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  padding: 2px 8px;
+  border-radius: 9999px;
+  font-size: 10px;
+  font-weight: 600;
+}
+
+.console-status-pill.ready {
+  background: rgba(16, 185, 129, 0.1);
+  color: #34d399;
+  border: 1px solid rgba(16, 185, 129, 0.25);
+}
+
+.console-status-pill.running {
+  background: rgba(99, 102, 241, 0.1);
+  color: #818cf8;
+  border: 1px solid rgba(99, 102, 241, 0.25);
+}
+
+.console-status-pill.error {
+  background: rgba(244, 63, 94, 0.1);
+  color: #fb7185;
+  border: 1px solid rgba(244, 63, 94, 0.25);
+}
+
+.console-status-pill.timeout {
+  background: rgba(245, 158, 11, 0.1);
+  color: #fbbf24;
+  border: 1px solid rgba(245, 158, 11, 0.25);
+}
+
+.console-time-metric {
+  color: #64748b;
+  font-family: monospace;
+}
+
+.console-actions-group {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.btn-console-icon {
+  background: transparent;
+  border: none;
+  color: #64748b;
+  padding: 4px;
+  border-radius: 4px;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.15s ease;
+}
+
+.btn-console-icon:hover {
+  color: #e2e8f0;
+  background: rgba(51, 65, 85, 0.5);
+}
+
+/* Área de contenido de la consola */
+.console-body {
+  min-height: 120px;
+  max-height: 240px;
+  overflow-y: auto;
+  padding: 12px 16px;
+  font-family: 'JetBrains Mono', 'Fira Code', 'Consolas', monospace;
+  font-size: 12px;
+  line-height: 18px;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.console-empty-state {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 24px;
+  color: #475569;
+  gap: 6px;
+  font-size: 12px;
+  font-style: italic;
+}
+
+/* Registros de log individuales */
+.console-log-row {
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+  padding: 3px 6px;
+  border-radius: 4px;
+  word-break: break-all;
+}
+
+.console-timestamp {
+  color: #475569;
+  font-size: 10px;
+  flex-shrink: 0;
+  margin-top: 1px;
+}
+
+.console-msg-content {
+  flex: 1;
+  white-space: pre-wrap;
+}
+
+.console-log-row.log {
+  color: #cbd5e1;
+}
+
+.console-log-row.info {
+  color: #38bdf8;
+  background: rgba(56, 189, 248, 0.05);
+}
+
+.console-log-row.warn {
+  color: #fde047;
+  background: rgba(234, 179, 8, 0.08);
+  border-left: 2px solid #eab308;
+}
+
+.console-log-row.error {
+  color: #fda4af;
+  background: rgba(244, 63, 94, 0.08);
+  border-left: 2px solid #f43f5e;
+}
+
+.console-log-row.system {
+  color: #a5b4fc;
+  font-style: italic;
+}
+
+.console-log-row.return {
+  color: #34d399;
+  font-weight: 600;
+  background: rgba(16, 185, 129, 0.05);
+  border-left: 2px solid #10b981;
+}
+
+/* Tabla de resultados SQL */
+.console-sql-table-wrapper {
+  margin: 6px 0;
+  overflow-x: auto;
+  border: 1px solid rgba(51, 65, 85, 0.5);
+  border-radius: 6px;
+}
+
+.console-sql-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 11px;
+  text-align: left;
+}
+
+.console-sql-table th {
+  background: rgba(30, 41, 59, 0.9);
+  color: #818cf8;
+  font-weight: 600;
+  padding: 6px 12px;
+  border-bottom: 1px solid rgba(51, 65, 85, 0.6);
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+}
+
+.console-sql-table td {
+  padding: 6px 12px;
+  color: #e2e8f0;
+  border-bottom: 1px solid rgba(51, 65, 85, 0.25);
+}
+
+.console-sql-table tr:nth-child(even) td {
+  background: rgba(15, 23, 42, 0.4);
+}
+
+.console-sql-table tr:hover td {
+  background: rgba(51, 65, 85, 0.3);
+}
+
+/* Pestaña de Vista Previa HTML / CSS */
+.console-preview-iframe {
+  width: 100%;
+  height: 200px;
+  border: 1px solid rgba(51, 65, 85, 0.5);
+  border-radius: 6px;
+  background: #ffffff;
+}
+
+/* Indicador de pulsación / spinner */
+.compiler-spinner {
+  animation: compilerSpin 1s linear infinite;
+}
+
+@keyframes compilerSpin {
+  from { transform: rotate(0deg); }
+  to { transform: rotate(360deg); }
+}

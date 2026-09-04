@@ -1,169 +1,268 @@
-/* SISTEMA DE LOGROS PREMIUM */
+/* ==========================================================================
+   SISTEMA DE MEDALLERO DE LOGROS - GAME UI STANDARDS (MODERNO & ELEGANTE)
+   ========================================================================== */
+
 .logros-container {
-  max-width: 1100px;
+  max-width: 1120px;
   margin: 0 auto;
-  padding: 1rem;
+  padding: 1.5rem 1rem 3rem 1rem;
 }
 
+/* Header del Medallero */
 .logros-header {
   text-align: center;
-  margin-bottom: 2.5rem;
-  background: rgba(17, 17, 27, 0.6);
-  border: 1px solid rgba(255, 255, 255, 0.05);
-  border-radius: 16px;
-  padding: 2rem;
-  backdrop-filter: blur(10px);
-  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.4);
+  margin-bottom: 2rem;
+  background: rgba(15, 23, 42, 0.75);
+  border: 1px solid rgba(30, 41, 59, 0.8);
+  border-radius: 20px;
+  padding: 2.25rem 2rem;
+  backdrop-filter: blur(16px);
+  box-shadow: 0 16px 36px -10px rgba(0, 0, 0, 0.45);
+}
+
+.logros-header-icon {
+  width: 48px;
+  height: 48px;
+  margin: 0 auto 1rem auto;
+  border-radius: 14px;
+  background: rgba(245, 158, 11, 0.1);
+  border: 1px solid rgba(245, 158, 11, 0.2);
+  display: flex;
+  align-items: center;
+  justify-content: center;
 }
 
 .logros-header h2 {
-  font-size: 2.2rem;
-  font-weight: 800;
-  background: linear-gradient(135deg, #fbbf24 0%, #f59e0b 50%, #d97706 100%);
-  -webkit-background-clip: text;
-  background-clip: text;
-  -webkit-text-fill-color: transparent;
-  margin-bottom: 0.5rem;
+  font-size: 1.85rem;
+  font-weight: 700;
+  color: #f8fafc;
+  margin: 0 0 0.5rem 0;
+  letter-spacing: -0.02em;
 }
 
 .logros-header p {
-  color: var(--color-text-muted);
-  font-size: 1.05rem;
-  margin-bottom: 1.5rem;
+  color: #94a3b8;
+  font-size: 0.975rem;
+  max-width: 580px;
+  margin: 0 auto 1.75rem auto;
+  line-height: 1.5;
 }
 
+/* Barra de Progreso General */
 .logros-progress-bar-container {
-  max-width: 600px;
+  max-width: 540px;
   margin: 0 auto;
 }
 
 .logros-progress-info {
   display: flex;
   justify-content: space-between;
-  font-size: 0.9rem;
-  color: var(--color-text-main);
-  margin-bottom: 0.5rem;
+  align-items: center;
+  font-size: 0.85rem;
+  color: #cbd5e1;
+  margin-bottom: 0.6rem;
   font-weight: 500;
+}
+
+.logros-progress-stats strong {
+  color: #10b981;
 }
 
 .logros-progress-bar {
   width: 100%;
-  height: 8px;
-  background: rgba(255, 255, 255, 0.08);
+  height: 9px;
+  background: rgba(2, 6, 23, 0.85);
   border-radius: 999px;
   overflow: hidden;
-  border: 1px solid rgba(255, 255, 255, 0.03);
+  border: 1px solid rgba(51, 65, 85, 0.6);
+  padding: 1px;
 }
 
 .logros-progress-bar-fill {
   height: 100%;
-  background: linear-gradient(90deg, #10b981 0%, #34d399 100%);
+  background: linear-gradient(90deg, #10b981 0%, #14b8a6 100%);
   border-radius: 999px;
   transition: width 0.6s cubic-bezier(0.4, 0, 0.2, 1);
-  box-shadow: 0 0 10px rgba(52, 211, 153, 0.5);
 }
 
+/* Toolbar de Filtros */
+.logros-filters {
+  display: flex;
+  justify-content: center;
+  gap: 0.5rem;
+  margin-bottom: 2rem;
+  background: rgba(15, 23, 42, 0.7);
+  border: 1px solid rgba(30, 41, 59, 0.8);
+  border-radius: 16px;
+  padding: 0.4rem;
+  backdrop-filter: blur(12px);
+  width: fit-content;
+  margin-left: auto;
+  margin-right: auto;
+  box-shadow: 0 8px 24px -6px rgba(0, 0, 0, 0.3);
+}
+
+.btn-filter {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  background: transparent;
+  border: 1px solid transparent;
+  border-radius: 12px;
+  color: #94a3b8;
+  padding: 0.5rem 1rem;
+  font-size: 0.875rem;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.2s ease-in-out;
+}
+
+.btn-filter:hover {
+  background: rgba(30, 41, 59, 0.6);
+  color: #f1f5f9;
+}
+
+.btn-filter.active {
+  background: #4f46e5;
+  border-color: rgba(99, 102, 241, 0.5);
+  color: #ffffff;
+  font-weight: 600;
+  box-shadow: 0 4px 14px -2px rgba(79, 70, 229, 0.4);
+}
+
+.btn-filter-count {
+  font-size: 0.75rem;
+  padding: 0.15rem 0.5rem;
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.1);
+  color: inherit;
+  font-weight: 600;
+}
+
+.btn-filter.active .btn-filter-count {
+  background: rgba(255, 255, 255, 0.25);
+  color: #ffffff;
+}
+
+/* Grid de Logros */
 .logros-grid {
   display: grid;
   grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
-  gap: 1.5rem;
-  margin-top: 1rem;
+  gap: 1.25rem;
 }
 
-/* Tarjetas de Logros */
+/* Tarjeta Base */
 .logro-card {
   position: relative;
-  border-radius: 16px;
-  padding: 1.75rem;
-  background: rgba(24, 24, 37, 0.95);
-  border: 1px solid rgba(255, 255, 255, 0.12);
-  backdrop-filter: blur(8px);
-  transition: all 0.4s cubic-bezier(0.2, 0.8, 0.2, 1);
-  overflow: hidden;
+  border-radius: 18px;
+  padding: 1.5rem;
+  background: rgba(15, 23, 42, 0.75);
+  border: 1px solid rgba(30, 41, 59, 0.8);
+  backdrop-filter: blur(10px);
+  transition: all 0.25s cubic-bezier(0.2, 0.8, 0.2, 1);
   display: flex;
   flex-direction: column;
   justify-content: space-between;
-  min-height: 190px;
-  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.35);
+  min-height: 180px;
+  box-shadow: 0 6px 20px -4px rgba(0, 0, 0, 0.35);
+  overflow: hidden;
+}
+
+.logro-card:hover {
+  border-color: rgba(71, 85, 105, 0.8);
+  transform: translateY(-2px);
+  box-shadow: 0 12px 28px -6px rgba(0, 0, 0, 0.45);
 }
 
 .logro-card h3 {
-  font-size: 1.2rem;
-  margin-top: 0.25rem;
-  margin-bottom: 0.5rem;
-  font-weight: 700;
+  font-size: 1.05rem;
+  margin: 0 0 0.4rem 0;
+  font-weight: 600;
+  color: #f1f5f9;
+  letter-spacing: -0.01em;
+  padding-right: 2.25rem;
 }
 
 .logro-card p {
-  font-size: 0.9rem;
-  color: var(--color-text-muted);
-  line-height: 1.5;
-  margin-bottom: 1.25rem;
+  font-size: 0.85rem;
+  color: #94a3b8;
+  line-height: 1.45;
+  margin: 0 0 1.25rem 0;
 }
 
+/* Icono de Estado */
 .logro-card-status {
   position: absolute;
   top: 1.25rem;
   right: 1.25rem;
-  width: 36px;
-  height: 36px;
+  width: 32px;
+  height: 32px;
   border-radius: 50%;
   display: flex;
   align-items: center;
   justify-content: center;
-  background: rgba(255, 255, 255, 0.04);
-  border: 1px solid rgba(255, 255, 255, 0.08);
-  transition: all 0.3s ease;
+  background: rgba(30, 41, 59, 0.5);
+  border: 1px solid rgba(51, 65, 85, 0.6);
+  transition: all 0.2s ease;
 }
 
+/* Footer de Tarjeta */
 .logro-card-footer {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  border-top: 1px solid rgba(255, 255, 255, 0.06);
-  padding-top: 1rem;
+  border-top: 1px solid rgba(30, 41, 59, 0.7);
+  padding-top: 0.85rem;
   margin-top: auto;
 }
 
 .logro-xp-reward {
-  font-size: 0.85rem;
-  font-weight: 700;
+  font-size: 0.78rem;
+  font-weight: 600;
   padding: 0.25rem 0.6rem;
-  border-radius: 99px;
-  background: rgba(124, 58, 237, 0.15);
+  border-radius: 8px;
+  background: rgba(139, 92, 246, 0.12);
   color: #c084fc;
-  border: 1px solid rgba(168, 85, 247, 0.2);
+  border: 1px solid rgba(139, 92, 246, 0.25);
 }
 
 .logro-badge-status {
-  font-size: 0.8rem;
-  font-weight: 600;
-  color: var(--color-text-muted);
-  text-transform: uppercase;
-  letter-spacing: 0.05em;
+  font-size: 0.75rem;
+  font-weight: 500;
+  padding: 0.2rem 0.55rem;
+  border-radius: 999px;
 }
 
-/* Estados Bloqueados */
+/* Estados */
 .logro-card.locked {
-  filter: grayscale(0.9) opacity(0.5);
-  cursor: not-allowed;
+  background: rgba(15, 23, 42, 0.4);
+  border-color: rgba(30, 41, 59, 0.5);
+  opacity: 0.65;
+  cursor: default;
 }
 
 .logro-card.locked:hover {
-  filter: grayscale(0.7) opacity(0.65);
-  transform: translateY(1px);
+  opacity: 0.8;
+  transform: none;
 }
 
 .logro-card.locked .icon-lock {
-  color: rgba(255, 255, 255, 0.3);
+  color: #64748b;
 }
 
-/* Estados Desbloqueados */
+.logro-card.locked .logro-badge-status {
+  color: #64748b;
+  background: rgba(30, 41, 59, 0.5);
+  border: 1px solid rgba(51, 65, 85, 0.3);
+}
+
 .logro-card.unlocked {
-  filter: none;
   opacity: 1;
-  transform: translateY(-4px);
-  box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.3);
+}
+
+.logro-card.unlocked .logro-card-status {
+  background: rgba(16, 185, 129, 0.12);
+  border-color: rgba(16, 185, 129, 0.25);
 }
 
 .logro-card.unlocked .icon-unlock {
@@ -172,40 +271,38 @@
 
 .logro-card.unlocked .logro-badge-status {
   color: #10b981;
+  background: rgba(16, 185, 129, 0.1);
+  border: 1px solid rgba(16, 185, 129, 0.2);
 }
 
-/* Logros Especiales según Tipo */
+/* Acentos Sutiles por Categoría (Sin Glows Neón, Sin Scanlines, Sin Brackets) */
 .logro-card.unlocked.bronce {
-  border-color: rgba(217, 119, 6, 0.4);
-  background: linear-gradient(135deg, rgba(30, 20, 10, 0.7) 0%, rgba(15, 23, 42, 0.95) 100%);
-  box-shadow: 0 10px 30px rgba(217, 119, 6, 0.1), inset 0 1px 0 rgba(255,255,255,0.05);
+  border-color: rgba(217, 119, 6, 0.35);
+  background: linear-gradient(145deg, rgba(35, 22, 12, 0.35) 0%, rgba(15, 23, 42, 0.85) 100%);
 }
 .logro-card.unlocked.bronce h3 {
   color: #f59e0b;
 }
 
 .logro-card.unlocked.plata {
-  border-color: rgba(148, 163, 184, 0.4);
-  background: linear-gradient(135deg, rgba(30, 41, 59, 0.7) 0%, rgba(15, 23, 42, 0.95) 100%);
-  box-shadow: 0 10px 30px rgba(148, 163, 184, 0.1), inset 0 1px 0 rgba(255,255,255,0.05);
+  border-color: rgba(148, 163, 184, 0.35);
+  background: linear-gradient(145deg, rgba(30, 41, 59, 0.35) 0%, rgba(15, 23, 42, 0.85) 100%);
 }
 .logro-card.unlocked.plata h3 {
   color: #cbd5e1;
 }
 
 .logro-card.unlocked.oro {
-  border-color: rgba(234, 179, 8, 0.5);
-  background: linear-gradient(135deg, rgba(40, 35, 10, 0.7) 0%, rgba(15, 23, 42, 0.95) 100%);
-  box-shadow: 0 10px 35px rgba(234, 179, 8, 0.15), inset 0 1px 0 rgba(255,255,255,0.08);
+  border-color: rgba(245, 158, 11, 0.35);
+  background: linear-gradient(145deg, rgba(45, 30, 10, 0.35) 0%, rgba(15, 23, 42, 0.85) 100%);
 }
 .logro-card.unlocked.oro h3 {
   color: #fbbf24;
 }
 
 .logro-card.unlocked.platino {
-  border-color: rgba(99, 102, 241, 0.5);
-  background: linear-gradient(135deg, rgba(30, 27, 75, 0.7) 0%, rgba(15, 23, 42, 0.95) 100%);
-  box-shadow: 0 10px 40px rgba(99, 102, 241, 0.25), inset 0 1px 0 rgba(255,255,255,0.1);
+  border-color: rgba(99, 102, 241, 0.35);
+  background: linear-gradient(145deg, rgba(30, 27, 75, 0.35) 0%, rgba(15, 23, 42, 0.85) 100%);
 }
 .logro-card.unlocked.platino h3 {
   background: linear-gradient(90deg, #818cf8 0%, #c084fc 100%);
@@ -214,271 +311,139 @@
   -webkit-text-fill-color: transparent;
 }
 
-/* ==========================================================================
-   DISEÑOS DE LOGROS ULTRA-PREMIUM Y ANIMADOS
-   ========================================================================== */
-
-/* 1. Fuego Animado (fuego) */
-.logro-card.fuego, .logro-toast-notification.fuego {
-  background: linear-gradient(135deg, rgba(28, 6, 0, 0.95) 0%, rgba(15, 23, 42, 0.98) 100%);
-  border: 1px solid rgba(239, 68, 68, 0.2);
+.logro-card.unlocked.fuego {
+  border-color: rgba(249, 115, 22, 0.35);
+  background: linear-gradient(145deg, rgba(45, 18, 8, 0.35) 0%, rgba(15, 23, 42, 0.85) 100%);
 }
-.logro-card.unlocked.fuego, .logro-toast-notification.fuego {
-  border-color: rgba(249, 115, 22, 0.8);
-  box-shadow: 0 0 25px rgba(249, 115, 22, 0.4), inset 0 0 15px rgba(249, 115, 22, 0.2);
-  animation: fireFlicker 3s infinite alternate;
-}
-.logro-card.unlocked.fuego h3, .logro-toast-notification.fuego h4 {
-  color: #ff7e47 !important;
-  text-shadow: 0 0 8px rgba(249, 115, 22, 0.6);
-}
-.logro-card.unlocked.fuego::before {
-  content: '';
-  position: absolute;
-  top: -50%; left: -50%; width: 200%; height: 200%;
-  background: radial-gradient(circle, rgba(249, 115, 22, 0.08) 0%, transparent 60%);
-  pointer-events: none;
-  animation: rotateFire 10s linear infinite;
+.logro-card.unlocked.fuego h3 {
+  color: #fb923c;
 }
 
-@keyframes fireFlicker {
-  0% { box-shadow: 0 0 25px rgba(249, 115, 22, 0.35); }
-  50% { box-shadow: 0 0 35px rgba(239, 68, 68, 0.5); }
-  100% { box-shadow: 0 0 25px rgba(249, 115, 22, 0.35); }
+.logro-card.unlocked.celestial {
+  border-color: rgba(14, 165, 233, 0.35);
+  background: linear-gradient(145deg, rgba(12, 35, 60, 0.35) 0%, rgba(15, 23, 42, 0.85) 100%);
 }
-@keyframes rotateFire {
-  0% { transform: rotate(0deg); }
-  100% { transform: rotate(360deg); }
+.logro-card.unlocked.celestial h3 {
+  color: #38bdf8;
 }
 
-/* 2. Celestial con Aureola y Alas (celestial) */
-.logro-card.celestial, .logro-toast-notification.celestial {
-  background: linear-gradient(135deg, rgba(10, 25, 47, 0.9) 0%, rgba(15, 23, 42, 0.98) 100%);
-  border: 1px solid rgba(14, 165, 233, 0.2);
+.logro-card.unlocked.acuatico {
+  border-color: rgba(20, 184, 166, 0.35);
+  background: linear-gradient(145deg, rgba(10, 40, 42, 0.35) 0%, rgba(15, 23, 42, 0.85) 100%);
 }
-.logro-card.unlocked.celestial, .logro-toast-notification.celestial {
-  border-color: rgba(56, 189, 248, 0.8);
-  box-shadow: 0 0 25px rgba(56, 189, 248, 0.35), inset 0 0 20px rgba(255, 255, 255, 0.1);
-  animation: celestialFloat 4s ease-in-out infinite;
-}
-.logro-card.unlocked.celestial h3, .logro-toast-notification.celestial h4 {
-  color: #7dd3fc !important;
-  text-shadow: 0 0 10px rgba(56, 189, 248, 0.7);
-}
-.logro-card.unlocked.celestial::before {
-  content: '';
-  position: absolute;
-  top: 10px; left: calc(50% - 25px);
-  width: 50px; height: 8px;
-  border-radius: 50%;
-  border: 2px solid rgba(253, 224, 71, 0.8);
-  box-shadow: 0 0 15px rgba(253, 224, 71, 0.8);
-  opacity: 0.6;
-  pointer-events: none;
-  animation: haloGlow 2s ease-in-out infinite alternate;
-}
-.logro-card.unlocked.celestial::after {
-  content: '👼';
-  position: absolute;
-  bottom: 15px; right: 15px;
-  font-size: 1.3rem;
-  opacity: 0.25;
-  filter: drop-shadow(0 0 5px rgba(255, 255, 255, 0.5));
+.logro-card.unlocked.acuatico h3 {
+  color: #2dd4bf;
 }
 
-@keyframes celestialFloat {
-  0% { transform: translateY(-4px); }
-  50% { transform: translateY(-10px); }
-  100% { transform: translateY(-4px); }
+.logro-card.unlocked.mecha {
+  border-color: rgba(99, 102, 241, 0.35);
+  border-radius: 18px !important;
+  background: linear-gradient(145deg, rgba(25, 20, 55, 0.35) 0%, rgba(15, 23, 42, 0.85) 100%);
 }
-@keyframes haloGlow {
-  0% { transform: translateY(0) scale(0.9); opacity: 0.4; }
-  100% { transform: translateY(-2px) scale(1.1); opacity: 0.8; }
-}
-
-/* 3. Acuático con Burbujas (acuatico) */
-.logro-card.acuatico, .logro-toast-notification.acuatico {
-  background: linear-gradient(135deg, rgba(2, 44, 54, 0.95) 0%, rgba(15, 23, 42, 0.98) 100%);
-  border: 1px solid rgba(20, 184, 166, 0.2);
-}
-.logro-card.unlocked.acuatico, .logro-toast-notification.acuatico {
-  border-color: rgba(45, 212, 191, 0.8);
-  box-shadow: 0 0 25px rgba(45, 212, 191, 0.4), inset 0 0 15px rgba(45, 212, 191, 0.2);
-}
-.logro-card.unlocked.acuatico h3, .logro-toast-notification.acuatico h4 {
-  color: #2dd4bf !important;
-  text-shadow: 0 0 8px rgba(45, 212, 191, 0.5);
-}
-.logro-card.unlocked.acuatico::before {
-  content: '';
-  position: absolute;
-  bottom: 0; left: 0; width: 100%; height: 100%;
-  background: radial-gradient(circle at 50% 120%, rgba(45, 212, 191, 0.08) 0%, transparent 60%);
-  pointer-events: none;
-}
-
-/* 4. Mecha / Cyberpunk (mecha) */
-.logro-card.mecha, .logro-toast-notification.mecha {
-  background: linear-gradient(135deg, rgba(8, 8, 16, 0.98) 0%, rgba(15, 23, 42, 0.98) 100%);
-  border: 1.5px solid rgba(6, 182, 212, 0.25);
-  border-radius: 4px !important;
-}
-.logro-card.unlocked.mecha, .logro-toast-notification.mecha {
-  border-color: rgba(6, 182, 212, 0.9);
-  box-shadow: 0 0 20px rgba(6, 182, 212, 0.3), inset 0 0 10px rgba(6, 182, 212, 0.15);
-  background-image: 
-    linear-gradient(rgba(6, 182, 212, 0.03) 1px, transparent 1px),
-    linear-gradient(90deg, rgba(6, 182, 212, 0.03) 1px, transparent 1px);
-  background-size: 15px 15px;
-}
-.logro-card.unlocked.mecha h3, .logro-toast-notification.mecha h4 {
-  color: #22d3ee !important;
-  font-family: 'Courier New', monospace;
-  text-shadow: 0 0 5px rgba(6, 182, 212, 0.8);
+.logro-card.unlocked.mecha h3 {
+  font-family: inherit;
+  color: #f1f5f9 !important;
+  text-shadow: none;
 }
 .logro-card.unlocked.mecha::before {
-  content: '';
-  position: absolute;
-  top: 0; left: 0; width: 10px; height: 10px;
-  border-top: 3px solid #f97316;
-  border-left: 3px solid #f97316;
+  display: none;
 }
 
-/* 5. Anime / Manga Halftone (anime) */
-.logro-card.anime, .logro-toast-notification.anime {
-  background: linear-gradient(135deg, rgba(20, 10, 25, 0.95) 0%, rgba(15, 23, 42, 0.98) 100%);
-  border: 2px solid rgba(236, 72, 153, 0.2);
+.logro-card.unlocked.anime {
+  border-color: rgba(236, 72, 153, 0.35);
+  background: linear-gradient(145deg, rgba(45, 15, 35, 0.35) 0%, rgba(15, 23, 42, 0.85) 100%);
 }
-.logro-card.unlocked.anime, .logro-toast-notification.anime {
-  border: 2.5px solid #ffffff;
-  box-shadow: 6px 6px 0px #ec4899;
-}
-.logro-card.unlocked.anime h3, .logro-toast-notification.anime h4 {
+.logro-card.unlocked.anime h3 {
+  font-family: inherit;
   color: #f472b6 !important;
-  font-weight: 900;
-  text-transform: uppercase;
-  text-shadow: 2px 2px 0px #000000;
+  text-shadow: none;
+  font-weight: 600;
+  text-transform: none;
 }
 .logro-card.unlocked.anime::before {
-  content: '';
-  position: absolute;
-  top: 0; left: 0; width: 100%; height: 100%;
-  background-image: radial-gradient(rgba(236, 72, 153, 0.08) 20%, transparent 20%);
-  background-size: 8px 8px;
-  pointer-events: none;
+  display: none;
 }
 
-/* 6. Diamante (diamante) */
-.logro-card.unlocked.diamante, .logro-toast-notification.diamante {
-  border-color: rgba(255, 255, 255, 0.8);
-  background: linear-gradient(135deg, rgba(50, 60, 80, 0.85) 0%, rgba(15, 23, 42, 0.98) 100%);
-  box-shadow: 0 0 35px rgba(255, 255, 255, 0.3), inset 0 0 20px rgba(255, 255, 255, 0.1);
+.logro-card.unlocked.diamante {
+  border-color: rgba(148, 163, 184, 0.4);
+  background: linear-gradient(145deg, rgba(40, 50, 65, 0.35) 0%, rgba(15, 23, 42, 0.85) 100%);
 }
-.logro-card.unlocked.diamante h3, .logro-toast-notification.diamante h4 {
-  background: linear-gradient(90deg, #ffffff 0%, #e2e8f0 50%, #94a3b8 100%);
+.logro-card.unlocked.diamante h3 {
+  background: linear-gradient(90deg, #ffffff 0%, #cbd5e1 100%);
   -webkit-background-clip: text;
   background-clip: text;
   -webkit-text-fill-color: transparent;
-  text-shadow: 0 0 10px rgba(255, 255, 255, 0.4);
+  text-shadow: none;
 }
 .logro-card.unlocked.diamante::after {
-  content: '';
-  position: absolute;
-  top: 0; left: -100%;
-  width: 50%; height: 100%;
-  background: linear-gradient(90deg, transparent, rgba(255,255,255,0.15), transparent);
-  transform: skewX(-25deg);
-  animation: shine 4s infinite;
+  display: none;
 }
 
-@keyframes shine {
-  0% { left: -100%; }
-  20% { left: 150%; }
-  100% { left: 150%; }
+.logro-card.unlocked.esmeralda {
+  border-color: rgba(16, 185, 129, 0.35);
+  background: linear-gradient(145deg, rgba(6, 45, 30, 0.35) 0%, rgba(15, 23, 42, 0.85) 100%);
 }
-
-/* 7. Esmeralda (esmeralda) */
-.logro-card.unlocked.esmeralda, .logro-toast-notification.esmeralda {
-  border-color: rgba(16, 185, 129, 0.7);
-  background: linear-gradient(135deg, rgba(6, 78, 59, 0.65) 0%, rgba(15, 23, 42, 0.98) 100%);
-  box-shadow: 0 0 30px rgba(16, 185, 129, 0.45), inset 0 0 15px rgba(16, 185, 129, 0.15);
-}
-.logro-card.unlocked.esmeralda h3, .logro-toast-notification.esmeralda h4 {
+.logro-card.unlocked.esmeralda h3 {
   color: #34d399 !important;
-  text-shadow: 0 0 8px rgba(52, 211, 153, 0.5);
+  text-shadow: none;
 }
 
-/* 8. Rubí (rubi) */
-.logro-card.unlocked.rubi, .logro-toast-notification.rubi {
-  border-color: rgba(220, 38, 38, 0.7);
-  background: linear-gradient(135deg, rgba(127, 29, 29, 0.65) 0%, rgba(15, 23, 42, 0.98) 100%);
-  box-shadow: 0 0 30px rgba(220, 38, 38, 0.45), inset 0 0 15px rgba(220, 38, 38, 0.15);
+.logro-card.unlocked.rubi {
+  border-color: rgba(244, 63, 94, 0.35);
+  background: linear-gradient(145deg, rgba(45, 10, 20, 0.35) 0%, rgba(15, 23, 42, 0.85) 100%);
 }
-.logro-card.unlocked.rubi h3, .logro-toast-notification.rubi h4 {
+.logro-card.unlocked.rubi h3 {
   color: #f87171 !important;
-  text-shadow: 0 0 8px rgba(248, 113, 113, 0.5);
+  text-shadow: none;
 }
 
-/* 9. Cósmico (cosmico) */
-.logro-card.unlocked.cosmico, .logro-toast-notification.cosmico {
-  border-color: rgba(139, 92, 246, 0.7);
-  background: linear-gradient(135deg, rgba(88, 28, 135, 0.65) 0%, rgba(15, 23, 42, 0.98) 100%);
-  box-shadow: 0 0 35px rgba(139, 92, 246, 0.45), inset 0 0 20px rgba(139, 92, 246, 0.2);
+.logro-card.unlocked.cosmico {
+  border-color: rgba(168, 85, 247, 0.35);
+  background: linear-gradient(145deg, rgba(35, 15, 55, 0.35) 0%, rgba(15, 23, 42, 0.85) 100%);
 }
-.logro-card.unlocked.cosmico h3, .logro-toast-notification.cosmico h4 {
-  background: linear-gradient(90deg, #a78bfa 0%, #f472b6 100%) !important;
-  -webkit-background-clip: text !important;
-  background-clip: text !important;
-  -webkit-text-fill-color: transparent !important;
-  text-shadow: 0 0 12px rgba(167, 139, 250, 0.4);
+.logro-card.unlocked.cosmico h3 {
+  background: linear-gradient(90deg, #c084fc 0%, #f472b6 100%);
+  -webkit-background-clip: text;
+  background-clip: text;
+  -webkit-text-fill-color: transparent;
+  text-shadow: none;
 }
 .logro-card.unlocked.cosmico::before {
-  content: '';
-  position: absolute;
-  top: 0; left: 0; width: 100%; height: 100%;
-  background-image: 
-    radial-gradient(white, rgba(255,255,255,.2) 2px, transparent 40px),
-    radial-gradient(white, rgba(255,255,255,.15) 1px, transparent 30px);
-  background-size: 80px 80px, 60px 60px;
-  background-position: 0 0, 40px 40px;
-  opacity: 0.15;
-  pointer-events: none;
+  display: none;
 }
 
-/* 10. Obsidiana (obsidiana) */
-.logro-card.unlocked.obsidiana, .logro-toast-notification.obsidiana {
-  border-color: rgba(30, 30, 40, 0.9);
-  background: linear-gradient(135deg, #090514 0%, #110924 100%);
-  box-shadow: 0 0 30px rgba(124, 58, 237, 0.3), inset 0 0 15px rgba(0, 0, 0, 0.9);
+.logro-card.unlocked.obsidiana {
+  border-color: rgba(71, 85, 105, 0.4);
+  background: linear-gradient(145deg, rgba(15, 15, 25, 0.7) 0%, rgba(10, 15, 29, 0.9) 100%);
 }
-.logro-card.unlocked.obsidiana h3, .logro-toast-notification.obsidiana h4 {
+.logro-card.unlocked.obsidiana h3 {
   color: #d8b4fe !important;
-  text-shadow: 0 0 10px rgba(168, 85, 247, 0.5);
+  text-shadow: none;
 }
 
 .logros-badge-mini {
   background: #f59e0b;
-  color: #11111b;
+  color: #0f172a;
   font-size: 0.7rem;
-  font-weight: 750;
-  padding: 0.1rem 0.35rem;
+  font-weight: 700;
+  padding: 0.1rem 0.4rem;
   border-radius: 99px;
   margin-left: 0.35rem;
   vertical-align: middle;
 }
 
-/* TOAST NOTIFICADOR DE LOGRO FLOTANTE */
+/* Toast Notificador Flotante de Logro */
 .logro-toast-notification {
   position: fixed;
   bottom: 24px;
   right: 24px;
   z-index: 10000;
-  width: 380px;
-  background: rgba(15, 23, 42, 0.85);
-  border: 1px solid rgba(245, 158, 11, 0.5);
-  border-radius: 16px;
-  backdrop-filter: blur(12px);
-  box-shadow: 0 20px 40px rgba(0, 0, 0, 0.6), 0 0 30px rgba(245, 158, 11, 0.25);
+  width: 360px;
+  background: rgba(15, 23, 42, 0.95);
+  border: 1px solid rgba(51, 65, 85, 0.8);
+  border-radius: 18px;
+  backdrop-filter: blur(16px);
+  box-shadow: 0 20px 40px -10px rgba(0, 0, 0, 0.6);
   overflow: hidden;
 }
 
@@ -487,9 +452,8 @@
   top: 0;
   left: 0;
   width: 100%;
-  height: 4px;
-  background: linear-gradient(90deg, #fbbf24 0%, #f59e0b 50%, #d97706 100%);
-  box-shadow: 0 1px 15px rgba(245, 158, 11, 0.5);
+  height: 3px;
+  background: linear-gradient(90deg, #f59e0b 0%, #10b981 100%);
 }
 
 .toast-content {
@@ -500,8 +464,7 @@
 }
 
 .toast-icon {
-  color: #fbbf24;
-  filter: drop-shadow(0 0 8px rgba(251, 191, 36, 0.6));
+  color: #f59e0b;
 }
 
 .toast-text {
@@ -510,9 +473,9 @@
 
 .toast-meta {
   font-size: 0.7rem;
-  font-weight: 800;
-  color: #fbbf24;
-  letter-spacing: 0.1em;
+  font-weight: 700;
+  color: #f59e0b;
+  letter-spacing: 0.05em;
   display: block;
   margin-bottom: 0.15rem;
 }
@@ -520,23 +483,23 @@
 .toast-text h4 {
   font-size: 1.05rem;
   font-weight: 700;
-  color: #ffffff;
+  color: #f8fafc;
   margin: 0;
 }
 
 .toast-text p {
   font-size: 0.8rem;
-  color: var(--color-text-muted);
+  color: #94a3b8;
   margin: 0.25rem 0 0 0;
   line-height: 1.4;
 }
 
 .toast-xp {
-  background: rgba(251, 191, 36, 0.15);
+  background: rgba(245, 158, 11, 0.12);
   color: #fbbf24;
-  border: 1px solid rgba(251, 191, 36, 0.3);
+  border: 1px solid rgba(245, 158, 11, 0.25);
   font-size: 0.85rem;
-  font-weight: 800;
+  font-weight: 700;
   padding: 0.35rem 0.6rem;
   border-radius: 8px;
   white-space: nowrap;

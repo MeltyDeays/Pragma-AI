@@ -28,78 +28,93 @@ export default function AmigosPanel({
   });
 
   return (
-    <div className="amigos-tab-container animate-fade-in">
-      <div className="dashboard-grid">
+    <div className="w-full max-w-7xl mx-auto p-4 md:p-6 animate-fade-in">
+      <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
         
-        {/* Panel Izquierdo: Tu Identidad Militar & Agregar Amigo */}
-        <section className="dashboard-panel identity-panel">
-          <div className="panel-header-spec">
-            <UserPlus size={18} className="text-[#00ffcc]" />
-            <h3>REGISTRO TÁCTICO SOCIAL</h3>
-          </div>
-
-          <div className="identity-card-hud">
-            <p className="text-sm text-slate-400 mb-2">Tu identificador único de estudiante para compartir con tus amigos:</p>
-            <div className="student-id-display flex items-center justify-between bg-slate-900 border border-slate-700/60 rounded px-3 py-2 text-sm font-mono text-[#00ffcc] break-all">
-              <span>{estudiante?.id}</span>
-              <button 
-                onClick={() => {
-                  navigator.clipboard.writeText(estudiante?.id || '');
-                  mostrarMensaje('¡ID copiado al portapapeles!', 'success');
-                }}
-                className="copy-btn hover:text-white transition ml-2 p-1 cursor-pointer"
-                title="Copiar ID"
-              >
-                <Copy size={16} />
-              </button>
-            </div>
-          </div>
-
-          <div className="add-friend-form-container mt-6">
-            <h4>Agregar Amigo por ID</h4>
-            <form onSubmit={enviarSolicitudAmistad} className="flex flex-col gap-3 mt-2">
-              <input 
-                type="text" 
-                placeholder="Pega el ID único de tu amigo..."
-                value={inputIdAmigo}
-                onChange={(e) => setInputIdAmigo(e.target.value)}
-                className="hud-input font-mono text-xs"
-              />
-              <button 
-                type="submit" 
-                disabled={loadingAmigos} 
-                className="hud-btn flex items-center justify-center gap-2 cursor-pointer"
-              >
-                {loadingAmigos ? <RefreshCw className="animate-spin" size={16} /> : <UserPlus size={16} />}
-                <span>Enviar Solicitud</span>
-              </button>
-            </form>
-            {mensajeAmistad.texto && (
-              <div className={`alert-toast-mini mt-3 ${mensajeAmistad.tipo === 'success' ? 'success' : 'error'}`}>
-                {mensajeAmistad.texto}
+        {/* Panel Izquierdo: Identidad de Estudiante & Agregar Amigo */}
+        <section className="lg:col-span-4 bg-slate-900/60 backdrop-blur-xl border border-slate-800/80 rounded-2xl p-5 shadow-xl shadow-black/30 flex flex-col justify-between">
+          <div>
+            <div className="flex items-center gap-2.5 pb-4 mb-5 border-b border-slate-800/80">
+              <div className="w-8 h-8 rounded-lg bg-indigo-500/10 border border-indigo-500/20 flex items-center justify-center text-indigo-400">
+                <UserPlus size={18} />
               </div>
-            )}
+              <div>
+                <h3 className="text-white font-semibold text-base leading-tight">Comunidad de Estudiantes</h3>
+                <p className="text-xs text-slate-400">Conecta y practica con otros compañeros</p>
+              </div>
+            </div>
+
+            <div className="bg-slate-950/60 border border-slate-800/80 rounded-xl p-3.5 mb-6">
+              <span className="text-xs font-medium text-slate-400 block mb-2">Tu ID de Estudiante:</span>
+              <div className="flex items-center justify-between bg-slate-900 border border-slate-800 rounded-lg px-3 py-2 text-xs font-mono text-indigo-300 break-all">
+                <span>{estudiante?.id}</span>
+                <button 
+                  onClick={() => {
+                    navigator.clipboard.writeText(estudiante?.id || '');
+                    mostrarMensaje('¡ID copiado al portapapeles!', 'success');
+                  }}
+                  className="text-slate-400 hover:text-white transition ml-2 p-1 rounded hover:bg-slate-800 cursor-pointer"
+                  title="Copiar ID"
+                >
+                  <Copy size={15} />
+                </button>
+              </div>
+              <p className="text-[11px] text-slate-500 mt-2">Comparte este identificador con tus amigos para que te agreguen.</p>
+            </div>
+
+            <div className="pt-2">
+              <h4 className="text-xs font-semibold text-slate-300 uppercase tracking-wider mb-2">Agregar Amigo por ID</h4>
+              <form onSubmit={enviarSolicitudAmistad} className="flex flex-col gap-2.5">
+                <input 
+                  type="text" 
+                  placeholder="Pega el ID único del estudiante..."
+                  value={inputIdAmigo}
+                  onChange={(e) => setInputIdAmigo(e.target.value)}
+                  className="w-full bg-slate-950/80 border border-slate-800 rounded-xl px-3.5 py-2.5 text-xs text-slate-200 placeholder-slate-500 focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500 outline-none transition"
+                />
+                <button 
+                  type="submit" 
+                  disabled={loadingAmigos || !inputIdAmigo.trim()} 
+                  className="w-full py-2.5 px-4 bg-indigo-600 hover:bg-indigo-500 disabled:opacity-50 disabled:cursor-not-allowed text-white text-xs font-medium rounded-xl flex items-center justify-center gap-2 shadow-sm shadow-indigo-600/20 transition cursor-pointer"
+                >
+                  {loadingAmigos ? <RefreshCw className="animate-spin" size={15} /> : <UserPlus size={15} />}
+                  <span>Enviar Solicitud</span>
+                </button>
+              </form>
+
+              {mensajeAmistad.texto && (
+                <div className={`mt-3 p-2.5 rounded-lg text-xs font-medium border ${
+                  mensajeAmistad.tipo === 'success' 
+                    ? 'bg-emerald-500/10 border-emerald-500/20 text-emerald-400' 
+                    : 'bg-rose-500/10 border-rose-500/20 text-rose-400'
+                }`}>
+                  {mensajeAmistad.texto}
+                </div>
+              )}
+            </div>
           </div>
         </section>
 
         {/* Panel Derecho: Lista de Amigos & Notificaciones de Pendientes */}
-        <section className="dashboard-panel friends-list-panel flex-1">
-          <div className="panel-header-spec flex justify-between items-center flex-wrap gap-2">
-            <div className="flex items-center gap-2">
-              <Users size={18} className="text-[#00ffcc]" />
-              <h3>COGNICIÓN COMPARTIDA ({listaAmigos.length})</h3>
+        <section className="lg:col-span-8 bg-slate-900/60 backdrop-blur-xl border border-slate-800/80 rounded-2xl p-5 shadow-xl shadow-black/30 flex flex-col">
+          <div className="flex justify-between items-center flex-wrap gap-3 pb-4 mb-4 border-b border-slate-800/80">
+            <div className="flex items-center gap-2.5">
+              <div className="w-8 h-8 rounded-lg bg-indigo-500/10 border border-indigo-500/20 flex items-center justify-center text-indigo-400">
+                <Users size={18} />
+              </div>
+              <h3 className="text-white font-semibold text-base">Mis Amigos ({listaAmigos.length})</h3>
             </div>
             
-            {/* Buscador táctico de amigos */}
+            {/* Buscador de amigos */}
             {listaAmigos.length > 0 && (
               <div className="relative flex items-center">
-                <Search size={14} className="absolute left-2.5 text-slate-500 pointer-events-none" />
+                <Search size={14} className="absolute left-3 text-slate-400 pointer-events-none" />
                 <input 
-                  type="text"
-                  placeholder="Filtrar operadores..."
+                  type="text" 
+                  placeholder="Buscar amigos por nombre..." 
                   value={filtroAmigos}
                   onChange={(e) => setFiltroAmigos(e.target.value)}
-                  className="bg-slate-950/80 border border-slate-800 rounded-full pl-8 pr-3 py-1 text-xs font-mono text-slate-200 focus:border-[#00ffcc] outline-none w-48 transition-all"
+                  className="bg-slate-950/80 border border-slate-800 rounded-xl pl-9 pr-3 py-1.5 text-xs text-slate-200 placeholder-slate-500 focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500 outline-none w-52 transition-all"
                 />
               </div>
             )}
@@ -107,35 +122,37 @@ export default function AmigosPanel({
 
           {/* Solicitudes de Amistad Recibidas (Pendientes) */}
           {solicitudesPendientes.length > 0 && (
-            <div className="solicitudes-pendientes-section mb-6 border-b border-slate-800 pb-5">
-              <h4 className="text-amber-400 font-bold mb-3 flex items-center gap-2">
-                <span className="w-2.5 h-2.5 rounded-full bg-amber-500 animate-ping"></span>
+            <div className="mb-6 bg-amber-500/5 border border-amber-500/20 rounded-xl p-4">
+              <h4 className="text-amber-400 font-semibold text-xs mb-3 flex items-center gap-2">
+                <span className="w-2 h-2 rounded-full bg-amber-500 animate-pulse"></span>
                 Solicitudes de Amistad Recibidas ({solicitudesPendientes.length})
               </h4>
-              <div className="flex flex-col gap-3">
+              <div className="flex flex-col gap-2">
                 {solicitudesPendientes.map((req) => (
                   <div 
                     key={req.id} 
-                    className="pending-request-card flex items-center justify-between bg-slate-900/80 border border-amber-500/30 rounded p-3"
+                    className="flex items-center justify-between bg-slate-900/80 border border-slate-800 rounded-lg p-3 hover:border-slate-700 transition"
                   >
                     <div>
-                      <span className="text-white font-bold block">{req.solicitante_nombre}</span>
-                      <span className="text-xs text-slate-500 font-mono block truncate max-w-[200px]">{req.solicitante_id}</span>
+                      <span className="text-white font-medium text-sm block">{req.solicitante_nombre}</span>
+                      <span className="text-xs text-slate-500 font-mono block truncate max-w-[220px]">{req.solicitante_id}</span>
                     </div>
                     <div className="flex gap-2">
                       <button 
                         onClick={() => responderSolicitudAmistad(req.id, 'aceptar')}
-                        className="hud-btn-action accept flex items-center justify-center bg-emerald-600/20 hover:bg-emerald-600 border border-emerald-500/40 text-emerald-400 hover:text-white p-2 rounded transition cursor-pointer"
-                        title="Aceptar"
+                        className="flex items-center gap-1.5 bg-emerald-500/10 hover:bg-emerald-600 border border-emerald-500/30 text-emerald-400 hover:text-white px-3 py-1.5 rounded-lg text-xs font-medium transition cursor-pointer"
+                        title="Aceptar solicitud"
                       >
-                        <Check size={16} />
+                        <Check size={14} />
+                        <span>Aceptar</span>
                       </button>
                       <button 
                         onClick={() => responderSolicitudAmistad(req.id, 'rechazar')}
-                        className="hud-btn-action reject flex items-center justify-center bg-rose-600/20 hover:bg-rose-600 border border-rose-500/40 text-rose-400 hover:text-white p-2 rounded transition cursor-pointer"
-                        title="Rechazar"
+                        className="flex items-center gap-1.5 bg-rose-500/10 hover:bg-rose-600 border border-rose-500/30 text-rose-400 hover:text-white px-3 py-1.5 rounded-lg text-xs font-medium transition cursor-pointer"
+                        title="Rechazar solicitud"
                       >
-                        <X size={16} />
+                        <X size={14} />
+                        <span>Rechazar</span>
                       </button>
                     </div>
                   </div>
@@ -146,63 +163,70 @@ export default function AmigosPanel({
 
           {/* Lista de Amigos Aceptados */}
           {listaAmigos.length === 0 ? (
-            <div className="empty-friends-state text-center py-10 text-slate-500">
+            <div className="text-center py-16 text-slate-500">
               <Users size={40} className="mx-auto mb-3 opacity-30 text-slate-400" />
-              <p>Aún no has agregado a ningún colega a tu red.</p>
-              <p className="text-xs text-slate-600 mt-1">Comparte tu ID militar para empezar a comparar constelaciones estelares.</p>
+              <p className="text-sm font-medium text-slate-400">Aún no has agregado a ningún compañero.</p>
+              <p className="text-xs text-slate-500 mt-1">Comparte tu ID de estudiante para comenzar a colaborar y competir.</p>
             </div>
           ) : amigosFiltrados.length === 0 ? (
-            <div className="text-center py-8 text-slate-500 font-mono text-xs">
-              No se encontraron operadores coincidentes con "{filtroAmigos}".
+            <div className="text-center py-12 text-slate-500 text-xs">
+              No se encontraron amigos que coincidan con "{filtroAmigos}".
             </div>
           ) : (
-            <div className="friends-grid grid grid-cols-1 md:grid-cols-2 gap-4 mt-3">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-3.5 mt-1">
               {amigosFiltrados.map((amigo) => {
                 const online = estaOnline ? estaOnline(amigo.ultima_conexion) : false;
+                const inicial = amigo.nombre ? amigo.nombre.charAt(0).toUpperCase() : 'E';
                 return (
                   <div 
                     key={amigo.id} 
-                    className="friend-tactical-card hud-panel-spec bg-slate-950/70 border border-slate-800/90 hover:border-[#00ffcc]/50 rounded-lg p-4 flex flex-col justify-between transition-all duration-200 hover:shadow-[0_0_15px_rgba(0,255,204,0.15)]"
+                    className="bg-slate-950/60 border border-slate-800/80 hover:border-indigo-500/30 rounded-xl p-4 flex flex-col justify-between transition-all duration-200 hover:shadow-lg hover:shadow-black/20"
                   >
                     <div>
-                      <div className="flex items-center justify-between mb-1.5">
-                        <div className="flex items-center gap-2">
-                          <span className={`w-2.5 h-2.5 rounded-full ${online ? 'bg-emerald-400 shadow-[0_0_8px_#34d399]' : 'bg-slate-600'}`} />
-                          <span className="text-white font-bold tracking-wide text-sm">{amigo.nombre}</span>
+                      <div className="flex items-center justify-between mb-2">
+                        <div className="flex items-center gap-2.5">
+                          <div className="w-8 h-8 rounded-full bg-gradient-to-br from-indigo-500 to-violet-600 text-white font-semibold text-xs flex items-center justify-center shadow-sm">
+                            {inicial}
+                          </div>
+                          <div>
+                            <div className="flex items-center gap-1.5">
+                              <span className={`w-2 h-2 rounded-full ${online ? 'bg-emerald-400' : 'bg-slate-600'}`} />
+                              <span className="text-white font-medium text-sm">{amigo.nombre}</span>
+                            </div>
+                            <div className="flex items-center gap-1 mt-0.5">
+                              <span className="text-[11px] text-slate-500 block truncate max-w-[150px] font-mono">{amigo.id}</span>
+                              <button
+                                onClick={() => {
+                                  navigator.clipboard.writeText(amigo.id || '');
+                                  mostrarMensaje && mostrarMensaje('¡ID copiado!', 'success');
+                                }}
+                                className="text-slate-500 hover:text-indigo-400 transition cursor-pointer p-0.5"
+                                title="Copiar ID"
+                              >
+                                <Copy size={11} />
+                              </button>
+                            </div>
+                          </div>
                         </div>
-                        <span className="text-[10px] bg-[#00ffcc]/10 text-[#00ffcc] border border-[#00ffcc]/20 px-2 py-0.5 rounded uppercase font-mono font-bold">
-                          {amigo.nivel_actual}
+                        <span className="text-[11px] bg-indigo-500/10 text-indigo-400 border border-indigo-500/20 px-2 py-0.5 rounded-md font-medium">
+                          {amigo.nivel_actual || 'Estudiante'}
                         </span>
-                      </div>
-
-                      <div className="flex items-center justify-between mb-3 text-[10px] text-slate-500 font-mono">
-                        <span className="truncate max-w-[170px]">{amigo.id}</span>
-                        <button
-                          onClick={() => {
-                            navigator.clipboard.writeText(amigo.id || '');
-                            mostrarMensaje && mostrarMensaje('ID del amigo copiado', 'success');
-                          }}
-                          className="hover:text-cyan-400 transition cursor-pointer p-0.5"
-                          title="Copiar ID de amigo"
-                        >
-                          <Copy size={11} />
-                        </button>
                       </div>
                     </div>
 
-                    <div className="flex flex-col gap-2.5 mt-auto">
-                      <div className="friend-stats-hud bg-slate-900/60 rounded p-2 border border-slate-800/60 flex items-center justify-between font-mono text-[11px]">
-                        <span className="text-slate-400">Ruta:</span>
-                        <span className="text-[#00ffcc] font-bold">{amigo.tecnologia_actual || 'General'} (Módulo {amigo.tema_indice || 1})</span>
+                    <div className="flex flex-col gap-2.5 mt-3 pt-3 border-t border-slate-900">
+                      <div className="bg-slate-900/60 rounded-lg px-2.5 py-1.5 border border-slate-800/50 flex items-center justify-between text-xs">
+                        <span className="text-slate-400">Ruta de Aprendizaje:</span>
+                        <span className="text-slate-200 font-medium">{amigo.tecnologia_actual || 'General'} (Módulo {amigo.tema_indice || 1})</span>
                       </div>
 
                       {desafiarAmigo1vs1 && (
                         <button
                           onClick={() => desafiarAmigo1vs1(amigo)}
-                          className="w-full py-2 bg-gradient-to-r from-cyan-500/20 via-[#00ffcc]/20 to-indigo-500/20 hover:from-cyan-500/40 hover:to-[#00ffcc]/40 border border-[#00ffcc]/40 hover:border-[#00ffcc] text-[#00ffcc] hover:text-white rounded font-mono font-bold text-xs flex items-center justify-center gap-2 transition-all hover:scale-[1.02] active:scale-98 cursor-pointer shadow-[0_0_8px_rgba(0,255,204,0.15)]"
+                          className="w-full py-2 bg-slate-900 hover:bg-indigo-600/90 border border-slate-700/60 hover:border-indigo-500 text-slate-200 hover:text-white rounded-lg text-xs font-medium flex items-center justify-center gap-2 transition-all cursor-pointer shadow-sm"
                         >
-                          <Swords size={13} className="text-[#00ffcc]" />
-                          <span>RETAR A DUELO 1v1</span>
+                          <Swords size={14} className="text-indigo-400 group-hover:text-white" />
+                          <span>Desafiar 1 vs 1</span>
                         </button>
                       )}
                     </div>

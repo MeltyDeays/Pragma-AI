@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { 
   Users, UserPlus, Trash2, ShieldAlert, Check, X, 
-  Settings, Gamepad2, Award, Zap, Code, Shield, HelpCircle, Swords, Play, Trophy
+  Settings, Gamepad2, Award, Zap, Code, Shield, HelpCircle, Swords, Play, Trophy, Search
 } from 'lucide-react';
 import './PragmaGames.css';
 
@@ -678,14 +678,14 @@ function LobbyView({ estudiante, backendUrl, onUpdate, listaAmigos = [], partida
     const setSlots = team === 'orange' ? setOrangeSlots : setBlueSlots;
     const COUNTDOWN_SECONDS = 12; // Espera garantizada de más de 10 segundos
     
-    // Si tiene backend y ID real, despachar invitación táctica por SSE
+    // Si tiene backend y ID real, despachar invitación directa por SSE
     if (friend.id && estudiante?.id) {
       fetch(`${backendUrl}/api/duelos/invitar`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           retador_id: estudiante.id,
-          retador_nombre: estudiante.nombre || 'Comandante',
+          retador_nombre: estudiante.nombre || 'Estudiante',
           retado_id: friend.id,
           retado_nombre: friend.nombre,
           tipo_match: matchType,
@@ -1318,14 +1318,14 @@ function LobbyView({ estudiante, backendUrl, onUpdate, listaAmigos = [], partida
       return (
         <div key={`${team}-${slotIndex}`} className="lobby-player-slot empty">
           <button 
-            className="invite-slot-btn" 
+            className="invite-slot-btn group" 
             onClick={() => {
               setInviteTarget({ team, index: slotIndex });
               setShowInviteModal(true);
             }}
           >
-            <UserPlus size={16} className="mb-1 text-[#00ffcc]" />
-            <span>INVITAR AMIGO</span>
+            <UserPlus size={16} className="mb-1 text-indigo-400 group-hover:text-indigo-300 transition" />
+            <span>Invitar Amigo</span>
           </button>
         </div>
       );
@@ -1349,24 +1349,24 @@ function LobbyView({ estudiante, backendUrl, onUpdate, listaAmigos = [], partida
     if (slot.type === 'inviting') {
       if (slot.status === 'sending') {
         return (
-          <div key={`${team}-${slotIndex}`} className="lobby-player-slot active inviting border-cyan-500/60 bg-cyan-950/30 relative p-2 flex flex-col items-center justify-center">
+          <div key={`${team}-${slotIndex}`} className="lobby-player-slot active inviting border border-indigo-500/40 bg-slate-900/80 rounded-xl relative p-2.5 flex flex-col items-center justify-center shadow-md">
             <div className="flex items-center gap-1.5 mb-1.5">
-              <div className="slot-spinner animate-spin w-3.5 h-3.5 border-2 border-[#00ffcc] border-t-transparent rounded-full"></div>
-              <span className="font-mono text-[10px] text-amber-400 font-bold px-1.5 py-0.5 rounded bg-amber-500/10 border border-amber-500/30 animate-pulse">
+              <div className="slot-spinner animate-spin w-3.5 h-3.5 border-2 border-indigo-400 border-t-transparent rounded-full"></div>
+              <span className="font-mono text-[10px] text-amber-400 font-semibold px-1.5 py-0.5 rounded bg-amber-500/10 border border-amber-500/25">
                 ⏱️ {slot.countdown || 12}s
               </span>
             </div>
             <div className="slot-info text-center mb-2">
-              <span className="slot-name text-white font-mono font-bold text-xs max-w-[120px] truncate block">{slot.name}</span>
-              <span className="slot-role text-[8px] text-[#00ffcc] animate-pulse block">ESPERANDO RESPUESTA...</span>
+              <span className="slot-name text-white font-medium text-xs max-w-[120px] truncate block">{slot.name}</span>
+              <span className="slot-role text-[10px] text-slate-400 font-medium block">Esperando respuesta...</span>
             </div>
             <div className="flex gap-1">
               <button 
-                className="px-2 py-0.5 bg-rose-950/80 hover:bg-rose-900 border border-rose-500/40 text-rose-300 font-mono text-[9px] font-bold rounded cursor-pointer transition active:scale-95" 
+                className="px-2.5 py-1 bg-rose-500/10 hover:bg-rose-600 border border-rose-500/30 text-rose-300 hover:text-white text-[10px] font-medium rounded-md cursor-pointer transition active:scale-95" 
                 onClick={() => cancelInvitation(team, slotIndex)} 
                 title="Cancelar invitación activa"
               >
-                CANCELAR
+                Cancelar
               </button>
             </div>
           </div>
@@ -1519,42 +1519,58 @@ function LobbyView({ estudiante, backendUrl, onUpdate, listaAmigos = [], partida
         </div>
       )}
 
-      {/* MODAL / SECTOR DE INVITACIÓN DE AMIGOS */}
+      {/* MODAL / SECTOR DE INVITACIÓN DE AMIGOS (DISEÑO SLATE / INDIGO) */}
       {showInviteModal && (
-        <div className="cyber-modal-overlay">
-          <div className="cyber-modal hud-panel-spec">
-            <div className="panel-header-spec justify-between flex items-center mb-3">
-              <h3 className="text-white font-semibold text-sm flex items-center gap-2">
-                <span>👥</span> Invitar Amigo a la Partida
-              </h3>
+        <div className="fixed inset-0 z-50 bg-slate-950/80 backdrop-blur-md flex items-center justify-center p-4 animate-fade-in">
+          <div className="bg-slate-900 border border-slate-800 rounded-2xl shadow-2xl shadow-black/60 max-w-md w-full overflow-hidden">
+            
+            {/* Cabecera del Modal */}
+            <div className="px-6 py-4 border-b border-slate-800/80 flex items-center justify-between">
+              <div className="flex items-center gap-2.5">
+                <div className="w-8 h-8 rounded-lg bg-indigo-500/10 border border-indigo-500/20 flex items-center justify-center text-indigo-400">
+                  <Users size={16} />
+                </div>
+                <div>
+                  <h3 className="text-white font-semibold text-sm">Invitar Amigo a la Partida</h3>
+                  <p className="text-[11px] text-slate-400">Selecciona un compañero para unirse a tu sala</p>
+                </div>
+              </div>
               <button 
                 onClick={() => {
                   setShowInviteModal(false);
                   setFriendSearchQuery('');
                 }} 
-                className="text-slate-400 hover:text-white p-1 rounded-lg hover:bg-slate-800 transition"
+                className="text-slate-400 hover:text-white p-1.5 rounded-lg hover:bg-slate-800 transition cursor-pointer"
+                title="Cerrar ventana"
               >
                 <X size={16} />
               </button>
             </div>
 
-            {/* BARRA DE BÚSQUEDA */}
-            <div className="search-bar-container mb-4">
-              <input 
-                type="text" 
-                placeholder="Buscar amigo por nombre o tecnología..." 
-                value={friendSearchQuery}
-                onChange={(e) => setFriendSearchQuery(e.target.value)}
-                className="w-full p-2.5 rounded-xl bg-slate-900 border border-slate-700/60 text-white placeholder-slate-500 text-xs focus:border-indigo-500 outline-none transition"
-              />
+            {/* Barra de Búsqueda */}
+            <div className="p-4 border-b border-slate-800/60 bg-slate-950/40">
+              <div className="relative flex items-center">
+                <Search size={14} className="absolute left-3 text-slate-400 pointer-events-none" />
+                <input 
+                  type="text" 
+                  placeholder="Buscar amigo por nombre o tecnología..." 
+                  value={friendSearchQuery}
+                  onChange={(e) => setFriendSearchQuery(e.target.value)}
+                  className="w-full pl-9 pr-3.5 py-2 rounded-xl bg-slate-900 border border-slate-700/60 text-white placeholder-slate-500 text-xs focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500 outline-none transition"
+                />
+              </div>
             </div>
 
-            <div className="modal-friends-list flex flex-col gap-2 max-h-[300px] overflow-y-auto">
+            {/* Lista de Amigos en el Modal */}
+            <div className="p-4 flex flex-col gap-2 max-h-[320px] overflow-y-auto">
               {listaAmigos.filter(amigo => 
                 amigo.nombre.toLowerCase().includes(friendSearchQuery.toLowerCase()) ||
                 (amigo.tecnologia_actual && amigo.tecnologia_actual.toLowerCase().includes(friendSearchQuery.toLowerCase()))
               ).length === 0 ? (
-                <p className="text-xs text-slate-400 text-center py-8">No se encontraron amigos disponibles.</p>
+                <div className="py-8 text-center text-slate-500 text-xs">
+                  <Users size={32} className="mx-auto mb-2 opacity-30 text-slate-400" />
+                  <p>No se encontraron amigos disponibles.</p>
+                </div>
               ) : (
                 listaAmigos.filter(amigo => 
                   amigo.nombre.toLowerCase().includes(friendSearchQuery.toLowerCase()) ||
@@ -1563,17 +1579,20 @@ function LobbyView({ estudiante, backendUrl, onUpdate, listaAmigos = [], partida
                   const yaInvitado = 
                     orangeSlots.some(s => s && s.type === 'friend' && s.friendObj?.id === amigo.id) ||
                     blueSlots.some(s => s && s.type === 'friend' && s.friendObj?.id === amigo.id);
-                  const inicial = amigo.nombre.charAt(0).toUpperCase();
+                  const inicial = amigo.nombre ? amigo.nombre.charAt(0).toUpperCase() : 'E';
                   
                   return (
-                    <div key={amigo.id} className="friend-invite-row flex justify-between items-center p-3 rounded">
+                    <div 
+                      key={amigo.id} 
+                      className="flex items-center justify-between p-2.5 rounded-xl bg-slate-950/50 hover:bg-slate-800/40 border border-slate-800/60 hover:border-indigo-500/30 transition-all duration-150"
+                    >
                       <div className="flex items-center gap-3">
-                        <div className="friend-avatar-circle">
+                        <div className="w-8 h-8 rounded-full bg-gradient-to-br from-indigo-500 to-violet-600 text-white font-semibold text-xs flex items-center justify-center shadow-sm">
                           {inicial}
                         </div>
-                        <div className="friend-details">
-                          <span className="friend-name-text">{amigo.nombre}</span>
-                          <span className="friend-tech-badge">
+                        <div>
+                          <span className="text-white font-medium text-xs block">{amigo.nombre}</span>
+                          <span className="text-[10px] text-indigo-400 bg-indigo-500/10 border border-indigo-500/20 px-1.5 py-0.5 rounded font-medium inline-block mt-0.5">
                             {amigo.tecnologia_actual || 'JavaScript'}
                           </span>
                         </div>
@@ -1584,11 +1603,13 @@ function LobbyView({ estudiante, backendUrl, onUpdate, listaAmigos = [], partida
                           inviteFriend(amigo, inviteTarget.team, inviteTarget.index);
                           setFriendSearchQuery('');
                         }}
-                        className={`hud-btn-action accept p-1.5 px-4 text-[10px] rounded font-mono font-bold uppercase transition ${
-                          yaInvitado ? 'opacity-40 cursor-not-allowed' : ''
+                        className={`px-3.5 py-1.5 text-xs font-medium rounded-lg transition-all cursor-pointer ${
+                          yaInvitado 
+                            ? 'bg-slate-800 text-slate-500 border border-slate-700/50 cursor-not-allowed'
+                            : 'bg-indigo-600 hover:bg-indigo-500 text-white shadow-sm shadow-indigo-600/20'
                         }`}
                       >
-                        {yaInvitado ? 'INVITADO' : 'INVITAR'}
+                        {yaInvitado ? 'Invitado' : 'Invitar'}
                       </button>
                     </div>
                   );
