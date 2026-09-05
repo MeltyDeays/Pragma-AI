@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useCallback, useRef } from 'react';
-import { BookOpen, Award, Download, CheckCircle2, AlertTriangle, Play, RefreshCw, Send, Code, Sparkles, User, LogOut, Check, ChevronRight, Gamepad2, Zap, Brain, Trophy, Target, Shuffle, GitFork, Lock, Unlock, Keyboard, Eye, Filter, Globe, UserPlus, Users, Copy, X, Swords, Trash2, MessageSquare } from 'lucide-react';
+import { BookOpen, Award, Download, CheckCircle2, AlertTriangle, Play, RefreshCw, Send, Code, Sparkles, User, LogOut, Check, ChevronRight, Gamepad2, Zap, Brain, Trophy, Target, Shuffle, GitFork, Lock, Unlock, Keyboard, Eye, Filter, Globe, UserPlus, Users, Copy, X, Swords, Trash2, MessageSquare, ChevronUp, ChevronDown, GripVertical } from 'lucide-react';
 import './App.css';
 
 // Componentes React cargados dinámicamente con Lazy Loading (Mejora de performance móvil)
@@ -1697,11 +1697,27 @@ function App() {
                                       onDragEnd={handleDragEnd}
                                       className="sorter-line-card"
                                     >
-                                      <div className="drag-handle">☰</div>
+                                      <div className="drag-handle text-slate-500 hover:text-cyan-400 cursor-grab active:cursor-grabbing p-1 flex items-center justify-center">
+                                        <GripVertical size={16} />
+                                      </div>
                                       <pre className="line-code font-mono"><code>{linea}</code></pre>
-                                      <div className="sorter-arrows flex gap-1">
-                                        <button className="arrow-btn" onClick={() => moverLineaSorter(idx, idx - 1)}>▲</button>
-                                        <button className="arrow-btn" onClick={() => moverLineaSorter(idx, idx + 1)}>▼</button>
+                                      <div className="sorter-arrows flex gap-1 items-center">
+                                        <button 
+                                          disabled={idx === 0} 
+                                          className="arrow-btn p-1.5 rounded bg-slate-800 hover:bg-slate-700 disabled:opacity-30 text-slate-300 hover:text-white transition flex items-center justify-center" 
+                                          onClick={() => moverLineaSorter(idx, idx - 1)}
+                                          title="Mover arriba"
+                                        >
+                                          <ChevronUp size={14} />
+                                        </button>
+                                        <button 
+                                          disabled={idx === sorterLineas.length - 1} 
+                                          className="arrow-btn p-1.5 rounded bg-slate-800 hover:bg-slate-700 disabled:opacity-30 text-slate-300 hover:text-white transition flex items-center justify-center" 
+                                          onClick={() => moverLineaSorter(idx, idx + 1)}
+                                          title="Mover abajo"
+                                        >
+                                          <ChevronDown size={14} />
+                                        </button>
                                       </div>
                                     </div>
                                   ))}
