@@ -2517,158 +2517,278 @@ function CopilotoView({ estudiante, backendUrl, onUpdate }) {
 
   return (
     <div className="copiloto-panel glass-panel">
-      <div className="flex items-center justify-between flex-wrap gap-3 mb-3">
+      {/* Header Táctico */}
+      <div className="flex items-center justify-between flex-wrap gap-3 mb-4 pb-3 border-b border-slate-800/80">
         <div>
-          <h2>🤖 Copiloto de Depuración Conceptual</h2>
-          <p className="panel-desc">Estudia el código roto, aplica la corrección lógica y justifica conceptualmente cuál era el error.</p>
+          <div className="flex items-center gap-2">
+            <span className="text-xl">🤖</span>
+            <h2 className="text-lg font-bold text-white tracking-wide">Copiloto de Depuración Conceptual</h2>
+            <span className="text-[10px] font-mono px-2 py-0.5 rounded bg-indigo-500/20 text-indigo-300 border border-indigo-500/30 font-bold">
+              IDE TÁCTICO
+            </span>
+          </div>
+          <p className="panel-desc text-xs text-slate-400 mt-1">
+            Estudia el algoritmo defectuoso, implementa la refactorización y valida la eficiencia Big-O con la suite de tests y el Mentor IA.
+          </p>
         </div>
         <div className="flex items-center gap-2">
-          <span className="text-xs text-indigo-400 font-mono px-2 py-1 bg-indigo-950/50 rounded border border-indigo-500/30">
+          <span className="text-xs text-cyan-300 font-mono font-semibold px-2.5 py-1 bg-cyan-950/60 rounded-lg border border-cyan-500/30 flex items-center gap-1.5 shadow-sm">
+            <span className="w-2 h-2 rounded-full bg-cyan-400 animate-pulse"></span>
             {retoSeleccionado.lenguaje} · {retoSeleccionado.dificultad}
+          </span>
+          <span className="text-xs text-slate-400 font-mono px-2 py-1 bg-slate-900/80 rounded-lg border border-slate-800">
+            {retoSeleccionado.categoria}
           </span>
         </div>
       </div>
 
-      {/* Filtro por Tecnología */}
-      <div className="flex items-center gap-2 mb-3">
-        <span className="text-xs text-slate-400 font-mono">Filtrar:</span>
-        {['Todas', 'JavaScript', 'Python', 'SQL'].map(tec => (
-          <button
-            key={tec}
-            type="button"
-            className={`px-2.5 py-1 text-xs rounded font-mono border transition ${filtroTec === tec ? 'bg-indigo-600 text-white border-indigo-500 shadow-sm' : 'bg-slate-900/60 text-slate-400 border-slate-800 hover:border-slate-700'}`}
-            onClick={() => setFiltroTec(tec)}
-          >
-            {tec}
-          </button>
-        ))}
-      </div>
+      {/* Filtro por Tecnología y Selector de Retos Tácticos */}
+      <div className="copiloto-nav-bar mb-4">
+        <div className="flex items-center justify-between flex-wrap gap-2 mb-2.5">
+          <div className="flex items-center gap-1.5">
+            <span className="text-xs text-slate-400 font-mono mr-1">Filtrar stack:</span>
+            {['Todas', 'JavaScript', 'Python', 'SQL'].map(tec => (
+              <button
+                key={tec}
+                type="button"
+                className={`copiloto-filter-btn ${filtroTec === tec ? 'active' : ''}`}
+                onClick={() => setFiltroTec(tec)}
+              >
+                {tec}
+              </button>
+            ))}
+          </div>
+          <span className="text-[11px] font-mono text-slate-500">
+            {retosFiltrados.length} retos disponibles
+          </span>
+        </div>
 
-      {/* Selector de Retos */}
-      <div className="copiloto-retos-selector flex gap-2 overflow-x-auto pb-2 mb-3">
-        {retosFiltrados.map(r => (
-          <button
-            key={r.id}
-            type="button"
-            className={`btn-subtab-pill ${retoSeleccionado.id === r.id ? 'active' : ''}`}
-            onClick={() => seleccionarReto(r)}
-          >
-            {r.titulo}
-          </button>
-        ))}
+        {/* Selector de Retos estilo Cards Tácticas */}
+        <div className="copiloto-retos-strip">
+          {retosFiltrados.map((r) => {
+            const isActive = retoSeleccionado.id === r.id;
+            const diffBadgeClass = r.dificultad === 'Principiante' 
+              ? 'diff-badge-principiante' 
+              : r.dificultad === 'Avanzado' 
+              ? 'diff-badge-avanzado' 
+              : 'diff-badge-intermedio';
+            return (
+              <button
+                key={r.id}
+                type="button"
+                className={`copiloto-reto-card ${isActive ? 'active' : ''}`}
+                onClick={() => seleccionarReto(r)}
+              >
+                <div className="flex items-center justify-between gap-1 mb-1">
+                  <span className={`text-[10px] font-mono font-bold px-1.5 py-0.5 rounded ${diffBadgeClass}`}>
+                    {r.dificultad}
+                  </span>
+                  <span className="text-[10px] font-mono text-slate-400 font-semibold">{r.lenguaje}</span>
+                </div>
+                <h4 className="text-xs font-semibold text-slate-200 line-clamp-1 mt-0.5" title={r.titulo}>
+                  {r.titulo}
+                </h4>
+                <span className="text-[10px] font-mono text-slate-500 block truncate mt-1">
+                  {r.categoria}
+                </span>
+              </button>
+            );
+          })}
+        </div>
       </div>
 
       <div className="copiloto-grid">
-        <div className="editor-side">
-          <div className="flex items-center justify-between mb-1">
-            <h4 className="text-xs text-slate-300 font-mono">Código con Bug (Refactoriza aquí):</h4>
-            <button
-              type="button"
-              className="text-xs text-slate-400 hover:text-white"
-              onClick={() => setCodigoCorregido(retoSeleccionado.codigo_con_bug)}
-            >
-              Restablecer
-            </button>
+        <div className="editor-side flex flex-col gap-3">
+          <div className="copiloto-ide-frame rounded-xl border border-slate-800 bg-slate-950 overflow-hidden shadow-lg">
+            <div className="editor-tab-bar flex items-center justify-between px-3.5 py-2 bg-slate-900/90 border-b border-slate-800">
+              <div className="flex items-center gap-2">
+                <span className="w-2.5 h-2.5 rounded-full bg-emerald-400"></span>
+                <span className="font-mono text-xs text-slate-300 font-semibold">
+                  {retoSeleccionado.lenguaje === 'Python' ? 'solution.py' : retoSeleccionado.lenguaje === 'SQL' ? 'query.sql' : 'solution.js'}
+                </span>
+                <span className="text-[10px] font-mono text-slate-500 px-1.5 py-0.5 rounded bg-slate-800/60 border border-slate-700/40">
+                  {codigoCorregido.split('\n').length} líneas
+                </span>
+              </div>
+              <button
+                type="button"
+                className="text-[11px] font-mono text-slate-400 hover:text-white flex items-center gap-1.5 px-2 py-1 rounded bg-slate-800/50 hover:bg-slate-800 transition"
+                onClick={() => setCodigoCorregido(retoSeleccionado.codigo_con_bug)}
+                title="Revertir cambios al bug original"
+              >
+                <span>↺</span>
+                <span>Restablecer</span>
+              </button>
+            </div>
+
+            <div className="editor-container-with-gutter flex relative bg-slate-950 min-h-[220px]">
+              <div ref={gutterRef} className="line-numbers select-none text-right font-mono text-xs py-3 px-3 bg-slate-950/90 text-slate-600 border-r border-slate-800/80 overflow-y-hidden max-h-[380px] min-h-[220px]">
+                {codigoCorregido.split('\n').map((_, idx) => (
+                  <div key={idx} className="leading-5">{idx + 1}</div>
+                ))}
+              </div>
+              <textarea
+                className="code-textarea flex-1 font-mono text-xs p-3 leading-5 outline-none bg-transparent resize-none text-emerald-400 min-h-[220px] max-h-[380px] overflow-y-auto"
+                value={codigoCorregido}
+                onChange={(e) => setCodigoCorregido(e.target.value)}
+                onScroll={(e) => {
+                  if (gutterRef.current) gutterRef.current.scrollTop = e.target.scrollTop;
+                }}
+                rows={Math.max(12, codigoCorregido.split('\n').length)}
+                spellCheck={false}
+              />
+            </div>
           </div>
 
-          <div className="editor-container-with-gutter flex relative bg-slate-900 border border-slate-800 rounded overflow-hidden mb-3">
-            <div ref={gutterRef} className="line-numbers select-none text-right font-mono text-xs py-3 px-2.5 bg-slate-950/80 text-slate-500 border-r border-slate-800/80 overflow-y-hidden max-h-[380px] min-h-[180px]">
-              {codigoCorregido.split('\n').map((_, idx) => (
-                <div key={idx} className="leading-5">{idx + 1}</div>
-              ))}
+          {/* Bitácora de Justificación Conceptual */}
+          <div className="justification-card p-3 rounded-xl border border-slate-800 bg-slate-900/70">
+            <div className="flex items-center justify-between mb-1.5">
+              <label className="text-xs text-slate-300 font-mono font-semibold flex items-center gap-1.5">
+                <span>📝</span>
+                <span>Bitácora Técnica / Causa Raíz & Big-O:</span>
+              </label>
+              <span className="text-[10px] font-mono text-indigo-400 font-semibold">+20 RP</span>
             </div>
             <textarea
-              className="code-textarea flex-1 font-mono text-xs p-3 leading-5 outline-none bg-transparent resize-none text-emerald-400 min-h-[180px] max-h-[380px] overflow-y-auto"
-              value={codigoCorregido}
-              onChange={(e) => setCodigoCorregido(e.target.value)}
-              onScroll={(e) => {
-                if (gutterRef.current) gutterRef.current.scrollTop = e.target.scrollTop;
-              }}
-              rows={Math.max(10, codigoCorregido.split('\n').length)}
-              spellCheck={false}
+              className="just-textarea w-full bg-slate-950 border border-slate-800 text-slate-200 p-2.5 rounded-lg font-mono text-xs outline-none focus:border-indigo-500 transition"
+              placeholder="Explica qué estaba mal en el algoritmo original (ej. orden Big-O, mutación indeseada, falta de listener cleanup, N+1 consultas)..."
+              value={justificacion}
+              onChange={(e) => setJustificacion(e.target.value)}
+              rows={3}
             />
           </div>
 
-          <h4 className="text-xs text-slate-300 font-mono mt-3">Justificación Conceptual del Bug:</h4>
-          <textarea
-            className="just-textarea w-full bg-slate-900 border border-slate-800 text-slate-200 p-2.5 rounded font-mono text-xs outline-none focus:border-indigo-500"
-            placeholder="Explica qué estaba mal en el algoritmo original (ej. orden Big-O, mutación indeseada, falta de listener cleanup, N+1 consultas)..."
-            value={justificacion}
-            onChange={(e) => setJustificacion(e.target.value)}
-            rows={3}
-          />
-
-          <div className="flex gap-2 mt-3">
+          {/* Barra de Acciones Unificada */}
+          <div className="copiloto-actions-bar">
             <button
               type="button"
-              className="btn-glow btn-sm flex items-center gap-1"
+              className="copiloto-btn-test"
               onClick={ejecutarTestsLocales}
             >
-              🧪 Ejecutar Tests
+              <span>🧪</span>
+              <span>EJECUTAR TESTS LOCALES</span>
             </button>
             <button
               type="button"
-              className="btn-action flex items-center gap-1"
+              className="copiloto-btn-audit"
               onClick={enviarAuditoria}
               disabled={loading}
             >
-              {loading ? 'Analizando en Groq LPU...' : '🚀 Auditar con Mentor IA'}
+              <span>{loading ? '⏳' : '🚀'}</span>
+              <span>{loading ? 'ANALIZANDO EN GROQ LPU...' : 'AUDITAR CON MENTOR IA'}</span>
             </button>
           </div>
 
+          {/* Resultados de Tests Locales */}
           {testResults && (
-            <div className={`mt-3 p-2.5 rounded border text-xs ${testResults.exito ? 'bg-emerald-950/40 border-emerald-500/50 text-emerald-300' : 'bg-rose-950/40 border-rose-500/50 text-rose-300'}`}>
-              <div className="font-semibold mb-1">
-                {testResults.exito ? '✅ Todas las pruebas unitarias pasaron' : '❌ Fallo en las pruebas unitarias'}
+            <div className={`p-3 rounded-xl border text-xs animate-scale-in ${testResults.exito ? 'bg-emerald-950/40 border-emerald-500/50 text-emerald-300' : 'bg-rose-950/40 border-rose-500/50 text-rose-300'}`}>
+              <div className="font-semibold mb-1 flex items-center gap-1.5">
+                <span>{testResults.exito ? '✅' : '❌'}</span>
+                <span>{testResults.exito ? 'Todas las pruebas unitarias pasaron con éxito' : 'Fallo en las pruebas unitarias'}</span>
               </div>
-              {testResults.error && <p>{testResults.error}</p>}
-              {testResults.detalles?.map((d, i) => (
-                <div key={i} className="flex justify-between py-0.5 border-b border-white/5 font-mono">
-                  <span>{d.nombre}: {d.ok ? '✓ OK' : '✗ Falló'}</span>
-                  <span className="text-slate-400">{d.obtenido}</span>
-                </div>
-              ))}
+              {testResults.error && <p className="font-mono text-[11px] text-rose-300 mt-1">{testResults.error}</p>}
+              <div className="space-y-1 mt-2">
+                {testResults.detalles?.map((d, i) => (
+                  <div key={i} className="flex justify-between items-center py-1 px-2 rounded bg-slate-950/50 border border-white/5 font-mono text-[11px]">
+                    <span>{d.nombre}: <strong className={d.ok ? 'text-emerald-400' : 'text-rose-400'}>{d.ok ? '✓ OK' : '✗ Falló'}</strong></span>
+                    <span className="text-slate-400 text-[10px]">{d.obtenido}</span>
+                  </div>
+                ))}
+              </div>
             </div>
           )}
         </div>
 
-        <div className="console-side">
-          <h4 className="text-xs text-slate-300 font-mono">Consola del Bug Detectado:</h4>
-          <div className="terminal-box">
-            <pre className="term-err font-mono text-xs whitespace-pre-wrap">{retoSeleccionado.consola_error}</pre>
-            <p className="term-info mt-2 text-indigo-300 font-mono text-xs">&gt; Descripción: {retoSeleccionado.descripcion}</p>
+        <div className="console-side flex flex-col gap-3">
+          {/* Consola de Bug y Telemetría */}
+          <div className="terminal-box-pro rounded-xl border border-rose-500/30 bg-slate-950 overflow-hidden shadow-lg">
+            <div className="flex items-center justify-between px-3.5 py-2 bg-rose-950/30 border-b border-rose-500/20">
+              <div className="flex items-center gap-2">
+                <span className="w-2.5 h-2.5 rounded-full bg-rose-500 animate-pulse"></span>
+                <h4 className="text-xs text-rose-300 font-mono font-bold tracking-wider">TERMINAL // BUG TELEMETRY</h4>
+              </div>
+              <span className="text-[10px] font-mono text-rose-400/80 bg-rose-950/60 px-2 py-0.5 rounded border border-rose-500/20 font-bold">
+                DIAGNÓSTICO CRÍTICO
+              </span>
+            </div>
+            <div className="p-3.5 bg-slate-950/90 font-mono text-xs">
+              <pre className="term-err text-rose-400 whitespace-pre-wrap leading-relaxed font-mono">{retoSeleccionado.consola_error}</pre>
+              <div className="mt-3 pt-2.5 border-t border-slate-800/80 text-slate-400 text-xs">
+                <span className="text-indigo-400 font-bold">&gt; Misión: </span>
+                <span>{retoSeleccionado.descripcion}</span>
+              </div>
+            </div>
           </div>
 
-          {result && (
-            <div className={`eval-result-card ${result.aprobado ? 'success' : 'fail'} mt-3 p-3 rounded-lg border bg-slate-900/90`}>
+          {/* Matriz de Tests Unitarios Requeridos */}
+          <div className="tests-suite-card p-3.5 rounded-xl border border-slate-800 bg-slate-900/70">
+            <div className="flex items-center justify-between mb-2">
+              <h4 className="text-xs text-slate-300 font-mono font-semibold flex items-center gap-1.5">
+                <span>🧪</span>
+                <span>Harness de Pruebas Unitarias ({retoSeleccionado.tests?.length || 0}):</span>
+              </h4>
+              <span className="text-[10px] font-mono text-slate-500">Target: 100% Cobertura</span>
+            </div>
+            <div className="space-y-1.5">
+              {retoSeleccionado.tests?.map((t, idx) => (
+                <div key={idx} className="p-2 rounded-lg bg-slate-950/70 border border-slate-800/80 font-mono text-[11px] flex flex-col gap-0.5">
+                  <div className="flex justify-between text-slate-300 font-semibold">
+                    <span>Caso #{idx + 1}: {t.desc}</span>
+                    <span className="text-[10px] text-indigo-400">assert</span>
+                  </div>
+                  <div className="flex justify-between text-[10.5px] text-slate-400">
+                    <span>Input: <code className="text-slate-300">{JSON.stringify(t.input)}</code></span>
+                    <span>Esperado: <code className="text-emerald-400">{JSON.stringify(t.expected)}</code></span>
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
+
+          {/* Evaluación de Mentor IA */}
+          {result ? (
+            <div className={`eval-result-card ${result.aprobado ? 'success' : 'fail'} p-3.5 rounded-xl border bg-slate-900/90 shadow-lg animate-scale-in`}>
               <div className="flex justify-between items-center mb-2">
-                <h4 className="font-semibold text-xs text-white">Evaluación del Copiloto IA:</h4>
-                <span className="pts font-mono font-bold text-[11px] px-2 py-0.5 rounded bg-slate-950/60 border border-slate-800 text-slate-300">
-                  Puntaje: {result.puntaje}/100 - {result.aprobado ? 'APROBADO' : 'CORRECCIÓN INSUFICIENTE'}
+                <div className="flex items-center gap-2">
+                  <span className="text-base">{result.aprobado ? '🏆' : '⚠️'}</span>
+                  <h4 className="font-semibold text-xs text-white">Evaluación del Copiloto IA:</h4>
+                </div>
+                <span className={`pts font-mono font-bold text-xs px-2.5 py-0.5 rounded border ${result.aprobado ? 'bg-emerald-950/80 border-emerald-500/50 text-emerald-300' : 'bg-rose-950/80 border-rose-500/50 text-rose-300'}`}>
+                  {result.puntaje}/100 · {result.aprobado ? 'APROBADO' : 'CORRECCIÓN INSUFICIENTE'}
                 </span>
               </div>
-              <p className="retro text-xs text-slate-300 mb-3">{result.retroalimentacion}</p>
+              <p className="retro text-xs text-slate-300 mb-3 leading-relaxed">{result.retroalimentacion}</p>
               
               <div className="grid grid-cols-1 md:grid-cols-3 gap-2 pt-2 border-t border-slate-800 text-[11px] font-mono">
-                <div className="p-2.5 rounded bg-slate-950/60 border border-slate-800 min-w-0 break-words flex flex-col justify-between">
+                <div className="p-2.5 rounded-lg bg-slate-950/80 border border-slate-800 min-w-0 break-words flex flex-col justify-between">
                   <span className="text-indigo-400 font-bold block mb-1">1. Exactitud Lógica</span>
                   <span className="text-slate-300 leading-relaxed text-[10.5px]">
-                    {result.criterios?.exactitud_logica || (result.aprobado ? 'Corrección válida y consistente' : 'Lógica incompleta o con errores')}
+                    {result.criterios?.exactitud_logica || (result.aprobado ? 'Corrección válida y consistente' : 'Lógica incompleta')}
                   </span>
                 </div>
-                <div className="p-2.5 rounded bg-slate-950/60 border border-slate-800 min-w-0 break-words flex flex-col justify-between">
+                <div className="p-2.5 rounded-lg bg-slate-950/80 border border-slate-800 min-w-0 break-words flex flex-col justify-between">
                   <span className="text-indigo-400 font-bold block mb-1">2. Eficiencia Big-O</span>
                   <span className="text-slate-300 leading-relaxed text-[10.5px]">
                     {result.criterios?.eficiencia_big_o || (result.aprobado ? 'Complejidad temporal y espacial óptima' : 'Cuello de botella no mitigado')}
                   </span>
                 </div>
-                <div className="p-2.5 rounded bg-slate-950/60 border border-slate-800 min-w-0 break-words flex flex-col justify-between">
+                <div className="p-2.5 rounded-lg bg-slate-950/80 border border-slate-800 min-w-0 break-words flex flex-col justify-between">
                   <span className="text-indigo-400 font-bold block mb-1">3. Justificación</span>
                   <span className="text-slate-300 leading-relaxed text-[10.5px]">
                     {result.criterios?.justificacion_conceptual || (justificacion ? 'Razonamiento técnico articulado' : 'Falta profundizar causa raíz')}
                   </span>
                 </div>
               </div>
+            </div>
+          ) : (
+            <div className="ai-standby-card p-4 rounded-xl border border-indigo-500/20 bg-gradient-to-br from-indigo-950/20 via-slate-950 to-slate-900/60 text-center flex flex-col items-center justify-center min-h-[140px]">
+              <div className="w-10 h-10 rounded-full bg-indigo-500/10 border border-indigo-500/30 flex items-center justify-center text-lg mb-2">
+                📡
+              </div>
+              <h5 className="text-xs font-mono font-bold text-indigo-300">Mentor IA en Standby (Groq LPU)</h5>
+              <p className="text-[11px] text-slate-400 max-w-xs mt-1 font-mono">
+                Escribe tu código y justificación técnica. El Mentor evaluará exactitud lógica, orden Big-O y otorgará puntos de rango Pragma.
+              </p>
             </div>
           )}
         </div>
@@ -2937,112 +3057,301 @@ function ZenView({ estudiante, backendUrl, onUpdate }) {
 
   return (
     <div className="zen-panel glass-panel">
-      <div className="zen-header">
+      {/* Header Zen */}
+      <div className="flex items-center justify-between flex-wrap gap-3 mb-4 pb-3 border-b border-slate-800/80">
         <div>
-          <h2>🧘 Santuario de Código Zen</h2>
-          <p className="panel-desc">Resuelve micro-acertijos rápidos para calmar la mente. Sin temporizadores apresurados ni clasificaciones punitivas.</p>
-        </div>
-        
-        {/* Reproductor Lo-Fi y Sintetizador */}
-        <div className="lofi-player flex items-center gap-3">
-          <div className="flex flex-col">
-            <span className="track-title text-xs font-semibold">
-              {useSynthAudio ? '🎵 Acordes Ambientales Sintéticos (432Hz)' : `🎵 Pista Lo-Fi`}
+          <div className="flex items-center gap-2">
+            <span className="text-xl">🧘</span>
+            <h2 className="text-lg font-bold text-white tracking-wide">Santuario de Código Zen</h2>
+            <span className="text-[10px] font-mono px-2 py-0.5 rounded bg-emerald-500/20 text-emerald-300 border border-emerald-500/30 font-bold">
+              SIN ESTRÉS · LO-FI CHILL
             </span>
-            <span className="text-[10px] text-slate-400">Audio generativo Web Audio API (Offline)</span>
+          </div>
+          <p className="panel-desc text-xs text-slate-400 mt-1">
+            Resuelve micro-acertijos funcionales e inmutables para calmar la mente. Sin clasificaciones punitivas ni presión de tiempo.
+          </p>
+        </div>
+        <div className="flex items-center gap-2">
+          <span className="text-xs font-mono text-emerald-400 bg-emerald-950/60 border border-emerald-500/30 px-2.5 py-1 rounded-lg">
+            🍃 Modo Concentración Profunda
+          </span>
+        </div>
+      </div>
+
+      {/* Cubierta de Enfoque y Audio Zen */}
+      <div className="zen-decks-grid mb-4">
+        {/* Módulo de Audio Armónico 432Hz */}
+        <div className="zen-audio-deck p-3.5 rounded-xl border border-indigo-500/30 bg-gradient-to-br from-indigo-950/40 via-slate-900/90 to-slate-950 shadow-md">
+          <div className="flex items-center justify-between mb-2">
+            <div className="flex items-center gap-2">
+              <span className="w-2.5 h-2.5 rounded-full bg-indigo-400 animate-pulse"></span>
+              <span className="text-xs font-mono font-bold text-indigo-200">
+                {useSynthAudio ? '🎹 SINTETIZADOR ARMÓNICO 432Hz' : '📻 AMBIENTE LO-FI CHILL'}
+              </span>
+            </div>
+            <span className="text-[10px] font-mono text-indigo-400 bg-indigo-950/80 px-2 py-0.5 rounded border border-indigo-500/20">
+              Web Audio API Offline
+            </span>
+          </div>
+          
+          <div className="flex items-center justify-between gap-3 mt-3">
+            <div className="flex items-center gap-2">
+              <button
+                type="button"
+                className={`h-9 px-4 rounded-lg font-mono text-xs font-bold transition-all flex items-center gap-1.5 cursor-pointer shadow-sm ${
+                  isPlaying 
+                    ? 'bg-amber-500/20 text-amber-300 border border-amber-500/40 hover:bg-amber-500/30' 
+                    : 'bg-indigo-600 hover:bg-indigo-500 text-white border border-indigo-400 shadow-indigo-500/30'
+                }`}
+                onClick={togglePlay}
+              >
+                <span>{isPlaying ? '⏸️' : '▶️'}</span>
+                <span>{isPlaying ? 'PAUSAR' : 'SONAR 432HZ'}</span>
+              </button>
+              <button
+                type="button"
+                className="h-9 px-3 rounded-lg font-mono text-xs text-slate-300 bg-slate-800/80 hover:bg-slate-700 border border-slate-700 transition cursor-pointer"
+                onClick={() => {
+                  if (isPlaying) togglePlay();
+                  setUseSynthAudio(!useSynthAudio);
+                }}
+                title="Alternar entre sintetizador 432Hz y señal lo-fi"
+              >
+                {useSynthAudio ? '📻 Modo Stream' : '🎹 Modo 432Hz'}
+              </button>
+            </div>
+
+            {/* Visualizador de onda armónica */}
+            <div className="audio-visualizer-pro flex items-end gap-1.5 h-8 px-3 py-1 bg-slate-950/90 rounded-lg border border-indigo-500/30" title={isPlaying ? "Frecuencias armónicas activas" : "Audio pausado"}>
+              {audioBars.map((h, i) => (
+                <div
+                  key={i}
+                  className="w-1.5 bg-gradient-to-t from-indigo-500 to-cyan-400 rounded-sm transition-all duration-100"
+                  style={{ height: isPlaying ? `${Math.max(6, h * 1.2)}px` : '4px', opacity: isPlaying ? 1 : 0.25 }}
+                />
+              ))}
+            </div>
+          </div>
+        </div>
+
+        {/* Módulo de Pomodoro Zen */}
+        <div className="zen-pomo-deck p-3.5 rounded-xl border border-emerald-500/30 bg-gradient-to-br from-emerald-950/40 via-slate-900/90 to-slate-950 shadow-md">
+          <div className="flex items-center justify-between mb-2">
+            <div className="flex items-center gap-2">
+              <span className="w-2.5 h-2.5 rounded-full bg-emerald-400 animate-pulse"></span>
+              <span className="text-xs font-mono font-bold text-emerald-200">TEMPORIZADOR DE ENFOQUE PROFUNDO</span>
+            </div>
+            <div className="flex items-center gap-1 text-[10px] font-mono">
+              <button 
+                type="button" 
+                className="px-2 py-0.5 rounded bg-slate-800 text-slate-300 hover:bg-slate-700 border border-slate-700 cursor-pointer" 
+                onClick={() => { setPomoMinutes(15); setPomoSeconds(0); setPomoRunning(false); }}
+              >
+                15m
+              </button>
+              <button 
+                type="button" 
+                className="px-2 py-0.5 rounded bg-slate-800 text-slate-300 hover:bg-slate-700 border border-slate-700 cursor-pointer" 
+                onClick={() => { setPomoMinutes(25); setPomoSeconds(0); setPomoRunning(false); }}
+              >
+                25m
+              </button>
+              <button 
+                type="button" 
+                className="px-2 py-0.5 rounded bg-slate-800 text-slate-300 hover:bg-slate-700 border border-slate-700 cursor-pointer" 
+                onClick={() => { setPomoMinutes(45); setPomoSeconds(0); setPomoRunning(false); }}
+              >
+                45m
+              </button>
+            </div>
           </div>
 
-          <div className="player-controls flex items-center gap-2">
-            <button className="btn-glow btn-sm" onClick={togglePlay}>
-              {isPlaying ? '❚❚ Pausar' : '▶ Sonar'}
-            </button>
-            <button 
-              className="btn-glow btn-sm" 
-              onClick={() => {
-                if (isPlaying) togglePlay();
-                setUseSynthAudio(!useSynthAudio);
-              }}
-              title="Alternar sintetizador"
+          <div className="flex items-center justify-between gap-3 mt-3">
+            <div className="flex items-baseline gap-2">
+              <span className="text-2xl font-mono font-black text-emerald-400 tracking-wider">
+                {String(pomoMinutes).padStart(2, '0')}:{String(pomoSeconds).padStart(2, '0')}
+              </span>
+              <span className="text-[11px] font-mono text-slate-400">
+                {pomoRunning ? '● Sesión activa' : '○ Pausado'}
+              </span>
+            </div>
+
+            <div className="flex items-center gap-2">
+              <button
+                type="button"
+                className={`h-9 px-4 rounded-lg font-mono text-xs font-bold transition-all flex items-center gap-1.5 cursor-pointer shadow-sm ${
+                  pomoRunning 
+                    ? 'bg-amber-500/20 text-amber-300 border border-amber-500/40 hover:bg-amber-500/30' 
+                    : 'bg-emerald-600 hover:bg-emerald-500 text-white border border-emerald-400 shadow-emerald-500/30'
+                }`}
+                onClick={() => setPomoRunning(!pomoRunning)}
+              >
+                <span>{pomoRunning ? '⏸️' : '▶️'}</span>
+                <span>{pomoRunning ? 'PAUSAR' : 'INICIAR ENFOQUE'}</span>
+              </button>
+              <button
+                type="button"
+                className="h-9 px-3 rounded-lg font-mono text-xs text-slate-300 bg-slate-800/80 hover:bg-slate-700 border border-slate-700 transition cursor-pointer"
+                onClick={() => {
+                  setPomoRunning(false);
+                  setPomoMinutes(25);
+                  setPomoSeconds(0);
+                }}
+                title="Reiniciar a 25 minutos"
+              >
+                🔄 REINICIAR
+              </button>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      {/* Espacio de Trabajo Zen: 2 Columnas */}
+      <div className="zen-sanctuary-layout">
+        {/* Columna Izquierda: Editor de Código Zen */}
+        <div className="zen-editor-col">
+          {/* Tarjeta del Acertijo */}
+          <div className="zen-puzzle-card p-4 rounded-xl border border-slate-800 bg-slate-950/90 shadow-lg">
+            <div className="flex items-center justify-between gap-2 mb-2 pb-2 border-b border-slate-800/80">
+              <div className="flex items-center gap-2">
+                <span className="text-base">🪷</span>
+                <h3 className="text-sm text-white font-bold tracking-wide">{acertijo.titulo}</h3>
+              </div>
+              <span className="text-xs text-cyan-300 font-mono font-semibold px-2.5 py-0.5 rounded-full bg-cyan-950/70 border border-cyan-500/30">
+                {acertijo.tecnologia || estudiante?.tecnologia_actual || 'General'}
+              </span>
+            </div>
+            <p className="desc text-slate-300 text-xs leading-relaxed font-mono">
+              {acertijo.descripcion}
+            </p>
+          </div>
+
+          {/* Editor Zen */}
+          <div className="zen-editor-frame rounded-xl border border-emerald-500/30 bg-slate-950 overflow-hidden shadow-lg">
+            <div className="flex items-center justify-between px-3.5 py-2 bg-slate-900/90 border-b border-slate-800">
+              <div className="flex items-center gap-2">
+                <span className="w-2.5 h-2.5 rounded-full bg-emerald-400"></span>
+                <span className="font-mono text-xs text-slate-300 font-semibold">zen_harmony.js</span>
+              </div>
+              <button
+                type="button"
+                className="text-[11px] font-mono text-slate-400 hover:text-white flex items-center gap-1 px-2 py-0.5 rounded bg-slate-800/50 hover:bg-slate-800 transition cursor-pointer"
+                onClick={() => setCodigoZen(acertijo.codigo_inicial)}
+              >
+                ↺ Restaurar
+              </button>
+            </div>
+            <textarea
+              className="code-textarea zen-textarea w-full font-mono text-xs p-4 leading-6 outline-none bg-transparent resize-none text-emerald-300 min-h-[200px]"
+              value={codigoZen}
+              onChange={(e) => setCodigoZen(e.target.value)}
+              rows={9}
+              spellCheck={false}
+            />
+          </div>
+
+          {/* Barra de Acciones del Editor */}
+          <div className="zen-actions-bar flex items-center gap-3">
+            <button
+              type="button"
+              className="flex-1 h-11 px-4 rounded-xl font-mono text-xs font-bold text-white bg-gradient-to-r from-emerald-600 via-teal-500 to-emerald-500 hover:from-emerald-500 hover:to-teal-400 border border-emerald-400/50 shadow-md shadow-emerald-500/20 transition-all flex items-center justify-center gap-2 cursor-pointer disabled:opacity-50"
+              onClick={resolverAcertijo}
+              disabled={loading}
             >
-              {useSynthAudio ? '🎹 432Hz' : '📻 Stream'}
+              <span>{loading ? '⏳' : '✨'}</span>
+              <span>{loading ? 'VALIDANDO ARMONÍA...' : 'VALIDAR CÓDIGO ZEN'}</span>
+            </button>
+            <button
+              type="button"
+              className="h-11 px-5 rounded-xl font-mono text-xs font-bold text-slate-200 bg-slate-900 hover:bg-slate-800 border border-slate-700 transition flex items-center gap-2 cursor-pointer disabled:opacity-50"
+              onClick={pedirAcertijo}
+              disabled={loading}
+            >
+              <span>🪷</span>
+              <span>OTRO ACERTIJO</span>
             </button>
           </div>
 
-          <div className="audio-visualizer flex items-end gap-1 h-6 w-16 px-2 py-1 bg-slate-950/80 rounded border border-indigo-500/20" title={isPlaying ? "Audio reproduciéndose" : "Audio en pausa"}>
-            {audioBars.map((h, i) => (
-              <div 
-                key={i} 
-                className="bar w-1.5 bg-indigo-400 rounded-sm transition-all duration-75"
-                style={{ height: isPlaying ? `${h}px` : '4px', opacity: isPlaying ? 1 : 0.35 }}
-              />
-            ))}
+          {/* Resultado de la Evaluación Zen */}
+          {evalResult && (
+            <div className={`eval-result-card ${evalResult.correcto ? 'success' : 'fail'} p-3.5 rounded-xl border animate-scale-in`}>
+              <div className="flex items-center gap-2 mb-1">
+                <span className="text-base">{evalResult.correcto ? '✨' : '⚠️'}</span>
+                <h4 className="font-bold text-xs">{evalResult.correcto ? 'Armonía Lógica Alcanzada' : 'Desbalance de Lógica'}</h4>
+              </div>
+              <p className="retro text-xs leading-relaxed">{evalResult.explicacion}</p>
+            </div>
+          )}
+        </div>
+
+        {/* Columna Derecha: Principios & Aforismos Zen */}
+        <div className="zen-sidebar-col">
+          {/* Card de Principios Funcionales */}
+          <div className="zen-principles-card p-4 rounded-xl border border-slate-800 bg-slate-900/70 shadow-lg">
+            <div className="flex items-center gap-2 mb-3 pb-2 border-b border-slate-800">
+              <span className="text-sm">📜</span>
+              <h4 className="text-xs font-mono font-bold text-slate-200 uppercase tracking-wider">
+                TRÍADA DEL CÓDIGO ZEN
+              </h4>
+            </div>
+            
+            <div className="space-y-2.5">
+              <div className="p-2.5 rounded-lg bg-slate-950/70 border border-slate-800/80">
+                <span className="text-xs font-mono font-bold text-emerald-400 block mb-0.5">
+                  1. Inmutabilidad Absoluta
+                </span>
+                <p className="text-[11px] text-slate-400 leading-relaxed font-mono">
+                  Evita mutar argumentos o variables externas. Retorna nuevos estados con operadores spread (<code className="text-slate-300">[...arr]</code>).
+                </p>
+              </div>
+
+              <div className="p-2.5 rounded-lg bg-slate-950/70 border border-slate-800/80">
+                <span className="text-xs font-mono font-bold text-cyan-400 block mb-0.5">
+                  2. Funciones Puras
+                </span>
+                <p className="text-[11px] text-slate-400 leading-relaxed font-mono">
+                  A idénticos parámetros, idéntico retorno. Cero efectos colaterales en el entorno global.
+                </p>
+              </div>
+
+              <div className="p-2.5 rounded-lg bg-slate-950/70 border border-slate-800/80">
+                <span className="text-xs font-mono font-bold text-indigo-400 block mb-0.5">
+                  3. Consumo Sereno de Memoria
+                </span>
+                <p className="text-[11px] text-slate-400 leading-relaxed font-mono">
+                  Usa generadores perezosos (<code className="text-slate-300">yield</code>) e índices de base de datos para no saturar la memoria RAM.
+                </p>
+              </div>
+            </div>
+          </div>
+
+          {/* Resonancia de la Sesión */}
+          <div className="zen-stats-card p-3.5 rounded-xl border border-slate-800 bg-slate-950/80">
+            <div className="flex justify-between items-center text-xs font-mono text-slate-400 mb-2">
+              <span>ESTADO DE RESONANCIA:</span>
+              <span className="text-emerald-400 font-bold">ONDAS ALFA (432Hz)</span>
+            </div>
+            <div className="grid grid-cols-2 gap-2 text-center font-mono">
+              <div className="p-2 rounded-lg bg-slate-900 border border-slate-800">
+                <span className="text-[10px] text-slate-500 block">ENFOQUE</span>
+                <span className="text-sm font-bold text-white">{25 - pomoMinutes} min</span>
+              </div>
+              <div className="p-2 rounded-lg bg-slate-900 border border-slate-800">
+                <span className="text-[10px] text-slate-500 block">RECOMPENSA</span>
+                <span className="text-sm font-bold text-emerald-400">+10 RP</span>
+              </div>
+            </div>
+          </div>
+
+          {/* Aforismo Zen */}
+          <div className="zen-quote-card p-3.5 rounded-xl border border-indigo-500/20 bg-gradient-to-br from-indigo-950/30 to-slate-950 text-slate-300">
+            <span className="text-xs font-mono text-indigo-400 block mb-1">“AFORISMO DE LA CALMA”</span>
+            <p className="text-xs italic leading-relaxed text-slate-300 font-sans">
+              "El código más limpio no es el que más líneas añade, sino el que con serena sencillez disuelve el problema sin perturbar el universo."
+            </p>
+            <span className="text-[10px] font-mono text-slate-500 block text-right mt-1.5">— Principios Pragma AI</span>
           </div>
         </div>
-      </div>
-
-      {/* Barra de Enfoque Pomodoro */}
-      <div className="zen-pomodoro-bar flex items-center justify-between p-3 rounded-lg bg-emerald-950/20 border border-emerald-500/20 my-3 flex-wrap gap-2">
-        <div className="flex items-center gap-2">
-          <span className="text-emerald-400">⏳</span>
-          <span className="text-xs font-medium text-slate-300">Temporizador de Enfoque Profundo:</span>
-          <span className="font-mono text-base text-emerald-400 font-bold ml-2">
-            {String(pomoMinutes).padStart(2, '0')}:{String(pomoSeconds).padStart(2, '0')}
-          </span>
-        </div>
-        <div className="flex items-center gap-2">
-          <button
-            type="button"
-            className={`px-3 py-1.5 text-xs font-mono font-medium rounded-lg border transition ${pomoRunning ? 'bg-amber-500/20 text-amber-300 border-amber-500/40 hover:bg-amber-500/30' : 'bg-emerald-500/20 text-emerald-300 border-emerald-500/40 hover:bg-emerald-500/30'}`}
-            onClick={() => setPomoRunning(!pomoRunning)}
-          >
-            {pomoRunning ? '⏸️ Pausar' : '▶️ Iniciar 25 min'}
-          </button>
-          <button
-            type="button"
-            className="px-3 py-1.5 text-xs font-mono font-medium rounded-lg border border-slate-700 bg-slate-800/80 text-slate-300 hover:bg-slate-700 hover:text-white transition"
-            onClick={() => {
-              setPomoRunning(false);
-              setPomoMinutes(25);
-              setPomoSeconds(0);
-            }}
-          >
-            🔄 Reiniciar
-          </button>
-        </div>
-      </div>
-
-      <div className="zen-workspace">
-        <div className="flex justify-between items-center mb-1">
-          <h3 className="text-sm text-white font-semibold">{acertijo.titulo}</h3>
-          <span className="text-[11px] text-indigo-400 font-mono px-2 py-0.5 rounded bg-indigo-950/40 border border-indigo-500/20">
-            {acertijo.tecnologia || estudiante?.tecnologia_actual || 'General'}
-          </span>
-        </div>
-        <p className="desc text-slate-300 text-xs mb-2">{acertijo.descripcion}</p>
-
-        <textarea
-          className="code-textarea zen-textarea"
-          value={codigoZen}
-          onChange={(e) => setCodigoZen(e.target.value)}
-          rows={8}
-          spellCheck={false}
-        />
-
-        <div className="zen-actions flex gap-2 mt-3">
-          <button className="btn-action" onClick={resolverAcertijo} disabled={loading}>
-            {loading ? 'Validando...' : 'Validar Código Zen'}
-          </button>
-          <button className="btn-glow" onClick={pedirAcertijo} disabled={loading}>
-            Otro Acertijo
-          </button>
-        </div>
-
-        {evalResult && (
-          <div className={`eval-result-card ${evalResult.correcto ? 'success' : 'fail'} mt-3`}>
-            <h4>{evalResult.correcto ? '✨ Acertijo Armonizado' : '❌ Desbalance de Lógica'}</h4>
-            <p className="retro text-xs">{evalResult.explicacion}</p>
-          </div>
-        )}
       </div>
     </div>
   );
@@ -3185,141 +3494,234 @@ function TabernaView({ estudiante, backendUrl, onUpdate }) {
 
   return (
     <div className="taberna-panel glass-panel">
-      <div className="flex items-center justify-between flex-wrap gap-2 mb-2">
+      {/* Header Táctico Taberna */}
+      <div className="flex items-center justify-between flex-wrap gap-3 mb-4 pb-3 border-b border-slate-800/80">
         <div>
-          <h2>🍺 La Taberna del Código (Optimización Extrema)</h2>
-          <p className="panel-desc">Refactoriza algoritmos de alto costo. Groq auditará tu solución en tiempo real exigiendo Big-O O(N) o mejor y RAM &lt; 12MB.</p>
+          <div className="flex items-center gap-2">
+            <span className="text-xl">🍺</span>
+            <h2 className="text-lg font-bold text-white tracking-wide">La Taberna del Código: Laboratorio de Optimización Extrema</h2>
+            <span className="text-[10px] font-mono px-2 py-0.5 rounded bg-amber-500/20 text-amber-300 border border-amber-500/30 font-bold">
+              PROFILER LPU
+            </span>
+          </div>
+          <p className="panel-desc text-xs text-slate-400 mt-1">
+            Refactoriza cuellos de botella algorítmicos. Nuestro profiler en tiempo real audita tu solución exigiendo orden Big-O O(N) o mejor y un consumo de RAM &lt; 12 MB.
+          </p>
         </div>
-        <span className="text-xs font-mono text-indigo-400 bg-indigo-950/40 border border-indigo-500/30 px-2.5 py-1 rounded">
-          Límite RAM: 12MB
-        </span>
+        <div className="flex items-center gap-2">
+          <span className="text-xs font-mono font-bold text-amber-400 bg-amber-950/60 border border-amber-500/40 px-3 py-1 rounded-lg flex items-center gap-1.5 shadow-sm">
+            <span>⚡</span>
+            <span>UMBRAL DE RAM: 12.0 MB</span>
+          </span>
+        </div>
       </div>
 
-      {/* Catálogo de Snippets */}
-      <div className="taberna-snippets-grid grid grid-cols-2 sm:grid-cols-3 md:grid-cols-6 gap-2 mb-4">
-        {CATALOGO_SNIPPETS.map(s => {
-          const badgeTec = s.tecnologia === 'JavaScript' ? 'JS' : s.tecnologia === 'Python' ? 'Py' : s.tecnologia === 'SQL' ? 'SQL' : s.tecnologia;
-          const badgeColor = s.tecnologia === 'JavaScript' ? 'bg-amber-500/20 text-amber-300 border-amber-500/30' : s.tecnologia === 'Python' ? 'bg-sky-500/20 text-sky-300 border-sky-500/30' : s.tecnologia === 'SQL' ? 'bg-emerald-500/20 text-emerald-300 border-emerald-500/30' : 'bg-purple-500/20 text-purple-300 border-purple-500/30';
-          const isActive = snippetActivo.id === s.id;
+      {/* Catálogo de Benchmarks Algorítmicos */}
+      <div className="taberna-benchmarks-catalog mb-4">
+        <div className="flex justify-between items-center mb-2">
+          <span className="text-xs font-mono font-bold text-slate-300 flex items-center gap-1.5">
+            <span>⚙️</span>
+            <span>SUITE DE BENCHMARKS DISPONIBLES ({CATALOGO_SNIPPETS.length}):</span>
+          </span>
+          <span className="text-[11px] font-mono text-slate-500">Selecciona un caso para profilar</span>
+        </div>
 
-          return (
-            <button
-              key={s.id}
-              type="button"
-              onClick={() => seleccionarSnippet(s)}
-              className={`p-2.5 rounded-xl border text-left transition ${isActive ? 'border-indigo-500 bg-indigo-500/15 shadow-md shadow-indigo-500/10' : 'border-slate-800 bg-slate-900/60 hover:border-slate-700 hover:bg-slate-900/90'}`}
-            >
-              <span className={`text-[10px] font-mono px-1.5 py-0.5 rounded font-bold border ${badgeColor}`}>
-                {badgeTec}
-              </span>
-              <h4 className="text-xs font-semibold text-white mt-1.5 truncate" title={s.titulo}>{s.titulo}</h4>
-              <span className="text-[10px] font-mono text-slate-400 block mt-0.5 truncate">{s.meta}</span>
-            </button>
-          );
-        })}
+        <div className="taberna-benchmarks-grid">
+          {CATALOGO_SNIPPETS.map(s => {
+            const isActive = snippetActivo.id === s.id;
+            const badgeTec = s.tecnologia === 'JavaScript' ? 'JavaScript' : s.tecnologia === 'Python' ? 'Python' : 'SQL';
+            const badgeColor = s.tecnologia === 'JavaScript' 
+              ? 'bg-amber-500/15 text-amber-300 border-amber-500/30' 
+              : s.tecnologia === 'Python' 
+              ? 'bg-sky-500/15 text-sky-300 border-sky-500/30' 
+              : 'bg-emerald-500/15 text-emerald-300 border-emerald-500/30';
+
+            return (
+              <button
+                key={s.id}
+                type="button"
+                onClick={() => seleccionarSnippet(s)}
+                className={`taberna-benchmark-btn ${isActive ? 'active' : ''}`}
+              >
+                <div className="flex justify-between items-center gap-1 mb-1.5">
+                  <span className={`text-[10.5px] font-mono px-2 py-0.5 rounded-full font-bold border ${badgeColor}`}>
+                    {badgeTec}
+                  </span>
+                  <span className="text-[10.5px] font-mono text-cyan-400 font-semibold bg-cyan-950/50 px-2 py-0.5 rounded border border-cyan-500/30">
+                    {s.meta}
+                  </span>
+                </div>
+                <h4 className="text-xs font-semibold text-slate-200 line-clamp-1 mt-1" title={s.titulo}>
+                  {s.titulo}
+                </h4>
+                <div className="flex items-center justify-between text-[10.5px] font-mono text-slate-500 mt-2 pt-1.5 border-t border-slate-800/60">
+                  <span>ID: {s.id}</span>
+                  <span className={isActive ? 'text-indigo-400 font-bold' : 'text-slate-500'}>
+                    {isActive ? '● ACTIVO' : 'Seleccionar'}
+                  </span>
+                </div>
+              </button>
+            );
+          })}
+        </div>
       </div>
 
       <div className="taberna-grid">
-        <div className="workspace-opt">
-          <div className="flex justify-between items-center mb-1">
-            <span className="text-xs font-mono text-slate-400">Meta: <strong className="text-white">{snippetActivo.meta}</strong></span>
-            <button 
-              className="text-xs text-slate-400 hover:text-white"
-              onClick={() => setCodigoOpt(snippetActivo.codigo)}
-            >
-              Restablecer
-            </button>
+        <div className="workspace-opt flex flex-col gap-3">
+          <div className="rounded-xl border border-slate-800 bg-slate-950 overflow-hidden shadow-lg">
+            <div className="flex items-center justify-between px-3.5 py-2 bg-slate-900/90 border-b border-slate-800">
+              <div className="flex items-center gap-2">
+                <span className="w-2.5 h-2.5 rounded-full bg-amber-400"></span>
+                <span className="font-mono text-xs text-slate-300 font-semibold">
+                  benchmark_{snippetActivo.id}.{snippetActivo.tecnologia === 'Python' ? 'py' : snippetActivo.tecnologia === 'SQL' ? 'sql' : 'js'}
+                </span>
+                <span className="text-[10.5px] font-mono text-slate-500">
+                  Target: <strong className="text-indigo-300">{snippetActivo.meta}</strong>
+                </span>
+              </div>
+              <button 
+                type="button"
+                className="text-[11px] font-mono text-slate-400 hover:text-white flex items-center gap-1 px-2 py-0.5 rounded bg-slate-800/50 hover:bg-slate-800 transition cursor-pointer"
+                onClick={() => setCodigoOpt(snippetActivo.codigo)}
+              >
+                ↺ Restablecer
+              </button>
+            </div>
+            <textarea
+              className="code-textarea opt-textarea font-mono text-xs w-full min-h-[260px] bg-slate-950 text-emerald-400 p-3.5 outline-none resize-none leading-relaxed"
+              value={codigoOpt}
+              onChange={(e) => setCodigoOpt(e.target.value)}
+              spellCheck={false}
+              rows={12}
+            />
           </div>
-          <textarea
-            className="code-textarea opt-textarea font-mono text-xs w-full h-[240px] bg-slate-900 border border-slate-800 text-emerald-400 p-3 rounded"
-            value={codigoOpt}
-            onChange={(e) => setCodigoOpt(e.target.value)}
-            spellCheck={false}
-          />
-          <button className="btn-action mt-3" onClick={testOptimizar} disabled={loading}>
-            {loading ? 'Compilando y Ejecutando Profiler...' : 'Refactorizar y Ejecutar'}
+
+          <button
+            type="button"
+            className="taberna-btn-submit"
+            onClick={testOptimizar}
+            disabled={loading}
+          >
+            <span>{loading ? '⏳' : '⚡'}</span>
+            <span>{loading ? 'COMPILANDO Y EJECUTANDO PROFILER...' : 'COMPILAR, PROFILAR Y AUDITAR CON GROQ'}</span>
           </button>
         </div>
 
-        <div className="profiler-side">
-          <h4 className="text-xs text-slate-300 font-mono mb-2">Gráficas de Rendimiento en Tiempo Real:</h4>
-          
-          <div className="metrics-box p-4 bg-slate-950/80 border border-slate-800 rounded-lg flex flex-col gap-4">
-            {/* Medidor de RAM con límite de 12MB */}
-            <div className="metric flex flex-col gap-1.5">
-              <div className="flex justify-between text-xs font-mono">
-                <span className="text-slate-400">RAM Consumida:</span>
-                <span className={`font-bold ${ramActual < 12 ? 'text-emerald-400' : 'text-rose-400'}`}>
-                  {ramActual} MB {ramActual < 12 ? '(Óptimo)' : '(Excede Límite 12MB)'}
-                </span>
+        <div className="profiler-side flex flex-col gap-3">
+          <div className="metrics-box-pro p-4 bg-slate-950/90 border border-slate-800 rounded-xl shadow-lg flex flex-col gap-4">
+            <div className="flex items-center justify-between pb-2 border-b border-slate-800">
+              <div className="flex items-center gap-2">
+                <span className="w-2.5 h-2.5 rounded-full bg-cyan-400 animate-pulse"></span>
+                <h4 className="text-xs text-slate-200 font-mono font-bold uppercase tracking-wider">
+                  TELEMETRÍA DE RENDIMIENTO
+                </h4>
               </div>
-              <div className="relative w-full h-3 bg-slate-900 rounded-full overflow-hidden border border-slate-800">
+              <span className="text-[10.5px] font-mono text-slate-400 bg-slate-900 px-2 py-0.5 rounded border border-slate-800">
+                PROFILER EN VIVO
+              </span>
+            </div>
+
+            {/* Medidor de RAM con límite de 12MB completamente desacoplado */}
+            <div className="ram-gauge-card">
+              <div className="flex justify-between items-baseline mb-2">
+                <span className="text-xs font-mono text-slate-400">Consumo de Memoria Heap:</span>
+                <div className="flex items-baseline gap-1.5 font-mono">
+                  <span className={`text-base font-black ${ramActual < 12 ? 'text-emerald-400' : 'text-rose-400'}`}>
+                    {ramActual} MB
+                  </span>
+                  <span className={`text-[11px] font-bold ${ramActual < 12 ? 'text-emerald-400' : 'text-rose-400'}`}>
+                    {ramActual < 12 ? '(Óptimo)' : '(Exceso Crítico)'}
+                  </span>
+                </div>
+              </div>
+
+              {/* Barra de progreso de RAM con marcadores */}
+              <div className="ram-progress-track">
                 <div 
-                  className={`h-full transition-all duration-300 ${ramActual < 12 ? 'bg-emerald-500' : 'bg-rose-500'}`}
+                  className={`ram-progress-fill ${ramActual < 12 ? 'ram-fill-optimal' : 'ram-fill-exceeded'}`}
                   style={{ width: `${ramPorcentaje}%` }}
                 />
                 {/* Marcador límite 12MB (60% de 20MB) */}
                 <div 
-                  className="absolute top-0 bottom-0 w-0.5 bg-amber-400 shadow-[0_0_4px_#fbbf24]"
+                  className="ram-limit-marker"
                   style={{ left: '60%' }}
                   title="Límite máximo permitido: 12MB"
                 />
               </div>
-              <div className="relative w-full h-4 text-[10px] text-slate-500 font-mono mt-1">
-                <span className="absolute left-0 top-0">0 MB</span>
-                <span className="absolute top-0 text-amber-400 font-semibold" style={{ left: '60%', transform: 'translateX(-50%)' }}>▲ Límite 12 MB</span>
-                <span className="absolute right-0 top-0">20 MB</span>
+
+              {/* Eje de marcas calibradas con separación generosa */}
+              <div className="ram-axis-markers">
+                <span>0 MB</span>
+                <span className="ram-limit-tag">
+                  ▲ Límite Máximo: 12 MB
+                </span>
+                <span>20 MB Max</span>
               </div>
             </div>
 
             {/* Curvas Big-O SVG Interactivas */}
-            <div className="big-o-curves flex flex-col gap-1">
-              <div className="flex justify-between items-center text-xs font-mono">
-                <span className="text-slate-400">Curvas de Complejidad Big-O:</span>
-                <span className={`font-bold px-2 py-0.5 rounded ${complejidadActual.includes('O(1)') || (complejidadActual.includes('O(N)') && !complejidadActual.includes('O(N^2)')) ? 'bg-emerald-500/10 text-emerald-400 border border-emerald-500/30' : 'bg-rose-500/10 text-rose-400 border border-rose-500/30'}`}>
+            <div className="big-o-curves-card p-3 rounded-lg bg-slate-900/80 border border-slate-800/90">
+              <div className="flex justify-between items-center text-xs font-mono mb-2">
+                <span className="text-slate-300 font-semibold">Complejidad Teórica Big-O:</span>
+                <span className={`font-mono font-bold text-xs px-2.5 py-0.5 rounded border ${
+                  complejidadActual.includes('O(1)') || (complejidadActual.includes('O(N)') && !complejidadActual.includes('O(N^2)')) 
+                    ? 'bg-emerald-500/15 text-emerald-400 border-emerald-500/40 shadow-[0_0_8px_rgba(16,185,129,0.2)]' 
+                    : 'bg-rose-500/15 text-rose-400 border-rose-500/40 shadow-[0_0_8px_rgba(244,63,94,0.2)]'
+                }`}>
                   {complejidadActual}
                 </span>
               </div>
-              <div className="p-2 bg-slate-900/90 rounded border border-slate-800">
-                <svg viewBox="0 0 240 90" className="w-full h-24">
+
+              <div className="p-2.5 bg-slate-950 rounded-lg border border-slate-800/80">
+                <svg viewBox="0 0 240 85" className="w-full h-24">
+                  {/* Grid de Fondo */}
+                  <line x1="20" y1="20" x2="220" y2="20" stroke="#1e293b" strokeDasharray="2,2" strokeWidth="0.8" />
+                  <line x1="20" y1="45" x2="220" y2="45" stroke="#1e293b" strokeDasharray="2,2" strokeWidth="0.8" />
+                  
                   {/* Ejes */}
-                  <line x1="20" y1="8" x2="20" y2="76" stroke="#334155" strokeWidth="1.5" />
-                  <line x1="20" y1="76" x2="230" y2="76" stroke="#334155" strokeWidth="1.5" />
+                  <line x1="20" y1="5" x2="20" y2="75" stroke="#475569" strokeWidth="1.5" />
+                  <line x1="20" y1="75" x2="225" y2="75" stroke="#475569" strokeWidth="1.5" />
                   
                   {/* Curva O(1) - Verde */}
                   <line 
-                    x1="20" y1="68" x2="195" y2="68" 
+                    x1="20" y1="66" x2="195" y2="66" 
                     stroke={complejidadActual.includes('O(1)') ? '#10b981' : '#334155'} 
-                    strokeWidth={complejidadActual.includes('O(1)') ? 3 : 1}
+                    strokeWidth={complejidadActual.includes('O(1)') ? 3 : 1.2}
                     strokeDasharray={complejidadActual.includes('O(1)') ? 'none' : '3,3'} 
                   />
-                  <text x="200" y="71" fill="#10b981" fontSize="9" fontFamily="monospace" fontWeight="bold">O(1)</text>
+                  <text x="200" y="69" fill="#10b981" fontSize="9.5" fontFamily="monospace" fontWeight="bold">O(1)</text>
 
                   {/* Curva O(N) - Azul */}
                   <line 
-                    x1="20" y1="72" x2="190" y2="28" 
-                    stroke={complejidadActual.includes('O(N)') && !complejidadActual.includes('O(N^2)') ? '#818cf8' : '#334155'} 
-                    strokeWidth={complejidadActual.includes('O(N)') && !complejidadActual.includes('O(N^2)') ? 3 : 1} 
+                    x1="20" y1="72" x2="190" y2="26" 
+                    stroke={complejidadActual.includes('O(N)') && !complejidadActual.includes('O(N^2)') ? '#38bdf8' : '#334155'} 
+                    strokeWidth={complejidadActual.includes('O(N)') && !complejidadActual.includes('O(N^2)') ? 3 : 1.2} 
                   />
-                  <text x="195" y="27" fill="#818cf8" fontSize="9" fontFamily="monospace" fontWeight="bold">O(N)</text>
+                  <text x="195" y="25" fill="#38bdf8" fontSize="9.5" fontFamily="monospace" fontWeight="bold">O(N)</text>
 
                   {/* Curva O(N^2) - Rojo */}
                   <path 
-                    d="M 20 74 Q 110 70 145 12" 
+                    d="M 20 74 Q 100 70 145 10" 
                     fill="none" 
                     stroke={complejidadActual.includes('O(N^2)') ? '#f43f5e' : '#334155'} 
-                    strokeWidth={complejidadActual.includes('O(N^2)') ? 3 : 1} 
+                    strokeWidth={complejidadActual.includes('O(N^2)') ? 3 : 1.2} 
                   />
-                  <text x="150" y="15" fill="#f43f5e" fontSize="9" fontFamily="monospace" fontWeight="bold">O(N²)</text>
+                  <text x="150" y="14" fill="#f43f5e" fontSize="9.5" fontFamily="monospace" fontWeight="bold">O(N²)</text>
                 </svg>
               </div>
             </div>
           </div>
 
+          {/* Resultado de la Auditoría */}
           {result && (
-            <div className={`eval-result-card ${result.valido && result.memoria_simulada_mb < 12 ? 'success' : 'fail'} mt-3`}>
-              <h4>{result.valido && result.memoria_simulada_mb < 12 ? '🚀 Algoritmo Aprobado' : '⚠️ Optimización Requerida'}</h4>
-              <p className="retro text-xs text-slate-300">{result.feedback}</p>
+            <div className={`eval-result-card ${result.valido && result.memoria_simulada_mb < 12 ? 'success' : 'fail'} p-3.5 rounded-xl border animate-scale-in`}>
+              <div className="flex items-center gap-2 mb-1">
+                <span className="text-base">{result.valido && result.memoria_simulada_mb < 12 ? '🚀' : '⚠️'}</span>
+                <h4 className="font-bold text-xs">
+                  {result.valido && result.memoria_simulada_mb < 12 ? 'Algoritmo Aprobado para Producción' : 'Optimización Requerida'}
+                </h4>
+              </div>
+              <p className="retro text-xs text-slate-300 leading-relaxed font-mono">{result.feedback}</p>
             </div>
           )}
         </div>
@@ -5070,71 +5472,112 @@ function DefenseView({ estudiante, backendUrl, onUpdate }) {
   return (
     <div className="defense-panel glass-panel spec-defense-layout">
       {!gameStarted ? (
-        <div className="start-screen-spec p-6 text-center max-w-lg mx-auto">
+        <div className="start-screen-spec p-6 max-w-3xl mx-auto flex flex-col items-center text-center">
+          {/* Header del Centro de Mando */}
           <div className="flex items-center justify-center gap-3 mb-2">
-            <h2 className="text-lg text-white font-mono font-bold tracking-wider">SYNTAX DEFENSE: FIREWALL TÁCTICO</h2>
-            <span className="text-[10px] text-indigo-400 bg-indigo-950/60 border border-indigo-500/30 px-2 py-0.5 rounded font-mono font-bold">
-              MODO TÁCTICO
+            <span className="text-2xl">🛡️</span>
+            <h2 className="text-xl text-white font-mono font-black tracking-wider">
+              SYNTAX DEFENSE: FIREWALL TÁCTICO CIBERNÉTICO
+            </h2>
+            <span className="text-[10px] text-indigo-300 bg-indigo-950/80 border border-indigo-500/40 px-2.5 py-0.5 rounded font-mono font-bold">
+              FIREWALL LVL 5
             </span>
           </div>
-          <p className="text-xs text-slate-300 font-mono mb-4 leading-relaxed">
-            Elimina fragmentos corruptos (<span className="text-rose-400 font-bold">CRITICAL</span>) disparando con el láser antes de que colapsen el firewall. Deja pasar el código limpio (<span className="text-indigo-300 font-bold">OK</span>). Supera las 5 oleadas para obtener la victoria.
+          <p className="text-xs text-slate-400 font-mono mb-6 max-w-xl leading-relaxed">
+            Intercepta y desintegra los paquetes de código corruptos (<span className="text-rose-400 font-bold">● CRITICAL BUG</span>) con el láser de fotones antes de que impacten la barrera de contención. Permite el paso seguro del código limpio (<span className="text-cyan-400 font-bold">✓ CÓDIGO OK</span>).
           </p>
 
-          <div className="flex justify-center gap-6 my-4 text-xs font-mono">
-            <div className="p-2.5 rounded bg-slate-900 border border-slate-800">
-              <span className="text-slate-400 block text-[10px]">RÉCORD PERSONAL:</span>
-              <span className="text-amber-400 font-bold">{highScore.toLocaleString()} PTS</span>
+          {/* Matriz de las 5 Oleadas Tácticas */}
+          <div className="defense-waves-grid">
+            {OLEADAS_ESTRUCTURADAS.map(w => (
+              <div key={w.oleada} className="wave-card-spec">
+                <div>
+                  <span className="text-[10px] font-bold text-indigo-400 block mb-1">
+                    FASE 0{w.oleada}
+                  </span>
+                  <h5 className="text-[11px] font-semibold text-slate-200 line-clamp-2 leading-snug">
+                    {w.titulo.replace(`Oleada ${w.oleada}: `, '')}
+                  </h5>
+                </div>
+                <div className="text-[9.5px] text-slate-500 mt-2 pt-1 border-t border-slate-800/60 flex items-center justify-between">
+                  <span>{w.snippets.filter(s => s.corrupt).length} Bugs</span>
+                  <span className="text-emerald-400">Seguro</span>
+                </div>
+              </div>
+            ))}
+          </div>
+
+          {/* Telemetría de Operaciones y Carga */}
+          <div className="defense-telemetry-grid">
+            <div className="p-3 rounded-xl bg-slate-950/90 border border-slate-800 text-center">
+              <span className="text-slate-500 block text-[10px]">RÉCORD HISTÓRICO:</span>
+              <span className="text-amber-400 font-bold text-sm">{highScore.toLocaleString()} PTS</span>
             </div>
-            <div className="p-2.5 rounded bg-slate-900 border border-slate-800">
-              <span className="text-slate-400 block text-[10px]">PERKS ACTIVOS:</span>
-              <span className="text-emerald-400 font-bold">{activePerks.length} Runas</span>
+            <div className="p-3 rounded-xl bg-slate-950/90 border border-slate-800 text-center">
+              <span className="text-slate-500 block text-[10px]">RUNAS EQUIPADAS:</span>
+              <span className="text-emerald-400 font-bold text-sm">{activePerks.length} Perks Activos</span>
+            </div>
+            <div className="p-3 rounded-xl bg-slate-950/90 border border-slate-800 text-center col-span-2 sm:col-span-1">
+              <span className="text-slate-500 block text-[10px]">ESCUDOS TÁCTICOS:</span>
+              <span className="text-cyan-400 font-bold text-sm">{initialLives} Núcleos</span>
             </div>
           </div>
 
-          <button className="btn-action px-6 py-2.5 text-xs font-mono font-bold tracking-wide mt-2" onClick={startGame}>
-            INICIAR DEFENSA TÁCTICA
+          {/* Botón de Lanzamiento de Misión */}
+          <button 
+            type="button" 
+            className="defense-btn-launch"
+            onClick={startGame}
+          >
+            <span>⚡</span>
+            <span>ACTIVAR PROTOCOLO DE DEFENSA CIBERNÉTICA</span>
           </button>
         </div>
       ) : (
-        <div className="arcade-grid-arena relative overflow-hidden rounded-xl border border-slate-800 bg-slate-950">
+        <div className="arcade-grid-arena relative overflow-hidden rounded-2xl border border-slate-800 bg-slate-950 shadow-2xl">
           {/* Header del HUD */}
-          <div className="hud-header-stats p-3 bg-slate-900/90 border-b border-slate-800 flex justify-between items-center text-xs font-mono">
+          <div className="hud-header-stats p-3.5 bg-slate-900/95 border-b border-slate-800 flex justify-between items-center text-xs font-mono">
             <div className="flex items-center gap-4">
               <div>
                 <span className="text-slate-500 text-[10px] block">PUNTAJE</span>
-                <span className="text-indigo-300 font-bold">{score.toLocaleString()}</span>
+                <span className="text-indigo-300 font-bold text-sm">{score.toLocaleString()}</span>
               </div>
-              <div>
+              <div className="hidden sm:block">
                 <span className="text-slate-500 text-[10px] block">RÉCORD</span>
                 <span className="text-amber-400 font-bold">{highScore.toLocaleString()}</span>
               </div>
             </div>
 
             {/* Barra de Integridad del Firewall (0 - 100%) */}
-            <div className="flex flex-col items-center flex-1 max-w-xs mx-4">
-              <div className="flex justify-between w-full text-[10px] mb-1">
-                <span className="text-slate-400">INTEGRIDAD DEL FIREWALL</span>
+            <div className="flex flex-col items-center flex-1 max-w-sm mx-4">
+              <div className="flex justify-between w-full text-[10.5px] mb-1">
+                <span className="text-slate-400 font-semibold">INTEGRIDAD DEL FIREWALL</span>
                 <span className={`font-bold ${firewallHp > 50 ? 'text-emerald-400' : firewallHp > 20 ? 'text-amber-400' : 'text-rose-400'}`}>
                   {firewallHp}%
                 </span>
               </div>
-              <div className="w-full h-2 bg-slate-800 rounded-full overflow-hidden border border-slate-700/50">
+              <div className="w-full h-2.5 bg-slate-900 rounded-full overflow-hidden border border-slate-800 p-0.5">
                 <div 
-                  className={`h-full transition-all duration-200 ${firewallHp > 50 ? 'bg-emerald-500' : firewallHp > 20 ? 'bg-amber-500' : 'bg-rose-500'}`}
+                  className={`h-full rounded-full transition-all duration-200 ${
+                    firewallHp > 50 
+                      ? 'bg-gradient-to-r from-emerald-500 to-teal-400 shadow-[0_0_8px_rgba(16,185,129,0.5)]' 
+                      : firewallHp > 20 
+                      ? 'bg-gradient-to-r from-amber-500 to-orange-400 shadow-[0_0_8px_rgba(245,158,11,0.5)]' 
+                      : 'bg-gradient-to-r from-rose-600 to-red-500 shadow-[0_0_8px_rgba(244,63,94,0.5)]'
+                  }`}
                   style={{ width: `${firewallHp}%` }}
                 />
               </div>
             </div>
 
-            <div className="flex items-center gap-3 text-right">
+            <div className="flex items-center gap-4 text-right">
               <div>
                 <span className="text-slate-500 text-[10px] block">OLEADA</span>
-                <span className="text-indigo-400 font-bold">{currentWave} / 5</span>
+                <span className="text-cyan-400 font-bold text-sm">{currentWave} / 5</span>
               </div>
-              <div className="tactical-shields flex gap-1 items-center">
+              <div className="tactical-shields flex gap-1.5 items-center">
                 {Array.from({ length: initialLives }).map((_, i) => (
-                  <span key={i} className={`shield-node text-sm transition-opacity ${i < lives ? 'opacity-100' : 'opacity-20'}`}>
+                  <span key={i} className={`shield-node text-base transition-opacity ${i < lives ? 'opacity-100' : 'opacity-20'}`}>
                     🛡️
                   </span>
                 ))}
@@ -5142,15 +5585,31 @@ function DefenseView({ estudiante, backendUrl, onUpdate }) {
             </div>
           </div>
 
-          {/* Área de juego principal */}
+          {/* Área de juego principal con Matriz Cibernética */}
           <div 
             ref={playfieldRef}
-            className="game-playfield-spec relative h-[380px] bg-slate-950 overflow-hidden select-none"
+            className="game-playfield-spec relative h-[440px] bg-slate-950 overflow-hidden select-none cursor-crosshair"
             onMouseMove={handleMouseMove}
           >
+            {/* Grid y Carriles Tácticos de Paquetes */}
+            <div className="defense-lanes-grid">
+              <div className="defense-lane">
+                <span>// CANAL 01: SINTAXIS</span>
+              </div>
+              <div className="defense-lane">
+                <span>// CANAL 02: ACCESO</span>
+              </div>
+              <div className="defense-lane">
+                <span>// CANAL 03: ASYNC</span>
+              </div>
+              <div className="defense-lane">
+                <span>// CANAL 04: KERNEL</span>
+              </div>
+            </div>
+
             {/* Título sutil de la oleada */}
-            <div className="absolute top-3 left-0 right-0 text-center pointer-events-none">
-              <span className="text-[11px] text-slate-600 font-mono uppercase tracking-widest">
+            <div className="absolute top-2 left-0 right-0 text-center pointer-events-none z-10">
+              <span className="text-[10px] font-mono text-cyan-300/80 bg-slate-900/80 px-3 py-1 rounded-full border border-cyan-500/30 uppercase tracking-widest shadow-sm">
                 {OLEADAS_ESTRUCTURADAS[currentWave - 1]?.titulo}
               </span>
             </div>
@@ -5163,92 +5622,132 @@ function DefenseView({ estudiante, backendUrl, onUpdate }) {
                   y1={`${laserEffect.y1}%`} 
                   x2={`${laserEffect.x2}%`} 
                   y2={`${laserEffect.y2}%`} 
-                  stroke="#38bdf8" 
-                  strokeWidth="2.5"
+                  stroke="#22d3ee" 
+                  strokeWidth="3.5"
                   strokeLinecap="round"
+                  className="filter drop-shadow-[0_0_8px_#22d3ee]"
                 />
               </svg>
             )}
 
             {/* Fragmentos de código cayendo */}
-            {fallingLines.map(line => {
-              const borderClass = line.corrupt ? "border-rose-500 bg-rose-950/40 text-rose-300" : "border-indigo-500 bg-indigo-950/40 text-indigo-300";
-              return (
-                <div
-                  key={line.id}
-                  className={`falling-code-block absolute p-2 rounded border font-mono text-xs cursor-pointer shadow-md transition-transform hover:scale-105 z-10 ${borderClass}`}
-                  style={{ left: `${line.x}%`, top: `${line.y}%` }}
-                  onClick={() => dispararLinea(line.id, line.corrupt, line.x, line.y)}
-                >
-                  <span className={`block-warning-tag text-[9px] font-bold block mb-0.5 ${line.corrupt ? 'text-rose-400' : 'text-emerald-400'}`}>
-                    {line.corrupt ? '● CRITICAL BUG' : '✓ CÓDIGO OK'}
-                  </span>
-                  <code className="block-code-text">{line.text}</code>
-                </div>
-              );
-            })}
+            {fallingLines.map(line => (
+              <div
+                key={line.id}
+                className={`falling-code-block ${line.corrupt ? 'corrupt' : 'clean'}`}
+                style={{ left: `${line.x}%`, top: `${line.y}%` }}
+                onClick={() => dispararLinea(line.id, line.corrupt, line.x, line.y)}
+              >
+                <span className={`block-warning-tag ${line.corrupt ? 'text-rose-400' : 'text-emerald-400'}`}>
+                  {line.corrupt ? '● CRITICAL BUG (DISPARAR)' : '✓ CÓDIGO OK (DEJAR PASAR)'}
+                </span>
+                <code className="block-code-text">{line.text}</code>
+              </div>
+            ))}
 
-            {/* Pantalla de Victoria */}
+            {/* Visual Firewall Energy Barrier at bottom */}
+            <div className="defense-energy-barrier">
+              <span className="text-[9px] font-mono text-cyan-400 font-bold tracking-wider">
+                [ BARRERA DE ENERGÍA ACTIVA ]
+              </span>
+              {/* Cañón Láser Táctico que sigue el cursor */}
+              <div 
+                className="defense-laser-cannon"
+                style={{ left: `${turretPaddleX}%` }}
+              >
+                <div style={{ width: '10px', height: '12px', background: '#22d3ee', borderRadius: '2px 2px 0 0', boxShadow: '0 0 8px #22d3ee' }}></div>
+                <div style={{ width: '32px', height: '8px', background: '#4f46e5', borderRadius: '2px' }}></div>
+              </div>
+              <span className="text-[9px] font-mono text-indigo-400 font-bold tracking-wider">
+                DEFENSA DE NODO CENTRAL
+              </span>
+            </div>
+
+            {/* Modal Centrado de Victoria */}
             {victory && (
-              <div className="absolute inset-0 bg-slate-950/90 flex flex-col items-center justify-center text-center p-6 z-30 animate-scale-in">
-                <div className="w-14 h-14 rounded-2xl bg-indigo-500/10 border border-indigo-500/30 flex items-center justify-center text-3xl mb-3">
+              <div className="defense-modal-overlay animate-scale-in">
+                <div className="w-16 h-16 rounded-2xl bg-indigo-500/20 border border-indigo-400/50 flex items-center justify-center text-3xl mb-3 shadow-[0_0_24px_rgba(99,102,241,0.4)]">
                   🏆
                 </div>
-                <h3 className="text-lg text-white font-mono font-bold">¡DEFENSA TÁCTICA VICTORIOSA!</h3>
-                <p className="text-xs text-slate-400 max-w-sm mt-1 mb-4">
-                  Has neutralizado las 5 oleadas de amenazas y preservado la integridad del firewall.
+                <h3 className="text-xl text-white font-mono font-black tracking-wider">
+                  ¡DEFENSA TÁCTICA VICTORIOSA!
+                </h3>
+                <p className="text-xs text-slate-400 max-w-sm mt-1 mb-4 font-mono">
+                  Has neutralizado exitosamente las 5 oleadas de amenazas y preservado la integridad del cortafuegos.
                 </p>
 
-                <div className="p-3 rounded-xl bg-slate-900 border border-slate-800 text-xs font-mono mb-4 w-full max-w-xs space-y-1.5">
+                <div className="p-4 rounded-xl bg-slate-900 border border-slate-800 text-xs font-mono mb-5 w-full max-w-xs space-y-2 shadow-lg">
                   <div className="flex justify-between text-slate-300">
-                    <span>Puntaje Total:</span>
-                    <span className="text-white font-bold">{score.toLocaleString()}</span>
+                    <span>PUNTAJE FINAL:</span>
+                    <span className="text-cyan-400 font-bold text-sm">{score.toLocaleString()}</span>
                   </div>
-                  <div className="flex justify-between text-emerald-400 font-semibold border-t border-slate-800 pt-1.5">
-                    <span>Recompensas:</span>
+                  <div className="flex justify-between text-slate-400 text-[11px]">
+                    <span>INTEGRIDAD RESTANTE:</span>
+                    <span className="text-emerald-400 font-bold">{firewallHp}%</span>
+                  </div>
+                  <div className="flex justify-between text-emerald-300 font-semibold border-t border-slate-800 pt-2 text-[11px]">
+                    <span>RECOMPENSAS:</span>
                     <span>+15 Shards · +2 Cores · +2 Esencia</span>
                   </div>
                 </div>
 
-                <div className="flex gap-2">
-                  <button className="btn-action text-xs px-4 py-2" onClick={startGame}>
-                    Jugar de Nuevo
+                <div className="flex flex-col sm:flex-row gap-3 w-full max-w-xs">
+                  <button 
+                    type="button"
+                    className="flex-1 h-11 rounded-xl font-mono text-xs font-bold text-white bg-gradient-to-r from-indigo-600 to-purple-600 hover:from-indigo-500 hover:to-purple-500 border border-indigo-400/50 shadow-md shadow-indigo-500/30 transition-all cursor-pointer" 
+                    onClick={startGame}
+                  >
+                    JUGAR DE NUEVO
                   </button>
-                  <button className="btn-subtab-pill text-xs px-4 py-2" onClick={() => setGameStarted(false)}>
-                    Regresar
+                  <button 
+                    type="button"
+                    className="h-11 px-4 rounded-xl font-mono text-xs font-bold text-slate-300 bg-slate-900 hover:bg-slate-800 border border-slate-700 transition-all cursor-pointer" 
+                    onClick={() => setGameStarted(false)}
+                  >
+                    SALIR
                   </button>
                 </div>
               </div>
             )}
 
-            {/* Pantalla de Derrota */}
+            {/* Modal Centrado de Derrota */}
             {gameOver && !victory && (
-              <div className="absolute inset-0 bg-slate-950/90 flex flex-col items-center justify-center text-center p-6 z-30 animate-scale-in">
-                <div className="w-14 h-14 rounded-2xl bg-rose-500/10 border border-rose-500/30 flex items-center justify-center text-3xl mb-3">
+              <div className="defense-modal-overlay animate-scale-in">
+                <div className="w-16 h-16 rounded-2xl bg-rose-500/20 border border-rose-500/50 flex items-center justify-center text-3xl mb-3 shadow-[0_0_24px_rgba(244,63,94,0.4)]">
                   🛡️
                 </div>
-                <h3 className="text-lg text-white font-mono font-bold">FIREWALL COMPROMETIDO</h3>
-                <p className="text-xs text-slate-400 max-w-sm mt-1 mb-4">
-                  El firewall ha colapsado ante los errores críticos en la oleada {currentWave}.
+                <h3 className="text-xl text-white font-mono font-black tracking-wider">
+                  FIREWALL COMPROMETIDO
+                </h3>
+                <p className="text-xs text-slate-400 max-w-sm mt-1 mb-4 font-mono">
+                  El cortafuegos ha colapsado ante la penetración de bugs en la oleada {currentWave}.
                 </p>
 
-                <div className="p-3 rounded-xl bg-slate-900 border border-slate-800 text-xs font-mono mb-4 w-full max-w-xs space-y-1 text-slate-300">
-                  <div className="flex justify-between">
-                    <span>Puntaje:</span>
+                <div className="p-4 rounded-xl bg-slate-900 border border-slate-800 text-xs font-mono mb-5 w-full max-w-xs space-y-2 shadow-lg">
+                  <div className="flex justify-between text-slate-300">
+                    <span>PUNTAJE ALCANZADO:</span>
                     <span className="text-white font-bold">{score.toLocaleString()}</span>
                   </div>
-                  <div className="flex justify-between text-amber-400">
-                    <span>Recompensas:</span>
+                  <div className="flex justify-between text-amber-400 text-[11px]">
+                    <span>RECOMPENSA DE ESFUERZO:</span>
                     <span>+5 RP · +1 Shard</span>
                   </div>
                 </div>
 
-                <div className="flex gap-2">
-                  <button className="btn-action text-xs px-4 py-2" onClick={startGame}>
-                    Reintentar
+                <div className="flex flex-col sm:flex-row gap-3 w-full max-w-xs">
+                  <button 
+                    type="button"
+                    className="flex-1 h-11 rounded-xl font-mono text-xs font-bold text-white bg-gradient-to-r from-rose-600 to-orange-600 hover:from-rose-500 hover:to-orange-500 border border-rose-400/50 shadow-md shadow-rose-500/30 transition-all cursor-pointer" 
+                    onClick={startGame}
+                  >
+                    REINTENTAR
                   </button>
-                  <button className="btn-subtab-pill text-xs px-4 py-2" onClick={() => setGameStarted(false)}>
-                    Salir
+                  <button 
+                    type="button"
+                    className="h-11 px-4 rounded-xl font-mono text-xs font-bold text-slate-300 bg-slate-900 hover:bg-slate-800 border border-slate-700 transition-all cursor-pointer" 
+                    onClick={() => setGameStarted(false)}
+                  >
+                    SALIR
                   </button>
                 </div>
               </div>
@@ -5256,18 +5755,25 @@ function DefenseView({ estudiante, backendUrl, onUpdate }) {
           </div>
 
           {/* Footer de Controles y Habilidad Especial */}
-          <div className="hud-footer-stats p-3 bg-slate-900/90 border-t border-slate-800 flex justify-between items-center text-xs font-mono">
+          <div className="hud-footer-stats p-3.5 bg-slate-900/95 border-t border-slate-800 flex justify-between items-center text-xs font-mono">
             <div className="flex items-center gap-3">
-              <span className="text-slate-400">COMBO: <strong className="text-amber-400">x{combo}</strong></span>
+              <span className="text-slate-400">MULTIPLICADOR: <strong className="text-amber-400 text-sm">x{combo}</strong></span>
+              <span className="text-slate-600 hidden sm:inline">|</span>
+              <span className="text-slate-400 hidden sm:inline">PAQUETES RESTANTES: <strong className="text-cyan-400">{corruptsLeftInWave}</strong></span>
             </div>
 
             <button 
               type="button"
-              className={`px-4 py-1.5 rounded text-xs font-mono font-bold transition-all ${power === 100 ? 'bg-indigo-600 hover:bg-indigo-500 text-white shadow-md shadow-indigo-600/30 animate-pulse' : 'bg-slate-800 text-slate-500 border border-slate-700/50 cursor-not-allowed'}`}
+              className={`h-10 px-5 rounded-xl text-xs font-mono font-black transition-all flex items-center gap-2 cursor-pointer ${
+                power === 100 
+                  ? 'bg-gradient-to-r from-indigo-600 to-purple-600 hover:from-indigo-500 hover:to-purple-500 text-white shadow-lg shadow-indigo-600/40 animate-pulse border border-indigo-400' 
+                  : 'bg-slate-850 text-slate-500 border border-slate-800 cursor-not-allowed opacity-50'
+              }`}
               onClick={detonarFirewallBlast}
               disabled={power < 100}
             >
-              💥 EMP BLAST {power === 100 ? '(LISTO)' : `(${power}%)`}
+              <span>💥</span>
+              <span>EMP BLAST {power === 100 ? '(LISTO)' : `(${power}%)`}</span>
             </button>
           </div>
         </div>
@@ -5991,37 +6497,37 @@ function DungeonView({ estudiante, backendUrl, onUpdate }) {
             </div>
 
             {/* Brújula / D-pad Táctico */}
-            <div className="dungeon-compass-container mt-3">
-              <div className="compass-header flex justify-between items-center mb-1 text-[11px] font-mono text-slate-400">
-                <span>CONTROLES DIRECCIONALES</span>
-                <span className="text-cyan-400 font-bold">N · S · E · O</span>
+            <div className="dungeon-compass-container mt-4 p-3 rounded-xl bg-slate-950/90 border border-slate-800 shadow-lg">
+              <div className="compass-header flex justify-between items-center mb-2.5 text-[11px] font-mono text-slate-400 pb-1.5 border-b border-slate-800/80">
+                <span className="font-semibold text-slate-300">D-PAD DE NAVEGACIÓN</span>
+                <span className="text-cyan-400 font-bold">RADAR ACTIVO</span>
               </div>
-              <div className="compass-cross-layout">
+              <div className="compass-cross-layout flex flex-col items-center gap-2">
                 <button
                   type="button"
-                  className="btn-compass btn-compass-n"
+                  className="btn-compass btn-compass-n w-36 h-9 rounded-lg font-mono text-xs font-bold transition flex items-center justify-center gap-1.5 cursor-pointer disabled:opacity-30 disabled:cursor-not-allowed"
                   onClick={() => mover('norte')}
                   disabled={posY === 0}
                   title="Mover al Norte"
                 >
                   ▲ NORTE
                 </button>
-                <div className="compass-mid-row">
+                <div className="compass-mid-row flex items-center justify-center gap-2 w-full">
                   <button
                     type="button"
-                    className="btn-compass btn-compass-w"
+                    className="btn-compass btn-compass-w flex-1 h-9 rounded-lg font-mono text-xs font-bold transition flex items-center justify-center gap-1.5 cursor-pointer disabled:opacity-30 disabled:cursor-not-allowed"
                     onClick={() => mover('oeste')}
                     disabled={posX === 0}
                     title="Mover al Oeste"
                   >
                     ◀ OESTE
                   </button>
-                  <div className="compass-radar-core">
-                    <span className="radar-coord font-mono">[{posX},{posY}]</span>
+                  <div className="compass-radar-core px-3 h-9 rounded-lg flex items-center justify-center font-mono text-xs font-black bg-slate-950 border border-cyan-500/40 text-cyan-400 shadow-[inset_0_0_8px_rgba(6,182,212,0.3)]">
+                    [{posX},{posY}]
                   </div>
                   <button
                     type="button"
-                    className="btn-compass btn-compass-e"
+                    className="btn-compass btn-compass-e flex-1 h-9 rounded-lg font-mono text-xs font-bold transition flex items-center justify-center gap-1.5 cursor-pointer disabled:opacity-30 disabled:cursor-not-allowed"
                     onClick={() => mover('este')}
                     disabled={posX === 2}
                     title="Mover al Este"
@@ -6031,7 +6537,7 @@ function DungeonView({ estudiante, backendUrl, onUpdate }) {
                 </div>
                 <button
                   type="button"
-                  className="btn-compass btn-compass-s"
+                  className="btn-compass btn-compass-s w-36 h-9 rounded-lg font-mono text-xs font-bold transition flex items-center justify-center gap-1.5 cursor-pointer disabled:opacity-30 disabled:cursor-not-allowed"
                   onClick={() => mover('sur')}
                   disabled={posY === 2}
                   title="Mover al Sur"
@@ -6044,13 +6550,13 @@ function DungeonView({ estudiante, backendUrl, onUpdate }) {
         </div>
 
         {/* Columna Derecha: Habitación Activa, Esquema y Consola */}
-        <div className="dungeon-room-column">
+        <div className="dungeon-room-column pb-6">
           {/* Cabecera de la Habitación */}
-          <div className="room-tactical-header mb-3">
+          <div className="room-tactical-header mb-3 pb-2.5 border-b border-slate-800">
             <div className="flex justify-between items-start flex-wrap gap-2">
               <div>
                 <div className="flex items-center gap-2">
-                  <span className="room-badge-pill font-mono text-xs px-2.5 py-0.5 rounded bg-indigo-950/80 border border-indigo-500/40 text-indigo-300 font-bold">
+                  <span className="room-badge-pill font-mono text-xs px-2.5 py-0.5 rounded-full bg-indigo-950/80 border border-indigo-500/40 text-indigo-300 font-bold">
                     SALA [{posX},{posY}]
                   </span>
                   <h3 className="room-heading text-base font-mono font-bold text-white">
@@ -6063,12 +6569,12 @@ function DungeonView({ estudiante, backendUrl, onUpdate }) {
               </div>
 
               {isRoomUnlocked ? (
-                <span className="room-unlocked-badge font-mono text-xs px-3 py-1 rounded bg-emerald-950/70 border border-emerald-500/50 text-emerald-300 font-bold flex items-center gap-1.5 shadow-[0_0_12px_rgba(16,185,129,0.25)]">
+                <span className="room-unlocked-badge font-mono text-xs px-3 py-1 rounded-lg bg-emerald-950/80 border border-emerald-500/60 text-emerald-300 font-bold flex items-center gap-1.5 shadow-[0_0_12px_rgba(16,185,129,0.3)]">
                   <span>✓</span>
                   <span>COMPUERTA DESBLOQUEADA</span>
                 </span>
               ) : (
-                <span className="room-locked-badge font-mono text-xs px-3 py-1 rounded bg-amber-950/70 border border-amber-500/50 text-amber-300 font-bold flex items-center gap-1.5">
+                <span className="room-locked-badge font-mono text-xs px-3 py-1 rounded-lg bg-amber-950/80 border border-amber-500/60 text-amber-300 font-bold flex items-center gap-1.5">
                   <span>🔒</span>
                   <span>REQUIERE CONSULTA SQL</span>
                 </span>
@@ -6077,17 +6583,17 @@ function DungeonView({ estudiante, backendUrl, onUpdate }) {
           </div>
 
           {/* Pilar 1: Esquema Relacional de la Tabla */}
-          <div className="schema-tactical-panel mb-3">
-            <div className="schema-panel-header flex justify-between items-center mb-2">
+          <div className="schema-tactical-panel mb-4 p-3.5 rounded-xl border border-slate-800 bg-slate-950/90 shadow-md">
+            <div className="schema-panel-header flex justify-between items-center mb-3">
               <div className="flex items-center gap-2">
-                <span className="text-cyan-400 font-mono text-xs">📊 ESQUEMA RELACIONAL:</span>
-                <code className="text-emerald-300 font-mono text-xs font-bold bg-slate-900 px-2 py-0.5 rounded border border-slate-800">
+                <span className="text-cyan-400 font-mono text-xs font-bold">📊 TABLA RELACIONAL:</span>
+                <code className="text-emerald-300 font-mono text-xs font-bold bg-slate-900 px-2.5 py-0.5 rounded-lg border border-slate-800">
                   {currentRoom.name}
                 </code>
               </div>
               <button
                 type="button"
-                className="btn-toggle-sample text-[11px] font-mono text-indigo-300 hover:text-indigo-200 underline"
+                className="btn-toggle-sample text-xs font-mono text-indigo-300 hover:text-cyan-300 underline cursor-pointer"
                 onClick={() => setShowMockPreview(!showMockPreview)}
               >
                 {showMockPreview ? '👁️ Ocultar Preview de Datos' : '👁️ Ver Preview de Registros'}
@@ -6095,39 +6601,41 @@ function DungeonView({ estudiante, backendUrl, onUpdate }) {
             </div>
 
             {/* Badges de Columnas con Tipos */}
-            <div className="schema-columns-list flex flex-wrap gap-2 mb-2.5">
+            <div className="schema-columns-list flex flex-wrap gap-2 mb-3">
               {currentRoom.columns.map((col, idx) => (
-                <div key={idx} className="column-spec-chip flex items-center gap-1.5 px-2 py-1 rounded bg-slate-900/90 border border-slate-800" title={col.desc}>
+                <div key={idx} className="column-spec-chip flex items-center gap-1.5 px-2.5 py-1 rounded-lg bg-slate-900 border border-slate-800 shadow-sm" title={col.desc}>
                   <span className="col-name font-mono text-xs font-bold text-slate-200">{col.name}</span>
                   {renderTypeBadge(col)}
-                  {col.isPk && <span className="text-[9px] font-mono font-bold text-amber-400 bg-amber-950/60 border border-amber-500/30 px-1 rounded" title="Primary Key">PK</span>}
-                  {col.isFk && <span className="text-[9px] font-mono font-bold text-indigo-400 bg-indigo-950/60 border border-indigo-500/30 px-1 rounded" title="Foreign Key">FK</span>}
+                  {col.isPk && <span className="text-[9px] font-mono font-bold text-amber-400 bg-amber-950/80 border border-amber-500/40 px-1.5 py-0.5 rounded" title="Primary Key">PK</span>}
+                  {col.isFk && <span className="text-[9px] font-mono font-bold text-indigo-400 bg-indigo-950/80 border border-indigo-500/40 px-1.5 py-0.5 rounded" title="Foreign Key">FK</span>}
                 </div>
               ))}
             </div>
 
-            {/* Preview de Registros de Muestra (Mock Sample) */}
+            {/* Preview de Registros de Muestra (DataGrip/Supabase Modern Table) */}
             {showMockPreview && currentRoom.mockSample && currentRoom.mockSample.length > 0 && (
-              <div className="mock-preview-table-container mt-2">
-                <div className="mock-preview-header text-[11px] font-mono text-slate-400 mb-1 flex items-center gap-1.5">
+              <div className="mock-preview-table-container mt-3">
+                <div className="mock-preview-header text-[11px] font-mono text-slate-400 mb-1.5 flex items-center gap-1.5">
                   <span>📋 Registros de muestra en '{currentRoom.name}' ({currentRoom.mockSample.length} filas):</span>
                 </div>
-                <div className="overflow-x-auto rounded border border-slate-800 bg-slate-950/90">
-                  <table className="dungeon-sample-table w-full text-xs font-mono border-collapse">
+                <div className="overflow-x-auto rounded-xl border border-slate-800 bg-slate-950 shadow-inner">
+                  <table className="dungeon-sample-table">
                     <thead>
-                      <tr className="border-b border-slate-800 bg-slate-900/80">
+                      <tr className="border-b border-slate-800 bg-slate-900/95">
                         {Object.keys(currentRoom.mockSample[0]).map((key, i) => (
-                          <th key={i} className="p-2 text-left text-cyan-400 font-semibold">{key}</th>
+                          <th key={i} className="py-2.5 px-3 text-left text-cyan-400 font-bold uppercase tracking-wider">{key}</th>
                         ))}
                       </tr>
                     </thead>
                     <tbody>
                       {currentRoom.mockSample.map((row, rIdx) => (
-                        <tr key={rIdx} className="border-b border-slate-800/40 hover:bg-slate-900/40">
+                        <tr key={rIdx} className={`border-b border-slate-800/40 hover:bg-slate-900/50 transition-colors ${rIdx % 2 === 0 ? 'bg-slate-950' : 'bg-slate-900/30'}`}>
                           {Object.values(row).map((val, cIdx) => (
-                            <td key={cIdx} className="p-2 text-slate-300">
+                            <td key={cIdx} className="py-2 px-3 text-slate-300">
                               {typeof val === 'boolean' ? (
-                                <span className={val ? 'text-emerald-400 font-bold' : 'text-rose-400 font-bold'}>{String(val)}</span>
+                                <span className={`px-2 py-0.5 rounded text-[10px] font-bold border ${val ? 'bg-emerald-950/70 border-emerald-500/40 text-emerald-300' : 'bg-rose-950/70 border-rose-500/40 text-rose-300'}`}>
+                                  {String(val).toUpperCase()}
+                                </span>
                               ) : (
                                 String(val)
                               )}
@@ -6144,10 +6652,10 @@ function DungeonView({ estudiante, backendUrl, onUpdate }) {
 
           {/* Pilar 3: Consola, Snippets y Visor */}
           {currentRoom.id !== 'nucleo' ? (
-            <div className="dungeon-console-section">
+            <div className="dungeon-console-section mb-4">
               {/* Barra de Snippets Rápidos */}
-              <div className="sql-snippets-strip mb-2 flex items-center flex-wrap gap-1.5">
-                <span className="text-[11px] font-mono text-slate-400 mr-1 flex items-center gap-1">
+              <div className="sql-snippets-strip mb-2.5 flex items-center flex-wrap gap-2 p-2.5 rounded-xl bg-slate-950/90 border border-slate-800 shadow-sm">
+                <span className="text-xs font-mono font-bold text-slate-300 mr-1 flex items-center gap-1">
                   <span>⚡</span>
                   <span>SNIPPETS:</span>
                 </span>
@@ -6165,7 +6673,7 @@ function DungeonView({ estudiante, backendUrl, onUpdate }) {
                   <button
                     key={sIdx}
                     type="button"
-                    className="btn-snippet-pill"
+                    className="btn-snippet-pill font-mono text-xs px-2.5 py-1 rounded-lg border border-slate-700 bg-slate-900 text-slate-200 hover:border-cyan-400 hover:bg-cyan-950/40 transition-all cursor-pointer font-semibold shadow-sm"
                     onClick={() => insertarSnippet(snippet)}
                     title={`Insertar '${snippet}' en el editor`}
                   >
@@ -6175,10 +6683,10 @@ function DungeonView({ estudiante, backendUrl, onUpdate }) {
               </div>
 
               {/* Editor SQL */}
-              <div className="sql-editor-wrap">
+              <div className="sql-editor-wrap rounded-xl border border-slate-800 bg-slate-950 overflow-hidden shadow-md">
                 <textarea
                   ref={textareaRef}
-                  className="code-textarea sql-dungeon-textarea font-mono text-xs w-full bg-slate-950 border border-slate-800 text-emerald-300 p-3 rounded-lg outline-none focus:border-cyan-500 transition-all"
+                  className="code-textarea sql-dungeon-textarea font-mono text-xs w-full bg-slate-950 text-emerald-300 p-3.5 outline-none resize-y min-h-[125px] leading-relaxed"
                   placeholder={`-- Escribe tu consulta SQL para ${currentRoom.name}...\nSELECT * FROM ${currentRoom.name} ...;`}
                   value={queryInput}
                   onChange={(e) => setQueryInput(e.target.value)}
@@ -6187,11 +6695,11 @@ function DungeonView({ estudiante, backendUrl, onUpdate }) {
                 />
 
                 {/* Barra de Acciones y Pistas */}
-                <div className="sql-editor-actions mt-2 flex justify-between items-center flex-wrap gap-2">
+                <div className="sql-editor-actions p-2.5 bg-slate-900/90 border-t border-slate-800 flex justify-between items-center flex-wrap gap-2">
                   <div className="flex items-center gap-2">
                     <button
                       type="button"
-                      className={`btn-dungeon-subaction ${showHintCard ? 'active' : ''}`}
+                      className={`h-9 px-3 rounded-lg font-mono text-xs font-bold border transition cursor-pointer ${showHintCard ? 'bg-indigo-600 text-white border-indigo-400 shadow-sm' : 'bg-slate-800/80 text-slate-300 border-slate-700 hover:bg-slate-700 hover:text-white'}`}
                       onClick={() => setShowHintCard(!showHintCard)}
                     >
                       💡 {showHintCard ? 'Ocultar Pistas' : 'Pistas / Ayuda Didáctica'}
@@ -6206,7 +6714,7 @@ function DungeonView({ estudiante, backendUrl, onUpdate }) {
                   <div className="flex items-center gap-2">
                     <button
                       type="button"
-                      className="btn-dungeon-clear"
+                      className="h-9 px-3 rounded-lg font-mono text-xs text-slate-400 hover:text-white bg-slate-800/40 hover:bg-slate-800 border border-slate-700/50 transition cursor-pointer"
                       onClick={() => setQueryInput('')}
                       title="Limpiar editor"
                     >
@@ -6214,7 +6722,7 @@ function DungeonView({ estudiante, backendUrl, onUpdate }) {
                     </button>
                     <button
                       type="button"
-                      className="btn-sql-submit-tactical"
+                      className="btn-sql-submit-tactical h-9 px-5 rounded-lg font-mono text-xs font-bold text-white bg-gradient-to-r from-cyan-600 via-teal-600 to-emerald-600 hover:from-cyan-500 hover:to-emerald-500 border border-cyan-400/50 shadow-md shadow-cyan-500/25 transition cursor-pointer disabled:opacity-50"
                       onClick={comprobarSQL}
                       disabled={loading || !queryInput.trim()}
                     >
@@ -6301,7 +6809,7 @@ function DungeonView({ estudiante, backendUrl, onUpdate }) {
                     <span className="text-[10px] text-slate-500 font-mono">CONEXIÓN VIRTUAL ACTIVA</span>
                   </div>
                   <div className="overflow-x-auto">
-                    <table className="dungeon-results-table w-full text-xs font-mono border-collapse">
+                    <table className="dungeon-results-table">
                       <thead>
                         <tr className="border-b border-slate-800 bg-slate-900/80">
                           {Object.keys(queryResultData[0]).map((key, i) => (
