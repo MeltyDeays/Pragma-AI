@@ -3,7 +3,8 @@ import {
   Users, UserPlus, Trash2, ShieldAlert, Check, X, 
   Settings, Award, Code, Play, Trophy, Search,
   Sparkles, Flame, CheckCircle2, XCircle, ArrowRight, RefreshCw, Lightbulb, Clock, Radio,
-  ChevronUp, ChevronDown, GripVertical, Shuffle, Terminal, Bug, Zap, AlertTriangle, ShieldCheck, Target, Bot
+  ChevronUp, ChevronDown, GripVertical, Shuffle, Terminal, Bug, Zap, AlertTriangle, ShieldCheck, Target, Bot,
+  ArrowLeft, Gamepad2, Globe
 } from 'lucide-react';
 import './PragmaGames.css';
 
@@ -1854,73 +1855,306 @@ function LobbyView({ estudiante, backendUrl, onUpdate, listaAmigos = [], partida
 
       {/* 2. CONFIGURACIÓN DEL MASTER DE LA SALA */}
       {showMasterConfig && (
-        <div className="setup-container-spec master-config-panel-hud">
-          <h3 className="text-lg font-mono text-indigo-300 font-bold tracking-wider mb-1">
-            CONFIGURACIÓN DE SALA MULTIJUGADOR
-          </h3>
-          <p className="text-xs text-slate-400 font-mono mb-6">
-            Selecciona el entorno de simulación que se sincronizará para todos los participantes en la partida:
-          </p>
+        <div className="setup-container-spec master-config-stage">
+          <div className="master-config-panel-hud">
+            {/* Tactical HUD Corner Brackets */}
+            <div className="hud-corner top-left"></div>
+            <div className="hud-corner top-right"></div>
+            <div className="hud-corner bottom-left"></div>
+            <div className="hud-corner bottom-right"></div>
 
-          <div className="config-grid-sections w-full max-w-[700px] flex flex-col gap-6">
-            {/* Categoría de Retos */}
+            {/* Top Telemetry Bar */}
+            <div className="master-config-top-bar">
+              <div className="flex items-center gap-2">
+                <span className="config-live-dot"></span>
+                <span className="config-header-tag">PROTOCOLO MULTIJUGADOR // CONSOLA DE HOST</span>
+              </div>
+              <div className="config-header-meta">
+                <span className="meta-chip">SALA: <strong className="text-cyan-400 font-bold">{matchType}</strong></span>
+                <span className="meta-chip">STACK: <strong className="text-indigo-300 font-bold">{estudiante?.tecnologia_actual || 'JavaScript'}</strong></span>
+              </div>
+            </div>
+
+            {/* Header with Title & Icon */}
+            <div className="master-config-header">
+              <div className="master-config-icon-box">
+                <Gamepad2 size={26} className="text-cyan-400" />
+              </div>
+              <div>
+                <h3 className="master-config-title">CONFIGURACIÓN DE SALA MULTIJUGADOR</h3>
+                <p className="master-config-subtitle">
+                  Calibra el entorno algorítmico sincronizado en tiempo real para todos los participantes de la partida:
+                </p>
+              </div>
+            </div>
+
+            {/* Categoría / Modo de Simulación */}
             <div className="config-group">
-              <span className="text-[10px] text-indigo-400 font-mono font-bold tracking-wider block mb-2">MODO DE SIMULACIÓN / JUEGOS:</span>
-              <div className="config-options-grid">
+              <div className="config-section-label">
+                <span className="config-section-title">MODO DE SIMULACIÓN / JUEGOS:</span>
+                <span className="config-section-hint">Selecciona la rotación táctica de minijuegos</span>
+              </div>
+
+              <div className="tactical-mode-grid">
+                {/* 1. Modo Mixto (8 Modos Arcade) */}
                 <button 
-                  className={`config-card-btn p-4 border text-left font-mono ${challengeCategory === 'mixed' ? 'border-indigo-500 text-indigo-300 bg-indigo-500/10' : 'border-slate-800 text-slate-400'}`} 
+                  type="button"
+                  className={`tactical-mode-card accent-cyan ${challengeCategory === 'mixed' ? 'active' : ''}`}
                   onClick={() => setChallengeCategory('mixed')}
                 >
-                  <div className="config-btn-content">
-                    <span className="config-btn-title">🌐 TODO (MIXTO)</span>
-                    <span className="config-btn-desc">Mezcla de minijuegos clásicos y Santuario Pragma AI.</span>
+                  <div className="mode-card-top">
+                    <div className="mode-card-icon-wrap bg-cyan-500/10 border border-cyan-500/30 text-cyan-400">
+                      <Globe size={20} />
+                    </div>
+                    <div className="flex items-center gap-2">
+                      <span className="mode-card-badge badge-emerald">RECOMENDADO</span>
+                      <div className="mode-card-radio-indicator">
+                        {challengeCategory === 'mixed' && <div className="mode-card-radio-dot" />}
+                      </div>
+                    </div>
+                  </div>
+
+                  <div className="mode-card-info">
+                    <span className="mode-card-title">TODOS LOS 8 MODOS ARCADE</span>
+                    <span className="mode-card-sub">Protocolo Canónico Mixto</span>
+                  </div>
+
+                  <p className="mode-card-desc">
+                    Rotación balanceada y aleatoria entre los 8 minijuegos del protocolo de combate multijugador.
+                  </p>
+
+                  <div className="mode-card-tags">
+                    <span className="mode-tag-chip">8 Modos Activos</span>
+                    <span className="mode-tag-chip">Bug Hunter</span>
+                    <span className="mode-tag-chip">Code Sorter</span>
+                    <span className="mode-tag-chip">Fill Code</span>
+                    <span className="mode-tag-chip">Code Typer</span>
+                    <span className="mode-tag-chip">Trivia Tech</span>
+                    <span className="mode-tag-chip">Flashcards</span>
+                    <span className="mode-tag-chip">Predictor</span>
+                    <span className="mode-tag-chip">Memory Match</span>
                   </div>
                 </button>
+
+                {/* 2. Modo Código & Lógica */}
                 <button 
-                  className={`config-card-btn p-4 border text-left font-mono ${challengeCategory === 'pragma' ? 'border-indigo-500 text-indigo-300 bg-indigo-500/10' : 'border-slate-800 text-slate-400'}`} 
+                  type="button"
+                  className={`tactical-mode-card ${challengeCategory === 'pragma' ? 'active' : ''}`}
                   onClick={() => setChallengeCategory('pragma')}
                 >
-                  <div className="config-btn-content">
-                    <span className="config-btn-title">🧪 NUEVOS MODOS</span>
-                    <span className="config-btn-desc">Acertijos del Santuario Zen y Tinder de sintaxis.</span>
+                  <div className="mode-card-top">
+                    <div className="mode-card-icon-wrap bg-indigo-500/10 border border-indigo-500/30 text-indigo-400">
+                      <Terminal size={20} />
+                    </div>
+                    <div className="flex items-center gap-2">
+                      <span className="mode-card-badge badge-indigo">CÓDIGO & LÓGICA</span>
+                      <div className="mode-card-radio-indicator">
+                        {challengeCategory === 'pragma' && <div className="mode-card-radio-dot" />}
+                      </div>
+                    </div>
+                  </div>
+
+                  <div className="mode-card-info">
+                    <span className="mode-card-title">DESAFÍOS DE CÓDIGO & LÓGICA</span>
+                    <span className="mode-card-sub">Ingeniería, Sintaxis & Refactor</span>
+                  </div>
+
+                  <p className="mode-card-desc">
+                    Desafíos intensivos de análisis sintáctico: Bug Hunter, Code Sorter, Fill the Code y Code Typer.
+                  </p>
+
+                  <div className="mode-card-tags">
+                    <span className="mode-tag-chip">Bug Hunter</span>
+                    <span className="mode-tag-chip">Code Sorter</span>
+                    <span className="mode-tag-chip">Fill Code</span>
+                    <span className="mode-tag-chip">Code Typer</span>
                   </div>
                 </button>
+
+                {/* 3. Modo Arcade Blitz */}
                 <button 
-                  className={`config-card-btn p-4 border text-left font-mono ${challengeCategory === 'arcade' ? 'border-indigo-500 text-indigo-300 bg-indigo-500/10' : 'border-slate-800 text-slate-400'}`} 
+                  type="button"
+                  className={`tactical-mode-card accent-amber ${challengeCategory === 'arcade' ? 'active' : ''}`}
                   onClick={() => setChallengeCategory('arcade')}
                 >
-                  <div className="config-btn-content">
-                    <span className="config-btn-title">🕹️ CLÁSICOS ARCADE</span>
-                    <span className="config-btn-desc">Preguntas de trivia técnica y refactorización.</span>
+                  <div className="mode-card-top">
+                    <div className="mode-card-icon-wrap bg-amber-500/10 border border-amber-500/30 text-amber-400">
+                      <Zap size={20} />
+                    </div>
+                    <div className="flex items-center gap-2">
+                      <span className="mode-card-badge badge-amber">SPEED BLITZ</span>
+                      <div className="mode-card-radio-indicator">
+                        {challengeCategory === 'arcade' && <div className="mode-card-radio-dot" />}
+                      </div>
+                    </div>
+                  </div>
+
+                  <div className="mode-card-info">
+                    <span className="mode-card-title">COMBATE RELÁMPAGO</span>
+                    <span className="mode-card-sub">Velocidad Mental & Memoria</span>
+                  </div>
+
+                  <p className="mode-card-desc">
+                    Duelos de reflejos instantáneos: Trivia Técnica, Flashcard Battle, Output Predictor y Memory Match.
+                  </p>
+
+                  <div className="mode-card-tags">
+                    <span className="mode-tag-chip">Trivia Tech</span>
+                    <span className="mode-tag-chip">Flashcards</span>
+                    <span className="mode-tag-chip">Output Predictor</span>
+                    <span className="mode-tag-chip">Memory Match</span>
                   </div>
                 </button>
               </div>
             </div>
 
-            {/* Dificultad */}
+            {/* Dificultad del Problema */}
             <div className="config-group">
-              <span className="text-[10px] text-indigo-400 font-mono font-bold tracking-wider block mb-2">DIFICULTAD DEL PROBLEMA:</span>
-              <div className="difficulty-grid">
-                {['novato', 'intermedio', 'experto'].map((diff) => (
-                  <button 
-                    key={diff}
-                    className={`config-card-btn p-3 border text-center font-mono uppercase text-xs ${difficulty === diff ? 'border-amber-500 text-amber-500 bg-amber-500/5' : 'border-slate-800 text-slate-400'}`} 
-                    onClick={() => setDifficulty(diff)}
-                  >
-                    {diff}
-                  </button>
-                ))}
+              <div className="config-section-label">
+                <span className="config-section-title">DIFICULTAD DEL PROBLEMA:</span>
+                <span className="config-section-hint">Ajusta la complejidad y el multiplicador de recompensa</span>
+              </div>
+
+              <div className="tactical-difficulty-grid">
+                {/* Novato */}
+                <button 
+                  type="button"
+                  className={`tactical-diff-card theme-emerald ${difficulty === 'novato' ? 'active' : ''}`}
+                  onClick={() => setDifficulty('novato')}
+                >
+                  <div className="diff-card-top">
+                    <div className="diff-card-icon-wrap bg-emerald-500/10 border border-emerald-500/30 text-emerald-400">
+                      <ShieldCheck size={20} />
+                    </div>
+                    <div className="diff-card-badges">
+                      <div className="flex items-center gap-2">
+                        <span className="diff-multiplier-badge badge-reward-emerald">+10 RP / x1.0</span>
+                        <div className="mode-card-radio-indicator">
+                          {difficulty === 'novato' && <div className="mode-card-radio-dot" />}
+                        </div>
+                      </div>
+                      <span className="diff-retos-tag">4 Retos</span>
+                    </div>
+                  </div>
+
+                  <div className="diff-card-title-row">
+                    <span className="diff-card-title">NOVATO</span>
+                    <span className="diff-card-sub">Fundamentos Base</span>
+                  </div>
+
+                  <p className="diff-card-desc">
+                    Sintaxis estándar, tipos de datos primitivos, condicionales y control de flujo elemental.
+                  </p>
+                </button>
+
+                {/* Intermedio */}
+                <button 
+                  type="button"
+                  className={`tactical-diff-card theme-indigo ${difficulty === 'intermedio' ? 'active' : ''}`}
+                  onClick={() => setDifficulty('intermedio')}
+                >
+                  <div className="diff-card-top">
+                    <div className="diff-card-icon-wrap bg-indigo-500/10 border border-indigo-500/30 text-indigo-400">
+                      <Target size={20} />
+                    </div>
+                    <div className="diff-card-badges">
+                      <div className="flex items-center gap-2">
+                        <span className="diff-multiplier-badge badge-reward-indigo">+20 RP / x1.5</span>
+                        <div className="mode-card-radio-indicator">
+                          {difficulty === 'intermedio' && <div className="mode-card-radio-dot" />}
+                        </div>
+                      </div>
+                      <span className="diff-retos-tag">5 Retos</span>
+                    </div>
+                  </div>
+
+                  <div className="diff-card-title-row">
+                    <span className="diff-card-title">INTERMEDIO</span>
+                    <span className="diff-card-sub">Estándar Competitivo</span>
+                  </div>
+
+                  <p className="diff-card-desc">
+                    Algoritmos clásicos, asincronía, manipulación funcional de colecciones y refactor reactivo.
+                  </p>
+                </button>
+
+                {/* Experto */}
+                <button 
+                  type="button"
+                  className={`tactical-diff-card theme-rose ${difficulty === 'experto' ? 'active' : ''}`}
+                  onClick={() => setDifficulty('experto')}
+                >
+                  <div className="diff-card-top">
+                    <div className="diff-card-icon-wrap bg-rose-500/10 border border-rose-500/30 text-rose-400">
+                      <Flame size={20} />
+                    </div>
+                    <div className="diff-card-badges">
+                      <div className="flex items-center gap-2">
+                        <span className="diff-multiplier-badge badge-reward-rose">+35 RP / x2.0</span>
+                        <div className="mode-card-radio-indicator">
+                          {difficulty === 'experto' && <div className="mode-card-radio-dot" />}
+                        </div>
+                      </div>
+                      <span className="diff-retos-tag">6 Retos</span>
+                    </div>
+                  </div>
+
+                  <div className="diff-card-title-row">
+                    <span className="diff-card-title">EXPERTO</span>
+                    <span className="diff-card-sub">Élite de Alta Presión</span>
+                  </div>
+
+                  <p className="diff-card-desc">
+                    Edge cases críticos, micro-optimizaciones de memoria O(1), coerción extrema y concurrencia.
+                  </p>
+                </button>
               </div>
             </div>
-          </div>
 
-          <div className="flex gap-4 mt-8 w-full max-w-[400px]">
-            <button className="hud-btn bg-slate-900 border border-slate-800 text-slate-400 py-2.5 px-4 text-xs flex-1" onClick={() => setShowMasterConfig(false)}>
-              Volver
-            </button>
-            <button className="hud-btn bg-indigo-600 hover:bg-indigo-500 border border-indigo-500 text-white font-semibold py-2.5 px-4 text-xs flex-1 flex items-center justify-center gap-2" onClick={confirmAndSearch}>
-              <Play size={14} /> BUSCAR RIVALES
-            </button>
+            {/* Resumen Táctico de Configuración */}
+            <div className="master-config-summary-bar">
+              <div className="flex items-center">
+                <span className="summary-indicator-glow"></span>
+                <span>
+                  SIMULACIÓN: <strong className="text-white">
+                    {challengeCategory === 'mixed' ? 'TODOS LOS 8 MODOS ARCADE' : challengeCategory === 'pragma' ? 'CÓDIGO & LÓGICA' : 'COMBATE RELÁMPAGO'}
+                  </strong>
+                </span>
+              </div>
+              <div className="flex items-center gap-3">
+                <span>
+                  DIFICULTAD: <strong className={difficulty === 'novato' ? 'text-emerald-400' : difficulty === 'experto' ? 'text-rose-400' : 'text-indigo-300'}>
+                    {difficulty.toUpperCase()} ({difficulty === 'novato' ? '4 RETOS' : difficulty === 'experto' ? '6 RETOS' : '5 RETOS'})
+                  </strong>
+                </span>
+                <span className="text-slate-600">|</span>
+                <span>
+                  RECOMPENSA: <strong className="text-amber-400">
+                    {difficulty === 'novato' ? '+10 RP' : difficulty === 'experto' ? '+35 RP' : '+20 RP'}
+                  </strong>
+                </span>
+              </div>
+            </div>
+
+            {/* Botones de Acción Ergonómicos */}
+            <div className="master-config-actions">
+              <button 
+                type="button"
+                className="tactical-btn btn-secondary-tactical tactical-btn-secondary"
+                onClick={() => setShowMasterConfig(false)}
+              >
+                <ArrowLeft size={16} />
+                <span>VOLVER AL LOBBY</span>
+              </button>
+              <button 
+                type="button"
+                className="tactical-btn btn-primary-tactical tactical-btn-primary"
+                onClick={confirmAndSearch}
+              >
+                <Radio size={16} className="animate-pulse" />
+                <span>BUSCAR RIVALES</span>
+              </button>
+            </div>
           </div>
         </div>
       )}
