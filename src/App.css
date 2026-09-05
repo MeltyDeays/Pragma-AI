@@ -1135,41 +1135,45 @@ body::before {
 /* Contenedor de Pestañas Principal */
 .nav-tabs-container {
   display: flex;
-  gap: 0.75rem;
-  margin-bottom: 2rem;
-  background: rgba(24, 24, 27, 0.6);
-  border: 1px solid var(--border-light);
-  padding: 0.4rem;
-  border-radius: 12px;
+  align-items: center;
+  gap: 0.5rem;
+  margin: 0 auto 1.75rem auto;
+  background: rgba(15, 23, 42, 0.75);
+  border: 1px solid rgba(148, 163, 184, 0.16);
+  padding: 0.35rem 0.5rem;
+  border-radius: 16px;
   width: fit-content;
-  backdrop-filter: blur(8px);
+  backdrop-filter: blur(16px);
+  box-shadow: 0 4px 20px -2px rgba(0, 0, 0, 0.35);
 }
 
 .nav-tab-btn {
   display: flex;
   align-items: center;
-  gap: 0.6rem;
-  padding: 0.6rem 1.25rem;
-  border: none;
+  gap: 0.55rem;
+  padding: 0.6rem 1.15rem;
+  border: 1px solid transparent;
   background: transparent;
-  color: var(--color-text-muted);
-  font-family: var(--font-primary);
-  font-size: 0.85rem;
+  color: #94a3b8;
+  font-family: var(--font-hud, 'Outfit', sans-serif);
+  font-size: 0.82rem;
   font-weight: 600;
   cursor: pointer;
-  border-radius: 8px;
-  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  border-radius: 12px;
+  transition: all 0.22s cubic-bezier(0.16, 1, 0.3, 1);
 }
 
 .nav-tab-btn:hover {
-  color: var(--color-text-main);
-  background: rgba(255, 255, 255, 0.03);
+  color: #f1f5f9;
+  background: rgba(255, 255, 255, 0.05);
+  border-color: rgba(255, 255, 255, 0.08);
 }
 
 .nav-tab-btn.active {
   color: #ffffff;
-  background: linear-gradient(135deg, var(--color-primary) 0%, #6366f1 100%);
-  box-shadow: 0 4px 12px rgba(59, 130, 246, 0.25);
+  background: linear-gradient(135deg, rgba(56, 189, 248, 0.25) 0%, rgba(99, 102, 241, 0.35) 100%);
+  border-color: rgba(56, 189, 248, 0.5);
+  box-shadow: 0 4px 18px -2px rgba(56, 189, 248, 0.3), inset 0 1px 0 rgba(255, 255, 255, 0.2);
 }
 
 /* Workspace del Mentor */

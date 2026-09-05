@@ -6,19 +6,39 @@ const { client, firestoreDb, ejecutarGroqConReintentos, parsearJSONGroq } = requ
 
 const FORJA_RECETAS = {
   'map_fire_skin': {
-    nombre: "Mapa Estelar de Fuego",
+    nombre: "Cartografía Estelar Ígnea",
     tipo: "map_skin",
     costo: { silicon_shards: 15, memory_threads: 5, javascript_essence: 1 }
   },
+  'map_tactical_slate': {
+    nombre: "Matriz Táctica Slate",
+    tipo: "map_skin",
+    costo: { silicon_shards: 15, memory_threads: 5, sql_essence: 1 }
+  },
   'star_aura_neon': {
-    nombre: "Aura Estelar Neón",
+    nombre: "Aura Táctica Índigo",
     tipo: "star_aura",
     costo: { silicon_shards: 20, memory_threads: 10, logic_cores: 2 }
   },
+  'star_aura_emerald': {
+    nombre: "Escudo Algorítmico Esmeralda",
+    tipo: "star_aura",
+    costo: { silicon_shards: 25, memory_threads: 12, logic_cores: 2, javascript_essence: 1 }
+  },
+  'star_aura_violet': {
+    nombre: "Vórtice Cuántico Violeta",
+    tipo: "star_aura",
+    costo: { silicon_shards: 30, memory_threads: 15, logic_cores: 3, python_essence: 1 }
+  },
   'laser_color_pink': {
-    nombre: "Láser Cyber Rosa",
+    nombre: "Foco Táctico Ámbar (#f59e0b)",
     tipo: "laser_color",
     costo: { silicon_shards: 10, python_essence: 1 }
+  },
+  'laser_color_sky': {
+    nombre: "Haz Cuántico Sky (#38bdf8)",
+    tipo: "laser_color",
+    costo: { silicon_shards: 10, sql_essence: 1 }
   }
 };
 
@@ -28,103 +48,357 @@ const SYNTAX_TINDER_SNIPPETS = [
     codigo: "const suma = (a, b) => a + b;",
     correcto: true,
     lenguaje: "JavaScript",
-    explicacion: "Arrow function limpia y sintácticamente correcta."
+    categoria: "syntax",
+    hint: "Arrow function con retorno implícito.",
+    explicacion: "Arrow function limpia y sintácticamente correcta con retorno implícito."
   },
   {
     id: "tinder_2",
     codigo: "function test() {\n  if (x = 2) {\n    return true;\n  }\n}",
     correcto: false,
     lenguaje: "JavaScript",
-    explicacion: "Usa '=' de asignación en lugar de '===' o '==' dentro de la condición."
+    categoria: "bugs",
+    hint: "Revisa los operadores lógicos en la condición.",
+    explicacion: "Usa '=' de asignación en lugar del operador de comparación estricta '===' dentro del condicional."
   },
   {
     id: "tinder_3",
     codigo: "def sumar_lista(numeros):\n    return sum(numeros)",
     correcto: true,
     lenguaje: "Python",
-    explicacion: "Definición válida y limpia usando el método builtin sum."
+    categoria: "clean_code",
+    hint: "Uso idiomático de funciones nativas.",
+    explicacion: "Definición válida y pythónica usando la función nativa sum()."
   },
   {
     id: "tinder_4",
     codigo: "def saludar(nombre)\nprint('Hola ' + nombre)",
     correcto: false,
     lenguaje: "Python",
-    explicacion: "Faltan los dos puntos ':' al final de def y la indentación de print."
+    categoria: "syntax",
+    hint: "Observa los signos de puntuación y la indentación de bloques.",
+    explicacion: "Error de sintaxis: falta ':' al final de def y la línea del print carece de indentación de 4 espacios."
   },
   {
     id: "tinder_5",
     codigo: "const items = [1, 2, 3];\nconst dobles = items.map(item => item * 2);",
     correcto: true,
     lenguaje: "JavaScript",
-    explicacion: "Uso limpio y correcto de Array.prototype.map()."
+    categoria: "functional",
+    hint: "Transformación inmutable de arreglos.",
+    explicacion: "Uso limpio y puro de Array.prototype.map() sin mutar el array original."
   },
   {
     id: "tinder_6",
     codigo: "let name = 'Eliab';\nconst name = 'Otro';",
     correcto: false,
     lenguaje: "JavaScript",
-    explicacion: "Redeclaración de una constante/variable 'name' en el mismo scope."
+    categoria: "scope",
+    hint: "Declaración múltiple en el mismo ámbito léxico.",
+    explicacion: "Identifier 'name' has already been declared. No se puede redeclarar una variable en el mismo ámbito."
   },
   {
     id: "tinder_7",
     codigo: "public class Main {\n    public static void main(String[] args) {\n        System.out.println(\"Hello World\");\n    }\n}",
     correcto: true,
     lenguaje: "Java",
-    explicacion: "Clase de entrada de Java perfectamente válida y formateada."
+    categoria: "syntax",
+    hint: "Firma estándar del punto de entrada en Java.",
+    explicacion: "Clase de entrada de Java perfectamente válida, estructurada y formateada."
   },
   {
     id: "tinder_8",
     codigo: "int[] nums = {1, 2, 3};\nSystem.out.println(nums[3]);",
     correcto: false,
     lenguaje: "Java",
-    explicacion: "Error de índice fuera de rango. nums tiene índices 0, 1 y 2."
+    categoria: "runtime",
+    hint: "Los índices de arreglos son 0-indexed.",
+    explicacion: "ArrayIndexOutOfBoundsException. El arreglo tiene longitud 3 con índices válidos 0, 1 y 2."
   },
   {
     id: "tinder_9",
     codigo: "SELECT u.id, u.nombre, COUNT(o.id) \nFROM usuarios u \nLEFT JOIN ordenes o ON u.id = o.usuario_id \nGROUP BY u.id, u.nombre;",
     correcto: true,
     lenguaje: "SQL",
-    explicacion: "Consulta relacional limpia con JOIN y GROUP BY correcto."
+    categoria: "queries",
+    hint: "Consulta relacional con función de agregación agrupada.",
+    explicacion: "Consulta relacional limpia con JOIN y GROUP BY correcto para todas las columnas proyectadas sin agregar."
   },
   {
     id: "tinder_10",
     codigo: "SELECT * FROM usuarios WHERE edad > 18 GROUP BY id;",
     correcto: false,
     lenguaje: "SQL",
-    explicacion: "GROUP BY inválido con SELECT * sin agregadores."
+    categoria: "queries",
+    hint: "Agrupación con proyección de todas las columnas.",
+    explicacion: "Consulta inválida en SQL estándar: no se puede agrupar con 'SELECT *' sin aplicar agregaciones al resto de columnas."
+  },
+  {
+    id: "tinder_11",
+    codigo: "const users = await fetch('/api/users');\nconst data = await users.json();",
+    correcto: true,
+    lenguaje: "JavaScript",
+    categoria: "async",
+    hint: "Consumo de API moderna con Promesas encadenadas.",
+    explicacion: "Manejo asíncrono limpio esperando la respuesta HTTP y la serialización JSON secuencial."
+  },
+  {
+    id: "tinder_12",
+    codigo: "function calculateDiscount(price, discount = 0) {\n  return price - (price * discount);\n}",
+    correcto: true,
+    lenguaje: "JavaScript",
+    categoria: "clean_code",
+    hint: "Parámetros predeterminados en funciones.",
+    explicacion: "Código limpio y defensivo que asigna valor por defecto al parámetro de descuento."
+  },
+  {
+    id: "tinder_13",
+    codigo: "const user = null;\nconsole.log(user.profile.name);",
+    correcto: false,
+    lenguaje: "JavaScript",
+    categoria: "runtime",
+    hint: "Acceso a propiedad de valor nulo.",
+    explicacion: "TypeError: Cannot read properties of null. Debería usar optional chaining (?.)."
+  },
+  {
+    id: "tinder_14",
+    codigo: "def filtrar_pares(lista):\n    return [x for x in lista if x % 2 == 0]",
+    correcto: true,
+    lenguaje: "Python",
+    categoria: "comprehension",
+    hint: "List comprehension idiomática.",
+    explicacion: "List comprehension concisa, declarativa y de alto rendimiento para filtrado."
+  },
+  {
+    id: "tinder_15",
+    codigo: "def append_item(val, lista=[]):\n    lista.append(val)\n    return lista",
+    correcto: false,
+    lenguaje: "Python",
+    categoria: "pitfall",
+    hint: "Cuidado con valores por defecto mutables en Python.",
+    explicacion: "Antipatrón clásico de Python: usar lista mutable como valor predeterminado comparte estado entre llamadas."
+  },
+  {
+    id: "tinder_16",
+    codigo: "try {\n  JSON.parse(rawInput);\n} catch (e) {\n  console.warn('JSON inválido:', e.message);\n}",
+    correcto: true,
+    lenguaje: "JavaScript",
+    categoria: "resilience",
+    hint: "Control estructurado de excepciones al parsear.",
+    explicacion: "Manejo robusto con bloque try-catch previniendo caída de la aplicación por datos malformados."
+  },
+  {
+    id: "tinder_17",
+    codigo: "SELECT id, email FROM clientes WHERE email IS NULL;",
+    correcto: true,
+    lenguaje: "SQL",
+    categoria: "queries",
+    hint: "Comparación de valores nulos en bases de datos.",
+    explicacion: "Uso correcto de 'IS NULL' en SQL en lugar del erróneo '= NULL'."
+  },
+  {
+    id: "tinder_18",
+    codigo: "SELECT * FROM productos WHERE precio = NULL;",
+    correcto: false,
+    lenguaje: "SQL",
+    categoria: "queries",
+    hint: "Los valores NULL no se comparan con igualdad ordinaria.",
+    explicacion: "En SQL cualquier comparación con '= NULL' evalúa a UNKNOWN. Debe utilizarse 'IS NULL'."
+  },
+  {
+    id: "tinder_19",
+    codigo: "const [count, setCount] = useState(0);\nuseEffect(() => {\n  setCount(count + 1);\n});",
+    correcto: false,
+    lenguaje: "React",
+    categoria: "hooks",
+    hint: "Efecto secundario sin arreglo de dependencias.",
+    explicacion: "Bucle infinito de renders: useEffect sin segundo argumento se ejecuta en cada ciclo de actualización."
+  },
+  {
+    id: "tinder_20",
+    codigo: "const total = precios.reduce((acc, curr) => acc + curr, 0);",
+    correcto: true,
+    lenguaje: "JavaScript",
+    categoria: "functional",
+    hint: "Acumulación funcional con valor inicial.",
+    explicacion: "Uso ejemplar de Array.reduce() con valor inicial explícito 0 evitando errores con listas vacías."
+  },
+  {
+    id: "tinder_21",
+    codigo: "datos = {'clave': 'valor'}\nres = datos.get('inexistente', 'defecto')",
+    correcto: true,
+    lenguaje: "Python",
+    categoria: "clean_code",
+    hint: "Acceso seguro con valor por defecto.",
+    explicacion: "El método dict.get() evita KeyError retornando el valor alternativo provisto."
+  },
+  {
+    id: "tinder_22",
+    codigo: "for i in range(5):\nx = i * 2",
+    correcto: false,
+    lenguaje: "Python",
+    categoria: "syntax",
+    hint: "Error de indentación en bloque for.",
+    explicacion: "IndentationError: el cuerpo del bucle for en Python requiere indentación explícita de 4 espacios."
+  },
+  {
+    id: "tinder_23",
+    codigo: "nombre = 'Ana'\nmsg = f'Hola {nombre}, bienvenido'",
+    correcto: true,
+    lenguaje: "Python",
+    categoria: "syntax",
+    hint: "Interpolación moderna de cadenas con f-strings.",
+    explicacion: "Uso canónico de f-strings en Python 3.6+ para formato limpio y eficiente de texto."
+  },
+  {
+    id: "tinder_24",
+    codigo: "def dividir(a, b):\n    return a / b\nres = dividir(10, 0)",
+    correcto: false,
+    lenguaje: "Python",
+    categoria: "runtime",
+    hint: "División entre cero sin validación previa ni excepción.",
+    explicacion: "ZeroDivisionError inminente: se debe validar el divisor o capturar con try-except."
+  },
+  {
+    id: "tinder_25",
+    codigo: "SELECT DISTINCT categoria FROM productos WHERE stock > 0;",
+    correcto: true,
+    lenguaje: "SQL",
+    categoria: "queries",
+    hint: "Deduplicación de resultados relacionales con DISTINCT.",
+    explicacion: "Consulta SQL perfectamente válida y optimizada para listar categorías únicas activas."
+  },
+  {
+    id: "tinder_26",
+    codigo: "UPDATE empleados SET salario = salario * 1.10;",
+    correcto: false,
+    lenguaje: "SQL",
+    categoria: "queries",
+    hint: "Mutación masiva no intencionada por ausencia de WHERE.",
+    explicacion: "Peligro crítico: UPDATE sin cláusula WHERE sobrescribe todas las filas de la tabla empleados."
+  },
+  {
+    id: "tinder_27",
+    codigo: "SELECT d.nombre, COUNT(e.id) AS total\nFROM departamentos d\nJOIN empleados e ON d.id = e.depto_id\nGROUP BY d.nombre;",
+    correcto: true,
+    lenguaje: "SQL",
+    categoria: "queries",
+    hint: "Agregación relacional estándar con JOIN y GROUP BY.",
+    explicacion: "Uso canónico de JOIN y GROUP BY agrupando por todas las columnas no agregadas."
+  },
+  {
+    id: "tinder_28",
+    codigo: "SELECT id FROM transacciones WHERE YEAR(fecha) = 2026;",
+    correcto: false,
+    lenguaje: "SQL",
+    categoria: "performance",
+    hint: "Función aplicada a columna indexada imposibilita el uso de índices.",
+    explicacion: "Antipatrón SQL: aplicar funciones sobre columnas en WHERE anula el uso de índices B-Tree (full scan)."
+  },
+  {
+    id: "tinder_29",
+    codigo: "const tema = usuario?.preferencias?.tema ?? 'oscuro';",
+    correcto: true,
+    lenguaje: "JavaScript",
+    categoria: "syntax",
+    hint: "Encadenamiento opcional y coalescencia nula.",
+    explicacion: "Sintaxis moderna ECMAScript ultra defensiva contra nulos o indefinidos."
+  },
+  {
+    id: "tinder_30",
+    codigo: "function Perfil(props) {\n  props.usuario.nombre = 'Modificado';\n  return <div>{props.usuario.nombre}</div>;\n}",
+    correcto: false,
+    lenguaje: "React",
+    categoria: "react",
+    hint: "Violación del principio de inmutabilidad en props de React.",
+    explicacion: "Las props en React son de solo lectura y nunca deben ser mutadas directamente."
+  },
+  {
+    id: "tinder_31",
+    codigo: "const [u, p] = await Promise.all([fetchUser(), fetchPosts()]);",
+    correcto: true,
+    lenguaje: "JavaScript",
+    categoria: "async",
+    hint: "Concurrencia asíncrona no bloqueante.",
+    explicacion: "Patrón óptimo para ejecutar múltiples promesas independientes en paralelo."
+  },
+  {
+    id: "tinder_32",
+    codigo: "if ([] == 0) {\n  console.log('Son iguales');\n}",
+    correcto: false,
+    lenguaje: "JavaScript",
+    categoria: "pitfall",
+    hint: "Coerción de tipos implícita y comparación débil peligrosa.",
+    explicacion: "Antipatrón de JavaScript: el uso de '==' produce coerción confusa. Debe emplearse '===' estricto."
   }
 ];
 
-async function obtenerPragmaProfile(estudianteId) {
-  const docRef = doc(firestoreDb, 'profesor_estudiantes', estudianteId);
-  const docSnap = await getDoc(docRef);
-  if (!docSnap.exists()) {
-    throw new Error('Estudiante no encontrado');
-  }
-  const data = docSnap.data();
-  const defaultPragmaProfile = {
+// Caché en memoria para perfiles Pragma (Zero-Latency / BOOST)
+const pragmaProfileCache = new Map();
+
+function createDefaultPragmaProfile() {
+  return {
     rank_points: 0,
+    energy: 100,
     cognitive_profile: { strengths: [], weaknesses: [], last_analysis_timestamp: new Date().toISOString() },
-    inventory: { silicon_shards: 10, memory_threads: 5, logic_cores: 2, javascript_essence: 0, python_essence: 0, java_essence: 0, sql_essence: 0 },
-    unlocked_runes: [],
+    inventory: { silicon_shards: 15, memory_threads: 5, logic_cores: 2, javascript_essence: 0, python_essence: 0, java_essence: 0, sql_essence: 0 },
+    unlocked_runes: ["quantum", "aural", "cyber", "void", "nexus", "data", "pyro", "chronos", "nexsis", "dati", "aura", "ghost", "weave", "voidp"],
+    active_perks: [],
+    runic_array: ["chronos", "quantum", "cyber"],
     unlocked_cosmetics: [],
-    equipped_cosmetics: { map_skin: "default", star_aura: "none", laser_color: "#00ffcc" }
+    equipped_cosmetics: { map_skin: "default", star_aura: "none", laser_color: "#38bdf8" },
+    defense_stats: { highscore: 0, max_stage: 1 },
+    dungeon_progress: { unlocked_rooms: ["0,0"] }
   };
-  
-  let pragma = data.pragma_profile;
-  if (pragma) {
-    if (typeof pragma === 'string') {
-      try { pragma = JSON.parse(pragma); } catch (e) { pragma = defaultPragmaProfile; }
-    }
-  } else {
-    pragma = defaultPragmaProfile;
+}
+
+async function obtenerPragmaProfile(estudianteId) {
+  if (!estudianteId) {
+    return createDefaultPragmaProfile();
   }
-  return pragma;
+  if (pragmaProfileCache.has(estudianteId)) {
+    return pragmaProfileCache.get(estudianteId);
+  }
+  try {
+    const docRef = doc(firestoreDb, 'profesor_estudiantes', String(estudianteId));
+    const docSnap = await getDoc(docRef);
+    if (!docSnap.exists()) {
+      const defaultProfile = createDefaultPragmaProfile();
+      pragmaProfileCache.set(estudianteId, defaultProfile);
+      return defaultProfile;
+    }
+    const data = docSnap.data();
+    let pragma = data.pragma_profile;
+    if (pragma) {
+      if (typeof pragma === 'string') {
+        try { pragma = JSON.parse(pragma); } catch (e) { pragma = createDefaultPragmaProfile(); }
+      }
+    } else {
+      pragma = createDefaultPragmaProfile();
+    }
+    pragmaProfileCache.set(estudianteId, pragma);
+    return pragma;
+  } catch (err) {
+    console.warn('Fallback a perfil en memoria por error en Firestore:', err.message);
+    const defaultProfile = createDefaultPragmaProfile();
+    pragmaProfileCache.set(estudianteId, defaultProfile);
+    return defaultProfile;
+  }
 }
 
 async function guardarPragmaProfile(estudianteId, pragmaProfile) {
-  const docRef = doc(firestoreDb, 'profesor_estudiantes', estudianteId);
-  await updateDoc(docRef, { pragma_profile: pragmaProfile });
+  if (!estudianteId) return;
+  // 1. Escritura instantánea en memoria (0ms)
+  pragmaProfileCache.set(estudianteId, pragmaProfile);
+  // 2. Persistencia asíncrona hacia Firestore en segundo plano (Zero-Wait)
+  try {
+    const docRef = doc(firestoreDb, 'profesor_estudiantes', String(estudianteId));
+    setDoc(docRef, { pragma_profile: pragmaProfile }, { merge: true }).catch(err => {
+      console.warn('Persistencia en background hacia Firestore diferida:', err.message);
+    });
+  } catch (err) {
+    console.warn('Error al iniciar persistencia en Firestore:', err.message);
+  }
 }
 
 // 1. COPILOTO DE DEPURACIÓN - EVALUACIÓN
@@ -152,7 +426,12 @@ router.post('/api/pragma/copiloto/evaluar', async (req, res) => {
     {
       "aprobado": true o false,
       "puntaje": número entre 0 y 100,
-      "retroalimentacion": "explicación clara del bug y evaluación del alumno"
+      "retroalimentacion": "explicación clara del bug y evaluación del alumno",
+      "criterios": {
+        "exactitud_logica": "evaluación de la corrección sintáctica y lógica",
+        "eficiencia_big_o": "análisis de complejidad temporal y espacial",
+        "justificacion_conceptual": "evaluación técnica del entendimiento conceptual del alumno"
+      }
     }
     `;
 
@@ -167,14 +446,16 @@ router.post('/api/pragma/copiloto/evaluar', async (req, res) => {
     if (respuesta.aprobado && respuesta.puntaje >= 90) {
       const pragma = await obtenerPragmaProfile(estudiante_id);
       
-      pragma.rank_points += 15;
-      pragma.inventory.silicon_shards += 5;
-      pragma.inventory.memory_threads += 2;
+      pragma.rank_points = (pragma.rank_points || 0) + 15;
+      if (!pragma.inventory) pragma.inventory = { silicon_shards: 15, memory_threads: 5, logic_cores: 2 };
+      pragma.inventory.silicon_shards = (pragma.inventory.silicon_shards || 0) + 5;
+      pragma.inventory.memory_threads = (pragma.inventory.memory_threads || 0) + 2;
       
       if (respuesta.puntaje >= 95) {
-        pragma.unlocked_runes.push({
+        if (!pragma.copiloto_logros) pragma.copiloto_logros = [];
+        pragma.copiloto_logros.push({
           id: crypto.randomUUID(),
-          titulo: "Depuración Copiloto",
+          titulo: "Depuración Copiloto Sobresaliente",
           codigo: codigo_corregido,
           fecha: new Date().toISOString()
         });
@@ -383,30 +664,564 @@ router.post('/api/pragma/perfil/equipar', async (req, res) => {
   }
 });
 
-// 6. SYNTAX TINDER
+// 6. SYNTAX TINDER (Optimizado con filtrado por tecnología y prefetch en lote)
 router.get('/api/pragma/tinder/codigo', (req, res) => {
-  const randomSnippet = SYNTAX_TINDER_SNIPPETS[Math.floor(Math.random() * SYNTAX_TINDER_SNIPPETS.length)];
-  res.json(randomSnippet);
+  const tech = (req.query.tecnologia || req.query.lenguaje || '').toLowerCase();
+  let pool = SYNTAX_TINDER_SNIPPETS;
+  if (tech) {
+    const filtered = SYNTAX_TINDER_SNIPPETS.filter(s => {
+      const lang = s.lenguaje.toLowerCase();
+      if (tech.includes('python')) return lang === 'python';
+      if (tech.includes('sql')) return lang === 'sql';
+      if (tech.includes('javascript') || tech.includes('js')) return lang === 'javascript' || lang === 'react';
+      return lang === tech;
+    });
+    if (filtered.length > 0) pool = filtered;
+  }
+  const randomSnippet = pool[Math.floor(Math.random() * pool.length)];
+  res.json({
+    id: randomSnippet.id,
+    codigo: randomSnippet.codigo,
+    lenguaje: randomSnippet.lenguaje,
+    categoria: randomSnippet.categoria || 'syntax',
+    hint: randomSnippet.hint || 'Observa cuidadosamente la sintaxis y operadores.'
+  });
+});
+
+// Endpoint /boost de lote para prefetching en memoria del frontend (0ms lag)
+router.get('/api/pragma/tinder/lote', (req, res) => {
+  const count = Math.min(Math.max(parseInt(req.query.count) || 5, 1), 10);
+  const tech = (req.query.tecnologia || req.query.lenguaje || '').toLowerCase();
+  let pool = SYNTAX_TINDER_SNIPPETS;
+  if (tech) {
+    const filtered = SYNTAX_TINDER_SNIPPETS.filter(s => {
+      const lang = s.lenguaje.toLowerCase();
+      if (tech.includes('python')) return lang === 'python';
+      if (tech.includes('sql')) return lang === 'sql';
+      if (tech.includes('javascript') || tech.includes('js')) return lang === 'javascript' || lang === 'react';
+      return lang === tech;
+    });
+    if (filtered.length > 0) pool = filtered;
+  }
+
+  const shuffled = [...pool].sort(() => 0.5 - Math.random());
+  let batch = shuffled.slice(0, count);
+  while (batch.length < count && pool.length > 0) {
+    batch.push(pool[Math.floor(Math.random() * pool.length)]);
+  }
+
+  const result = batch.map(s => ({
+    id: s.id,
+    codigo: s.codigo,
+    lenguaje: s.lenguaje,
+    categoria: s.categoria || 'syntax',
+    hint: s.hint || 'Observa cuidadosamente la sintaxis y operadores.'
+  }));
+  res.json({ snippets: result, boost_activo: true, tecnologia: tech || 'todas' });
 });
 
 router.post('/api/pragma/tinder/votar', async (req, res) => {
-  const { estudiante_id, snippet_id, voto } = req.body;
+  const { estudiante_id, snippet_id, voto, respuesta_ms } = req.body;
   const snippet = SYNTAX_TINDER_SNIPPETS.find(s => s.id === snippet_id);
   if (!snippet) return res.status(404).json({ error: 'Snippet no encontrado' });
 
   const acierto = snippet.correcto === voto;
 
   try {
+    let rp_ganados = 0;
+    let shards_ganados = 0;
+    let bonus_velocidad = 0;
+
     if (acierto) {
+      rp_ganados = 5;
+      shards_ganados = 1;
+
+      // /BOOST: Bono por respuesta rápida (< 5 segundos)
+      if (typeof respuesta_ms === 'number' && respuesta_ms > 0 && respuesta_ms <= 5000) {
+        bonus_velocidad = 3;
+        rp_ganados += bonus_velocidad;
+      }
+
       const pragma = await obtenerPragmaProfile(estudiante_id);
-      pragma.rank_points += 5;
-      pragma.inventory.silicon_shards += 1;
+      pragma.rank_points = (pragma.rank_points || 0) + rp_ganados;
+      if (!pragma.inventory) {
+        pragma.inventory = { silicon_shards: 10, memory_threads: 5, logic_cores: 2, javascript_essence: 0, python_essence: 0, java_essence: 0, sql_essence: 0 };
+      }
+      pragma.inventory.silicon_shards = (pragma.inventory.silicon_shards || 0) + shards_ganados;
       await guardarPragmaProfile(estudiante_id, pragma);
     }
-    res.json({ acierto, explicacion: snippet.explicacion });
+
+    // Respuesta instantánea con perfil y datos de recompensa
+    res.json({
+      acierto,
+      correcto: snippet.correcto,
+      explicacion: snippet.explicacion,
+      rp_ganados,
+      shards_ganados,
+      bonus_velocidad,
+      boost_activo: true
+    });
   } catch (error) {
     console.error('Error al votar en tinder:', error);
     res.status(500).json({ error: 'Fallo al procesar voto' });
+  }
+});
+
+// Endpoint "✨ Explicar con IA" (Deep Dive / Mentor de Sintaxis)
+router.post('/api/pragma/tinder/explicar', async (req, res) => {
+  const { snippet_id } = req.body;
+  const snippet = SYNTAX_TINDER_SNIPPETS.find(s => s.id === snippet_id);
+  if (!snippet) return res.status(404).json({ error: 'Snippet no encontrado' });
+
+  res.json({
+    id: snippet.id,
+    lenguaje: snippet.lenguaje,
+    estado_esperado: snippet.correcto ? 'Código Limpio' : 'Código Sucio',
+    analisis: snippet.explicacion,
+    consejo: snippet.hint || 'Verifica la documentación oficial y buenas prácticas del lenguaje.',
+    categoria: snippet.categoria || 'syntax'
+  });
+});
+
+// ==========================================
+// 7. GRIMORIO DE RUNAS & HECHIZOS INTERACTIVOS (AETHER CODEX)
+// ==========================================
+const GRIMORIO_RUNAS_CATALOG = {
+  'chronos': { id: 'chronos', titulo: 'CHRONOS SHARD', level: 5, tipo: 'CHRONOMANCY', icono: '⏳', color: '#00ff66', descripcion: 'Manipulación temporal. Almacena fragmentos del flujo de ejecución.', cooldown: '15s', costo: null, perk: { tipo: 'time_bonus', valor: 5, desc: '+5s en Tinder Code y +1 vida en Defense' } },
+  'quantum': { id: 'quantum', titulo: 'QUANTUM SURGE', level: 4, tipo: 'QUANTUM', icono: '💠', color: '#00ff66', descripcion: 'Sobrecarga de bits en memoria temporal.', cooldown: '8s', costo: null, perk: { tipo: 'rp_boost', valor: 25, desc: '+25% RP y Shards ganados' } },
+  'aural': { id: 'aural', titulo: 'AURAL VEIL', level: 3, tipo: 'RESONANCE', icono: '🔊', color: '#00f3ff', descripcion: 'Escudo de frecuencia acústica contra intrusiones.', cooldown: '20s', costo: null, perk: { tipo: 'shield_regen', valor: 15, desc: '+15% Escudo en Defense' } },
+  'cyber': { id: 'cyber', titulo: 'CYBER SHIELD', level: 5, tipo: 'DEFENSE', icono: '🛡️', color: '#00ff66', descripcion: 'Protección perimetral de kernel en tiempo real.', cooldown: '30s', costo: null, perk: { tipo: 'first_error_immune', valor: 1, desc: 'Inmunidad al primer error en duelos' } },
+  'void': { id: 'void', titulo: 'VOID PULSE', level: 3, tipo: 'VOID', icono: '🌀', color: '#00f3ff', descripcion: 'Limpia la pila de ejecución instantáneamente.', cooldown: '12s', costo: null, perk: { tipo: 'screen_clear', valor: 1, desc: 'Limpia 1 bloque crítico en Defense' } },
+  'nexus': { id: 'nexus', titulo: 'NEXUS BIND', level: 4, tipo: 'NEXUS', icono: '🕸️', color: '#00f3ff', descripcion: 'Entrelaza sockets de red locales y remotos.', cooldown: '10s', costo: null, perk: { tipo: 'net_sync', valor: 10, desc: 'Sincronización de paquetes ultrarrápida' } },
+  'data': { id: 'data', titulo: 'DATA STREAM', level: 3, tipo: 'FLOW', icono: '⇄', color: '#00f3ff', descripcion: 'Canaliza paquetes de datos comprimidos.', cooldown: '5s', costo: null, perk: { tipo: 'data_boost', valor: 15, desc: '+15% Esencias al resolver retos' } },
+  'pyro': { id: 'pyro', titulo: 'PYRO-CORE', level: 3, tipo: 'ELEMENTAL', icono: '🔥', color: '#ef4444', descripcion: 'Desencadena bucles iterativos de calor sintáctico.', cooldown: '15s', costo: null, perk: { tipo: 'fire_damage', valor: 30, desc: 'Daño crítico en Arena Multijugador' } },
+  'nexsis': { id: 'nexsis', titulo: 'NEXSIS RUNE', level: 3, tipo: 'FLOW', icono: '🪐', color: '#00f3ff', descripcion: 'Fuerza la ejecución asíncrona de llamadas apiladas.', cooldown: '15s', costo: null, perk: { tipo: 'async_boost', valor: 20, desc: '+20% Rapidez en ejecución asíncrona' } },
+  'dati': { id: 'dati', titulo: 'DATI STREAM', level: 3, tipo: 'FLOW', icono: '⧓', color: '#00f3ff', descripcion: 'Paraleliza hilos del procesador virtual.', cooldown: '22s', costo: null, perk: { tipo: 'thread_opt', valor: 15, desc: 'Optimiza memoria en La Taberna (-15% RAM)' } },
+  'aura': { id: 'aura', titulo: 'AURA LOCK', level: 3, tipo: 'DEFENSE', icono: '🔒', color: '#00ff66', descripcion: 'Previene la mutación de variables globales.', cooldown: '18s', costo: null, perk: { tipo: 'global_guard', valor: 1, desc: 'Previene mutación indeseada de estado' } },
+  'ghost': { id: 'ghost', titulo: 'GHOST NODE', level: 3, tipo: 'STEALTH', icono: '👻', color: '#00f3ff', descripcion: 'Oculta el hilo de ejecución de rastreadores.', cooldown: '25s', costo: null, perk: { tipo: 'stealth_eval', valor: 1, desc: 'Oculta tus tiempos ante rivales en Arena' } },
+  'weave': { id: 'weave', titulo: 'CRYPTIC WEAVE', level: 3, tipo: 'CRYPT', icono: '🌀', color: '#00ff66', descripcion: 'Encriptación simétrica de flujo de bytes.', cooldown: '30s', costo: null, perk: { tipo: 'crypt_shield', valor: 20, desc: '+20% Resistencia en Firewall' } },
+  'voidp': { id: 'voidp', titulo: 'VOID WAVE', level: 3, tipo: 'VOID', icono: '👁️', color: '#00f3ff', descripcion: 'Invoca un barrido de recolección de basura.', cooldown: '12s', costo: null, perk: { tipo: 'garbage_collect', valor: 1, desc: 'Descarta líneas de error sin penalización' } },
+  'lock1': { id: 'lock1', titulo: 'OVERCLOCK CORE', level: 6, tipo: 'OVERCLOCK', icono: '⚡', color: '#f59e0b', descripcion: 'Multiplicador de ciclos de CPU para duelos de alta intensidad.', cooldown: '25s', costo: { silicon_shards: 15, memory_threads: 5 }, perk: { tipo: 'combo_mult', valor: 2, desc: 'Multiplicador Combo x2' }, reqLvl: 12 },
+  'lock2': { id: 'lock2', titulo: 'MATRIX BEAM', level: 8, tipo: 'CYBER', icono: '🌟', color: '#8b5cf6', descripcion: 'Haz cuántico que penetra compuertas relacionales y firewalls.', cooldown: '35s', costo: { silicon_shards: 20, logic_cores: 2 }, perk: { tipo: 'auto_turret', valor: 1, desc: 'Torreta láser automática en Defense' }, reqLvl: 15 },
+  'lock3': { id: 'lock3', titulo: 'GRID RUNNER', level: 5, tipo: 'GRID', icono: '🗝️', color: '#10b981', descripcion: 'Navegación espectral en cuadrículas de bases de datos.', cooldown: '15s', costo: { silicon_shards: 15, sql_essence: 1 }, perk: { tipo: 'sql_hint', valor: 1, desc: 'Pista relacional automática en SQL Dungeon' }, reqLvl: 12 },
+  'lock4': { id: 'lock4', titulo: 'GHOST CODE', level: 7, tipo: 'STEALTH', icono: '👻', color: '#ec4899', descripcion: 'Ofuscación profunda de hilos de ejecución.', cooldown: '40s', costo: { silicon_shards: 25, logic_cores: 3, javascript_essence: 2 }, perk: { tipo: 'time_freeze', valor: 10, desc: 'Pausa el cronómetro 10s' }, reqLvl: 18 }
+};
+
+// Desbloquear runa consumiendo recursos
+router.post('/api/pragma/grimorio/desbloquear', async (req, res) => {
+  const { estudiante_id, rune_id } = req.body;
+  const rune = GRIMORIO_RUNAS_CATALOG[rune_id];
+  if (!rune) return res.status(404).json({ error: 'Runa no catalogada' });
+  if (!rune.costo) return res.json({ success: true, message: 'Runa básica ya desbloqueada' });
+
+  try {
+    const pragma = await obtenerPragmaProfile(estudiante_id);
+    if (!pragma.unlocked_runes) pragma.unlocked_runes = [];
+    if (pragma.unlocked_runes.includes(rune_id)) {
+      return res.json({ success: true, message: 'Runa ya desbloqueada previamente', pragma });
+    }
+
+    for (const [recurso, cantidad] of Object.entries(rune.costo)) {
+      if ((pragma.inventory[recurso] || 0) < cantidad) {
+        return res.status(400).json({ error: `Recursos insuficientes. Requiere ${cantidad} de ${recurso}.` });
+      }
+    }
+
+    for (const [recurso, cantidad] of Object.entries(rune.costo)) {
+      pragma.inventory[recurso] -= cantidad;
+    }
+
+    pragma.unlocked_runes.push(rune_id);
+    await guardarPragmaProfile(estudiante_id, pragma);
+    res.json({
+      success: true,
+      mensaje: `¡Runa ${rune.titulo} desbloqueada con éxito!`,
+      unlocked_runes: pragma.unlocked_runes,
+      inventory: pragma.inventory
+    });
+  } catch (err) {
+    console.error('Error al desbloquear runa:', err);
+    res.status(500).json({ error: 'Error interno al desbloquear runa' });
+  }
+});
+
+// Castear hechizo de runa interactivo
+router.post('/api/pragma/grimorio/castear', async (req, res) => {
+  const { estudiante_id, rune_id } = req.body;
+  const rune = GRIMORIO_RUNAS_CATALOG[rune_id];
+  if (!rune) return res.status(404).json({ error: 'Runa no catalogada' });
+
+  try {
+    const pragma = await obtenerPragmaProfile(estudiante_id);
+    if (!pragma.unlocked_runes) {
+      pragma.unlocked_runes = ["quantum", "aural", "cyber", "void", "nexus", "data", "pyro", "chronos", "nexsis", "dati", "aura", "ghost", "weave", "voidp"];
+    }
+
+    if (rune.costo && !pragma.unlocked_runes.includes(rune_id)) {
+      return res.status(400).json({ error: 'Debes desbloquear esta runa antes de poder castearla.' });
+    }
+
+    let energia = typeof pragma.energy === 'number' ? pragma.energy : 100;
+    const costoEnergia = 20;
+
+    if (energia < costoEnergia) {
+      if ((pragma.inventory?.silicon_shards || 0) >= 1) {
+        pragma.inventory.silicon_shards -= 1;
+        energia = 100;
+      } else {
+        return res.status(400).json({ error: 'Energía insuficiente (mínimo 20%). Espera recarga o usa 1 Shard.' });
+      }
+    } else {
+      energia -= costoEnergia;
+    }
+    pragma.energy = energia;
+
+    if (!Array.isArray(pragma.active_perks)) pragma.active_perks = [];
+    const ahora = Date.now();
+    pragma.active_perks = pragma.active_perks.filter(p => p.expira > ahora);
+
+    const duracionMs = 10 * 60 * 1000; // 10 minutos de efecto activo
+    const nuevoPerk = {
+      rune_id: rune.id,
+      titulo: rune.titulo,
+      icono: rune.icono,
+      color: rune.color,
+      perk: rune.perk,
+      activado_en: ahora,
+      expira: ahora + duracionMs
+    };
+    pragma.active_perks.push(nuevoPerk);
+
+    await guardarPragmaProfile(estudiante_id, pragma);
+    res.json({
+      success: true,
+      mensaje: `✨ Hechizo ${rune.titulo} canalizado exitosamente! Efecto: ${rune.perk.desc}`,
+      perk: nuevoPerk,
+      active_perks: pragma.active_perks,
+      energy: pragma.energy,
+      inventory: pragma.inventory
+    });
+  } catch (err) {
+    console.error('Error al castear runa:', err);
+    res.status(500).json({ error: 'Error al canalizar el hechizo' });
+  }
+});
+
+// Configurar Runic Array (Matriz de Engarce)
+router.post('/api/pragma/grimorio/equipar-array', async (req, res) => {
+  const { estudiante_id, runic_array } = req.body;
+  if (!Array.isArray(runic_array)) return res.status(400).json({ error: 'Array inválido' });
+
+  try {
+    const pragma = await obtenerPragmaProfile(estudiante_id);
+    pragma.runic_array = runic_array.slice(0, 3);
+    await guardarPragmaProfile(estudiante_id, pragma);
+    res.json({ success: true, runic_array: pragma.runic_array });
+  } catch (err) {
+    console.error('Error al equipar runic array:', err);
+    res.status(500).json({ error: 'Error al guardar matriz rúnica' });
+  }
+});
+
+// ==========================================
+// 8. SQL DUNGEON CRAWLER - ENGINE RELACIONAL
+// ==========================================
+const SQL_DUNGEON_DATA = {
+  "tabla_usuarios": {
+    name: "tabla_usuarios",
+    desc: "Filtra usuarios activos.",
+    columns: ["id (INT)", "nombre (VARCHAR)", "email (VARCHAR)", "activo (BOOLEAN)", "rol_id (INT)"],
+    validador: (q) => {
+      const c = q.toLowerCase();
+      return c.includes('select') && c.includes('tabla_usuarios') && (c.includes('activo = true') || c.includes('activo=true') || c.includes('activo is true') || c.includes('activo = 1') || c.includes('where activo'));
+    },
+    mockRows: [
+      { id: 1, nombre: 'Alice Chen', email: 'alice@pragma.ai', activo: true, rol_id: 1 },
+      { id: 2, nombre: 'Bob Vance', email: 'bob@pragma.ai', activo: true, rol_id: 2 },
+      { id: 5, nombre: 'Elena Rostova', email: 'elena@pragma.ai', activo: true, rol_id: 1 }
+    ]
+  },
+  "tabla_ventas": {
+    name: "tabla_ventas",
+    desc: "Calcula el total de ventas sumado.",
+    columns: ["id (INT)", "fecha (DATE)", "total (NUMERIC)", "cliente_id (INT)"],
+    validador: (q) => {
+      const c = q.toLowerCase();
+      return c.includes('select') && c.includes('sum(total)') && c.includes('tabla_ventas');
+    },
+    mockRows: [{ sum: 184520.75 }]
+  },
+  "tabla_logs": {
+    name: "tabla_logs",
+    desc: "Cuenta logs con nivel de ERROR.",
+    columns: ["id (INT)", "nivel (VARCHAR)", "mensaje (TEXT)", "creado_en (TIMESTAMP)"],
+    validador: (q) => {
+      const c = q.toLowerCase();
+      return c.includes('select') && c.includes('count(') && c.includes('tabla_logs') && (c.includes("nivel = 'error'") || c.includes('nivel = "error"') || c.includes("nivel='error'"));
+    },
+    mockRows: [{ count: 14 }]
+  },
+  "tabla_productos": {
+    name: "tabla_productos",
+    desc: "Obtén el producto más caro.",
+    columns: ["id (INT)", "nombre (VARCHAR)", "precio (DECIMAL)", "stock (INT)"],
+    validador: (q) => {
+      const c = q.toLowerCase();
+      return c.includes('select') && c.includes('tabla_productos') && c.includes('order by precio desc') && c.includes('limit 1');
+    },
+    mockRows: [{ id: 8, nombre: 'Quantum Server Core X9', precio: 12499.99, stock: 4 }]
+  },
+  "tabla_compras": {
+    name: "tabla_compras",
+    desc: "Cuenta compras agrupadas por cliente.",
+    columns: ["id (INT)", "cliente_id (INT)", "monto (DECIMAL)", "creado_en (DATE)"],
+    validador: (q) => {
+      const c = q.toLowerCase();
+      return c.includes('select') && c.includes('cliente_id') && c.includes('count(') && c.includes('tabla_compras') && c.includes('group by cliente_id');
+    },
+    mockRows: [
+      { cliente_id: 101, count: 12 },
+      { cliente_id: 102, count: 8 },
+      { cliente_id: 108, count: 24 }
+    ]
+  },
+  "tabla_roles": {
+    name: "tabla_roles",
+    desc: "Relaciona usuarios con sus roles.",
+    columns: ["u.id", "u.nombre", "r.id", "r.nombre AS rol"],
+    validador: (q) => {
+      const c = q.toLowerCase();
+      return c.includes('select') && c.includes('tabla_usuarios') && c.includes('join tabla_roles') && (c.includes('rol_id = r.id') || c.includes('r.id = u.rol_id'));
+    },
+    mockRows: [
+      { nombre: 'Alice Chen', rol: 'Arquitecto de Software' },
+      { nombre: 'Bob Vance', rol: 'Ingeniero de Datos' },
+      { nombre: 'Elena Rostova', rol: 'Security Lead' }
+    ]
+  },
+  "tabla_alertas": {
+    name: "tabla_alertas",
+    desc: "Lista alertas creadas a partir del 2026.",
+    columns: ["id (INT)", "tipo (VARCHAR)", "fecha (DATE)", "severidad (VARCHAR)"],
+    validador: (q) => {
+      const c = q.toLowerCase();
+      return c.includes('select') && c.includes('tabla_alertas') && c.includes('fecha >') && c.includes('2026');
+    },
+    mockRows: [
+      { id: 104, tipo: 'SQL_INJECTION_ATTEMPT', fecha: '2026-02-14', severidad: 'CRITICAL' },
+      { id: 109, tipo: 'PORT_SCAN_BLOCKED', fecha: '2026-03-01', severidad: 'HIGH' }
+    ]
+  },
+  "tabla_pagos": {
+    name: "tabla_pagos",
+    desc: "Busca pagos con estado PENDIENTE.",
+    columns: ["id (INT)", "monto (DECIMAL)", "estado (VARCHAR)", "metodo (VARCHAR)"],
+    validador: (q) => {
+      const c = q.toLowerCase();
+      return c.includes('select') && c.includes('tabla_pagos') && (c.includes("estado = 'pendiente'") || c.includes('estado = "pendiente"'));
+    },
+    mockRows: [
+      { id: 501, monto: 1450.00, estado: 'PENDIENTE', metodo: 'STRIPE_ESCROW' },
+      { id: 504, monto: 320.50, estado: 'PENDIENTE', metodo: 'CRYPTO_TRANSFER' }
+    ]
+  },
+  "nucleo": {
+    name: "NÚCLEO DE LA BASE DE DATOS",
+    desc: "¡Has conquistado el núcleo de datos!",
+    columns: ["nucleo_status (VARCHAR)", "potencia (INT)", "cripto_firmas (INT)"],
+    validador: () => true,
+    mockRows: [{ nucleo_status: 'DOMINADO', potencia: 100, cripto_firmas: 9999 }]
+  }
+};
+
+router.post('/api/pragma/dungeon/validar', async (req, res) => {
+  const { estudiante_id, room_name, query } = req.body;
+  if (!room_name || !query) return res.status(400).json({ error: 'Faltan parámetros' });
+
+  const room = SQL_DUNGEON_DATA[room_name];
+  if (!room) return res.status(404).json({ error: 'Habitación no encontrada' });
+
+  const cleanQuery = query.trim().replace(/;+$/, '').trim();
+  const valido = room.validador(cleanQuery);
+
+  if (valido) {
+    try {
+      const pragma = await obtenerPragmaProfile(estudiante_id);
+      pragma.rank_points = (pragma.rank_points || 0) + 15;
+      if (!pragma.inventory) pragma.inventory = { silicon_shards: 10, memory_threads: 5, logic_cores: 2, javascript_essence: 0, python_essence: 0, java_essence: 0, sql_essence: 0 };
+      pragma.inventory.sql_essence = (pragma.inventory.sql_essence || 0) + 1;
+      pragma.inventory.silicon_shards = (pragma.inventory.silicon_shards || 0) + 2;
+
+      if (!pragma.dungeon_progress) pragma.dungeon_progress = { unlocked_rooms: [] };
+      if (!pragma.dungeon_progress.unlocked_rooms.includes(room_name)) {
+        pragma.dungeon_progress.unlocked_rooms.push(room_name);
+      }
+
+      await guardarPragmaProfile(estudiante_id, pragma);
+      return res.json({
+        valido: true,
+        mensaje: '🔓 ¡Compuerta de Datos Abierta! Consulta ejecutada correctamente.',
+        mock_data: room.mockRows,
+        columns: room.columns,
+        rp_ganados: 15,
+        sql_essence_ganada: 1,
+        unlocked_rooms: pragma.dungeon_progress.unlocked_rooms
+      });
+    } catch (e) {
+      console.error(e);
+      return res.json({
+        valido: true,
+        mensaje: '🔓 ¡Compuerta de Datos Abierta!',
+        mock_data: room.mockRows,
+        columns: room.columns
+      });
+    }
+  }
+
+  res.json({
+    valido: false,
+    mensaje: '❌ Error de Sintaxis SQL o filtrado insuficiente. Verifica cláusulas WHERE, JOIN y agregaciones.',
+    columns: room.columns
+  });
+});
+
+// ==========================================
+// 9. COPILOTO RETOS DINÁMICOS
+// ==========================================
+const COPILOTO_RETOS_BANCO = [
+  {
+    id: "copiloto_1",
+    titulo: "Doble Ciclo Ineficiente y Comparación Incorrecta",
+    categoria: "Algoritmos",
+    lenguaje: "JavaScript",
+    dificultad: "Intermedio",
+    descripcion: "La función compara elementos en la misma posición (i === j) causando falsos duplicados y lentitud O(N^2).",
+    codigo_con_bug: `function encontrarDuplicados(arr) {\n  let duplicados = [];\n  for (let i = 0; i < arr.length; i++) {\n    for (let j = 0; j < arr.length; j++) {\n      if (arr[i] === arr[j]) {\n        duplicados.push(arr[i]);\n      }\n    }\n  }\n  return duplicados;\n}`,
+    codigo_solucion: `function encontrarDuplicados(arr) {\n  const vistos = new Set();\n  const duplicados = new Set();\n  for (const num of arr) {\n    if (vistos.has(num)) {\n      duplicados.add(num);\n    } else {\n      vistos.add(num);\n    }\n  }\n  return Array.from(duplicados);\n}`,
+    consola_error: "[ERROR] encontrarDuplicados([1, 2, 2, 3]) retornó [1, 2, 2, 2, 2, 3] en vez de [2].\n> Complejidad actual: O(N^2). Objetivo: O(N).",
+    tests: [
+      { input: "[1, 2, 3, 2, 4, 3]", esperado: "[2, 3]" },
+      { input: "[1, 2, 3]", esperado: "[]" },
+      { input: "[]", esperado: "[]" }
+    ]
+  },
+  {
+    id: "copiloto_2",
+    titulo: "Memory Leak por Clausuras y Event Listeners",
+    categoria: "Frontend",
+    lenguaje: "JavaScript",
+    dificultad: "Avanzado",
+    descripcion: "Registra listeners repetitivos en el DOM sin limpiar la referencia.",
+    codigo_con_bug: `function attachHandlers(buttons) {\n  buttons.forEach(btn => {\n    window.addEventListener('resize', function onResize() {\n      btn.style.width = window.innerWidth + 'px';\n    });\n  });\n}`,
+    codigo_solucion: `function attachHandlers(buttons) {\n  const handleResize = () => {\n    const w = window.innerWidth + 'px';\n    buttons.forEach(btn => { btn.style.width = w; });\n  };\n  window.addEventListener('resize', handleResize);\n  return () => window.removeEventListener('resize', handleResize);\n}`,
+    consola_error: "[LEAK DETECTED] 500 listeners huérfanos acumulados en window. RAM aumentando en 45MB.",
+    tests: [
+      { input: "3 buttons", esperado: "1 single shared event listener con cleanup" }
+    ]
+  },
+  {
+    id: "copiloto_3",
+    titulo: "Mutación No Intencional de Argumento Mutable",
+    categoria: "Backend",
+    lenguaje: "Python",
+    dificultad: "Principiante",
+    descripcion: "Uso de default argument mutable o asignación por referencia directa en python.",
+    codigo_con_bug: `def agregar_log(mensaje, log_list=[]):\n    log_list.append(mensaje)\n    return log_list`,
+    codigo_solucion: `def agregar_log(mensaje, log_list=None):\n    if log_list is None:\n        log_list = []\n    log_list.append(mensaje)\n    return log_list`,
+    consola_error: "[TEST FAIL] agregar_log('A') y luego agregar_log('B') acumuló ['A', 'B'] en la segunda llamada.",
+    tests: [
+      { input: "agregar_log('Primero')", esperado: "['Primero']" },
+      { input: "agregar_log('Segundo')", esperado: "['Segundo']" }
+    ]
+  },
+  {
+    id: "copiloto_4",
+    titulo: "SQL N+1 Query Problem en Bucle",
+    categoria: "Base de Datos",
+    lenguaje: "SQL",
+    dificultad: "Intermedio",
+    descripcion: "Ejecuta una consulta SQL individual por cada usuario en vez de una sola consulta con JOIN o IN.",
+    codigo_con_bug: `async function getUsuariosConRoles(usuarios) {\n  for (let u of usuarios) {\n    u.rol = await db.query('SELECT nombre FROM roles WHERE id = $1', [u.rol_id]);\n  }\n  return usuarios;\n}`,
+    codigo_solucion: `async function getUsuariosConRoles(usuarios) {\n  const ids = usuarios.map(u => u.rol_id).filter(Boolean);\n  const roles = await db.query('SELECT id, nombre FROM roles WHERE id = ANY($1)', [ids]);\n  const roleMap = new Map(roles.rows.map(r => [r.id, r.nombre]));\n  return usuarios.map(u => ({ ...u, rol: roleMap.get(u.rol_id) || null }));\n}`,
+    consola_error: "[PERFORMANCE WARNING] 100 usuarios generaron 101 consultas a la base de datos (Latency 850ms).",
+    tests: [
+      { input: "100 usuarios", esperado: "1 query unificada (Latency < 25ms)" }
+    ]
+  },
+  {
+    id: "copiloto_5",
+    titulo: "Reasignación Cuadrática de Strings",
+    categoria: "Backend",
+    lenguaje: "Python",
+    dificultad: "Intermedio",
+    descripcion: "Concatenación con += dentro de un bucle genera reasignación y copia O(N^2) de memoria inmutable.",
+    codigo_con_bug: `def ensamblar_payload(fragmentos):\n    resultado = ""\n    for f in fragmentos:\n        resultado += f + "\\n"\n    return resultado`,
+    codigo_solucion: `def ensamblar_payload(fragmentos):\n    return "\\n".join(fragmentos) + "\\n"`,
+    consola_error: "[PERFORMANCE] Concatenación de 50k fragmentos tardó 4.8s por copia inmutable repetitiva.",
+    tests: [
+      { input: "50k strings", esperado: "join en O(N) completado en 12ms" }
+    ]
+  },
+  {
+    id: "copiloto_6",
+    titulo: "Subconsulta Correlacionada Ineficiente",
+    categoria: "Base de Datos",
+    lenguaje: "SQL",
+    dificultad: "Avanzado",
+    descripcion: "Filtro con subconsulta correlacionada por fila en vez de EXISTS o JOIN indexado.",
+    codigo_con_bug: `SELECT id, total \nFROM ordenes o \nWHERE o.id IN (\n  SELECT orden_id FROM pagos p WHERE p.estado = 'COMPLETADO'\n);`,
+    codigo_solucion: `SELECT o.id, o.total \nFROM ordenes o \nJOIN pagos p ON o.id = p.orden_id \nWHERE p.estado = 'COMPLETADO';`,
+    consola_error: "[QUERY PLAN] Full table scan en subquery repetido 100,000 veces. Costo de ejecución: 14,200.",
+    tests: [
+      { input: "100k filas", esperado: "Index Scan O(N log N) con costo < 150" }
+    ]
+  }
+];
+
+router.get('/api/pragma/copiloto/retos', (req, res) => {
+  const tech = (req.query.tecnologia || req.query.lenguaje || '').toLowerCase();
+  let retos = COPILOTO_RETOS_BANCO;
+  if (tech) {
+    const filtered = COPILOTO_RETOS_BANCO.filter(r => {
+      const lang = r.lenguaje.toLowerCase();
+      if (tech.includes('python')) return lang === 'python';
+      if (tech.includes('sql')) return lang === 'sql' || r.categoria.toLowerCase().includes('sql') || r.categoria.toLowerCase().includes('base de datos');
+      if (tech.includes('javascript') || tech.includes('js')) return lang === 'javascript';
+      return lang === tech;
+    });
+    if (filtered.length > 0) retos = filtered;
+  }
+  res.json({ retos });
+});
+
+// Guardar Score de Defense Arcade
+router.post('/api/pragma/defense/score', async (req, res) => {
+  const { estudiante_id, score, stage, waves_cleared } = req.body;
+  try {
+    const pragma = await obtenerPragmaProfile(estudiante_id);
+    if (!pragma.defense_stats) pragma.defense_stats = { highscore: 0, max_stage: 1 };
+    if (score > (pragma.defense_stats.highscore || 0)) {
+      pragma.defense_stats.highscore = score;
+    }
+    if (stage > (pragma.defense_stats.max_stage || 1)) {
+      pragma.defense_stats.max_stage = stage;
+    }
+    const shardsGain = Math.floor(score / 250000) + Math.floor((waves_cleared || 0) / 2);
+    const rpGain = Math.floor(score / 100000);
+    pragma.rank_points = (pragma.rank_points || 0) + rpGain;
+    if (!pragma.inventory) pragma.inventory = { silicon_shards: 10, memory_threads: 5, logic_cores: 2, javascript_essence: 0, python_essence: 0, java_essence: 0, sql_essence: 0 };
+    pragma.inventory.silicon_shards = (pragma.inventory.silicon_shards || 0) + shardsGain;
+
+    await guardarPragmaProfile(estudiante_id, pragma);
+    res.json({
+      success: true,
+      highscore: pragma.defense_stats.highscore,
+      rp_ganados: rpGain,
+      shards_ganados: shardsGain
+    });
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ error: 'Error al registrar score' });
   }
 });
 

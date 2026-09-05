@@ -1,5 +1,8 @@
-import React, { useState, useEffect } from 'react';
-import { Sparkles, RefreshCw, BookOpen, Download, Send } from 'lucide-react';
+import { useState, useEffect } from 'react';
+import { 
+  Sparkles, RefreshCw, BookOpen, Download, Send, 
+  CheckSquare, Copy, Check, Layers, ShieldCheck, Code2, Database 
+} from 'lucide-react';
 import { parsearMarkdownMentor, parsearInlineMarkdown } from '../../core/controladores/markdown';
 import { descargarDocumentoPDF } from '../../core/controladores/pdfGenerator';
 
@@ -32,15 +35,53 @@ export default function MentorChat({
   enviarMensajeMentor
 }) {
   const [esMovil, setEsMovil] = useState(false);
+  const [copiadoId, setCopiadoId] = useState(null);
 
   useEffect(() => {
-    const checkMovil = () => {
-      setEsMovil(window.innerWidth < 768 || /Mobi|Android|iPhone/i.test(navigator.userAgent));
+    const handleResize = () => {
+      setEsMovil(window.innerWidth < 768);
     };
-    checkMovil();
-    window.addEventListener('resize', checkMovil);
-    return () => window.removeEventListener('resize', checkMovil);
+    handleResize();
+    window.addEventListener('resize', handleResize);
+    return () => window.removeEventListener('resize', handleResize);
   }, []);
+
+  const [allChecklists, setAllChecklists] = useState(() => {
+    try {
+      const items = {};
+      for (let i = 0; i < localStorage.length; i++) {
+        const key = localStorage.key(i);
+        if (key && key.startsWith('mentor_checklist_')) {
+          items[key.replace('mentor_checklist_', '')] = JSON.parse(localStorage.getItem(key) || '{}');
+        }
+      }
+      return items;
+    } catch {
+      return {};
+    }
+  });
+
+  const checklist = (planActivo?.id && allChecklists[planActivo.id]) ? allChecklists[planActivo.id] : {};
+
+  const toggleChecklistItem = (itemKey) => {
+    if (!planActivo?.id) return;
+    setAllChecklists(prev => {
+      const current = prev[planActivo.id] || {};
+      const updated = { ...current, [itemKey]: !current[itemKey] };
+      try {
+        localStorage.setItem(`mentor_checklist_${planActivo.id}`, JSON.stringify(updated));
+      } catch {
+        console.debug('Storage no disponible');
+      }
+      return { ...prev, [planActivo.id]: updated };
+    });
+  };
+
+  const copiarTexto = (id, texto) => {
+    navigator.clipboard.writeText(texto);
+    setCopiadoId(id);
+    setTimeout(() => setCopiadoId(null), 2000);
+  };
 
   const handleDescargarPlanPDF = () => {
     if (planActivo) {
@@ -68,7 +109,7 @@ export default function MentorChat({
         <div className="mentor-sidebar-header">
           <h3>Mis Proyectos</h3>
           <a
-            href={`${API_BASE}/api/mentor/second-brain/${estudiante.id}`}
+            href={`${API_BASE}/api/mentor/second-brain/${estudiante?.id || 'estudiante_local'}`}
             download
             className="btn-export-second-brain"
             title="Exportar bitácora estructurada de aprendizaje para NotebookLM / RAG"
@@ -161,6 +202,20 @@ export default function MentorChat({
                 >
                   <Sparkles size={14} /> Historial de Guías ({guiasAyuda.length})
                 </button>
+                <button
+                  type="button"
+                  className={`plan-tab-btn ${tabMentorColumn === 'blueprints' ? 'active' : ''}`}
+                  onClick={() => setTabMentorColumn('blueprints')}
+                >
+                  <Layers size={14} /> Blueprints & Recursos
+                </button>
+                <button
+                  type="button"
+                  className={`plan-tab-btn ${tabMentorColumn === 'checklist' ? 'active' : ''}`}
+                  onClick={() => setTabMentorColumn('checklist')}
+                >
+                  <CheckSquare size={14} /> Checklist de Fases
+                </button>
               </div>
 
               {tabMentorColumn === 'plan' ? (
@@ -198,6 +253,278 @@ export default function MentorChat({
                     {parsearMarkdownMentor(planActivo.plan_markdown)}
                   </div>
                 </>
+              ) : tabMentorColumn === 'blueprints' ? (
+                <div className="mentor-blueprints-body">
+                  <div className="blueprints-header mb-4">
+                    <h3>📐 Blueprints Arquitectónicos & Recursos de Producción</h3>
+                    <p className="text-xs text-slate-400">
+                      Plantillas y andamios estructurados listos para producción para diseñar la arquitectura de tu proyecto de forma limpia.
+                    </p>
+                  </div>
+
+                  <div className="blueprints-grid">
+                    {/* Blueprint 1: Clean Architecture */}
+                    <div className="blueprint-card">
+                      <div className="blueprint-card-top">
+                        <div className="flex items-center gap-2">
+                          <Layers size={16} className="text-indigo-400" />
+                          <h4 className="font-semibold text-white text-sm">Clean Architecture & UseCases</h4>
+                        </div>
+                        <span className="bp-tag bp-tag-arch">Modular</span>
+                      </div>
+                      <p className="bp-desc">
+                        Aislamiento estricto de dominio, casos de uso puros y adaptadores de infraestructura para evitar acoplamiento.
+                      </p>
+                      <pre className="bp-code-snippet">
+{`src/
+├── domain/          # Entidades y reglas de negocio
+│   └── entities/
+├── application/     # Casos de uso (CreateOrder, AuthUser)
+│   └── usecases/
+├── infrastructure/  # Repositorios DB, APIs externas, Prisma
+│   ├── database/
+│   └── repositories/
+└── interfaces/      # Controladores HTTP, DTOs y Rutas
+    └── http/`}
+                      </pre>
+                      <div className="bp-card-actions">
+                        <button
+                          type="button"
+                          className="btn-bp-copy"
+                          onClick={() => copiarTexto('bp_clean', `src/\n├── domain/entities/\n├── application/usecases/\n├── infrastructure/repositories/\n└── interfaces/http/`)}
+                        >
+                          {copiadoId === 'bp_clean' ? <Check size={13} className="text-emerald-400" /> : <Copy size={13} />}
+                          <span>{copiadoId === 'bp_clean' ? 'Copiado' : 'Copiar Estructura'}</span>
+                        </button>
+                        <button
+                          type="button"
+                          className="btn-bp-ask"
+                          onClick={() => {
+                            setMensajeChatMentor(`¿Cómo aplico Clean Architecture y casos de uso en mi proyecto ${planActivo?.titulo || ''}?`);
+                          }}
+                        >
+                          💬 Consultar al Mentor
+                        </button>
+                      </div>
+                    </div>
+
+                    {/* Blueprint 2: Express + PostgreSQL + Prisma */}
+                    <div className="blueprint-card">
+                      <div className="blueprint-card-top">
+                        <div className="flex items-center gap-2">
+                          <Database size={16} className="text-emerald-400" />
+                          <h4 className="font-semibold text-white text-sm">Express REST + PostgreSQL & Prisma</h4>
+                        </div>
+                        <span className="bp-tag bp-tag-db">Database</span>
+                      </div>
+                      <p className="bp-desc">
+                        Configuración de connection pool con pg/Prisma, migraciones versionadas y middleware de manejo de errores global.
+                      </p>
+                      <pre className="bp-code-snippet">
+{`// middleware/errorHandler.js
+export function errorHandler(err, req, res, next) {
+  const status = err.statusCode || 500;
+  res.status(status).json({
+    ok: false,
+    error: err.message || 'Internal Server Error',
+    code: err.code || 'UNKNOWN_ERROR'
+  });
+}`}
+                      </pre>
+                      <div className="bp-card-actions">
+                        <button
+                          type="button"
+                          className="btn-bp-copy"
+                          onClick={() => copiarTexto('bp_express', `export function errorHandler(err, req, res, next) {\n  const status = err.statusCode || 500;\n  res.status(status).json({ ok: false, error: err.message });\n}`)}
+                        >
+                          {copiadoId === 'bp_express' ? <Check size={13} className="text-emerald-400" /> : <Copy size={13} />}
+                          <span>{copiadoId === 'bp_express' ? 'Copiado' : 'Copiar Middleware'}</span>
+                        </button>
+                        <button
+                          type="button"
+                          className="btn-bp-ask"
+                          onClick={() => {
+                            setMensajeChatMentor(`¿Cuál es el mejor esquema relacional e índices en PostgreSQL para ${planActivo?.titulo || 'este proyecto'}?`);
+                          }}
+                        >
+                          💬 Consultar al Mentor
+                        </button>
+                      </div>
+                    </div>
+
+                    {/* Blueprint 3: JWT & Refresh Rotation */}
+                    <div className="blueprint-card">
+                      <div className="blueprint-card-top">
+                        <div className="flex items-center gap-2">
+                          <ShieldCheck size={16} className="text-amber-400" />
+                          <h4 className="font-semibold text-white text-sm">Autenticación JWT & Refresh Rotation</h4>
+                        </div>
+                        <span className="bp-tag bp-tag-sec">Seguridad</span>
+                      </div>
+                      <p className="bp-desc">
+                        Tokens de acceso en memoria y refresh tokens en HttpOnly Cookies con rotación e invalidación en cierre de sesión.
+                      </p>
+                      <pre className="bp-code-snippet">
+{`// auth/tokens.js
+export function setAuthCookies(res, { accessToken, refreshToken }) {
+  res.cookie('refreshToken', refreshToken, {
+    httpOnly: true,
+    secure: process.env.NODE_ENV === 'production',
+    sameSite: 'lax',
+    maxAge: 7 * 24 * 60 * 60 * 1000 // 7 días
+  });
+}`}
+                      </pre>
+                      <div className="bp-card-actions">
+                        <button
+                          type="button"
+                          className="btn-bp-copy"
+                          onClick={() => copiarTexto('bp_jwt', `res.cookie('refreshToken', refreshToken, { httpOnly: true, secure: true, sameSite: 'lax' });`)}
+                        >
+                          {copiadoId === 'bp_jwt' ? <Check size={13} className="text-emerald-400" /> : <Copy size={13} />}
+                          <span>{copiadoId === 'bp_jwt' ? 'Copiado' : 'Copiar Cookie Config'}</span>
+                        </button>
+                        <button
+                          type="button"
+                          className="btn-bp-ask"
+                          onClick={() => {
+                            setMensajeChatMentor(`¿Cómo mitigo vulnerabilidades de XSS y CSRF en el flujo de autenticación de ${planActivo?.titulo || 'mi app'}?`);
+                          }}
+                        >
+                          💬 Consultar al Mentor
+                        </button>
+                      </div>
+                    </div>
+
+                    {/* Blueprint 4: Testing Pyramid */}
+                    <div className="blueprint-card">
+                      <div className="blueprint-card-top">
+                        <div className="flex items-center gap-2">
+                          <Code2 size={16} className="text-cyan-400" />
+                          <h4 className="font-semibold text-white text-sm">Pirámide de Pruebas (Vitest + Supertest)</h4>
+                        </div>
+                        <span className="bp-tag bp-tag-test">Testing</span>
+                      </div>
+                      <p className="bp-desc">
+                        Estructura de pruebas unitarias sobre casos de uso y pruebas de integración sobre endpoints de Express.
+                      </p>
+                      <pre className="bp-code-snippet">
+{`// tests/integration/api.test.js
+import request from 'supertest';
+import { app } from '../../src/app';
+
+describe('POST /api/recurso', () => {
+  it('debe responder 201 y retornar el recurso creado', async () => {
+    const res = await request(app).post('/api/recurso').send({ name: 'Test' });
+    expect(res.status).toBe(201);
+    expect(res.body.ok).toBe(true);
+  });
+});`}
+                      </pre>
+                      <div className="bp-card-actions">
+                        <button
+                          type="button"
+                          className="btn-bp-copy"
+                          onClick={() => copiarTexto('bp_test', `import request from 'supertest';\nimport { app } from '../../src/app';`)}
+                        >
+                          {copiadoId === 'bp_test' ? <Check size={13} className="text-emerald-400" /> : <Copy size={13} />}
+                          <span>{copiadoId === 'bp_test' ? 'Copiado' : 'Copiar Test Boilerplate'}</span>
+                        </button>
+                        <button
+                          type="button"
+                          className="btn-bp-ask"
+                          onClick={() => {
+                            setMensajeChatMentor(`¿Qué casos de prueba esenciales debo escribir para validar la lógica de ${planActivo?.titulo || 'este plan'}?`);
+                          }}
+                        >
+                          💬 Consultar al Mentor
+                        </button>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              ) : tabMentorColumn === 'checklist' ? (
+                <div className="mentor-checklist-body">
+                  {(() => {
+                    const checklistItems = [
+                      { key: 'f1_req', fase: 'Fase 1: Análisis & Requerimientos', text: 'Definir entidades primarias y relaciones (1:N, N:M)' },
+                      { key: 'f1_dto', fase: 'Fase 1: Análisis & Requerimientos', text: 'Establecer contratos de API (DTOs y endpoints REST)' },
+                      { key: 'f2_schema', fase: 'Fase 2: Modelado DB & Persistencia', text: 'Diseñar esquema SQL relacional e índices en llaves foráneas' },
+                      { key: 'f2_mig', fase: 'Fase 2: Modelado DB & Persistencia', text: 'Configurar migraciones de base de datos y seeds de prueba' },
+                      { key: 'f3_usecase', fase: 'Fase 3: Lógica de Negocio & Servicios', text: 'Implementar casos de uso desacoplados de frameworks' },
+                      { key: 'f3_val', fase: 'Fase 3: Lógica de Negocio & Servicios', text: 'Validación estricta de payloads (Zod/Joi) y errores tipados' },
+                      { key: 'f4_auth', fase: 'Fase 4: Seguridad & Middleware', text: 'Autenticación segura con JWT y hash de contraseñas (Bcrypt/Argon2)' },
+                      { key: 'f4_owasp', fase: 'Fase 4: Seguridad & Middleware', text: 'Rate limiting, CORS estricto y sanitización anti-inyección' },
+                      { key: 'f5_state', fase: 'Fase 5: Frontend Reactivo & UI', text: 'Gestión de estado global limpio (Zustand) y caché de datos' },
+                      { key: 'f5_ux', fase: 'Fase 5: Frontend Reactivo & UI', text: 'Manejo de estados de carga, estados vacíos y feedback de error' },
+                      { key: 'f6_test', fase: 'Fase 6: Testing & Despliegue', text: 'Cobertura de pruebas unitarias sobre casos de uso críticos' },
+                      { key: 'f6_docker', fase: 'Fase 6: Testing & Despliegue', text: 'Contenedor Dockerfile multi-stage y variables de entorno seguras' }
+                    ];
+
+                    const total = checklistItems.length;
+                    const completados = checklistItems.filter(i => checklist[i.key]).length;
+                    const porcentaje = Math.round((completados / total) * 100);
+
+                    // Agrupar por fase
+                    const fasesUnicas = [...new Set(checklistItems.map(i => i.fase))];
+
+                    return (
+                      <div>
+                        <div className="checklist-progress-card mb-4">
+                          <div className="flex justify-between items-center mb-2">
+                            <div>
+                              <h3 className="font-bold text-white text-sm">Progreso Global de Implementación</h3>
+                              <span className="text-xs text-slate-400">{completados} de {total} hitos completados</span>
+                            </div>
+                            <span className="text-xl font-mono font-bold text-emerald-400">{porcentaje}%</span>
+                          </div>
+                          <div className="checklist-progress-bar">
+                            <div className="checklist-progress-fill" style={{ width: `${porcentaje}%` }}></div>
+                          </div>
+                          {porcentaje === 100 && (
+                            <p className="text-xs text-emerald-300 font-semibold mt-2">
+                              🎉 ¡Proyecto completado al 100%! Estás listo para desplegar a producción.
+                            </p>
+                          )}
+                        </div>
+
+                        <div className="checklist-phases-container">
+                          {fasesUnicas.map((faseNombre, fIdx) => {
+                            const itemsFase = checklistItems.filter(i => i.fase === faseNombre);
+                            const faseCompletada = itemsFase.every(i => checklist[i.key]);
+
+                            return (
+                              <div key={fIdx} className={`checklist-phase-block ${faseCompletada ? 'phase-all-done' : ''}`}>
+                                <div className="phase-block-header">
+                                  <span className="phase-title">{faseNombre}</span>
+                                  <span className={`phase-badge ${faseCompletada ? 'badge-done' : 'badge-pending'}`}>
+                                    {faseCompletada ? '✓ Completada' : 'En Progreso'}
+                                  </span>
+                                </div>
+                                <div className="phase-items-list">
+                                  {itemsFase.map(item => {
+                                    const isChecked = !!checklist[item.key];
+                                    return (
+                                      <label key={item.key} className={`checklist-item-row ${isChecked ? 'item-checked' : ''}`}>
+                                        <input
+                                          type="checkbox"
+                                          checked={isChecked}
+                                          onChange={() => toggleChecklistItem(item.key)}
+                                          className="checklist-checkbox"
+                                        />
+                                        <span className="item-text">{item.text}</span>
+                                      </label>
+                                    );
+                                  })}
+                                </div>
+                              </div>
+                            );
+                          })}
+                        </div>
+                      </div>
+                    );
+                  })()}
+                </div>
               ) : (
                 <div className="mentor-guias-body">
                   {guiaAyudaSeleccionada ? (
@@ -547,6 +874,46 @@ export default function MentorChat({
                     {p === 'Riguroso' ? '🏛️' : p === 'Tech Lead' ? '🚀' : '🤔'} {p}
                   </button>
                 ))}
+              </div>
+
+              {/* Quick Actions Prompts de Producción */}
+              <div className="mentor-quick-prompts-bar">
+                <span className="quick-prompts-lbl">Consultas Rápidas:</span>
+                <button
+                  type="button"
+                  className="btn-quick-prompt"
+                  onClick={() => setMensajeChatMentor(`¿Cómo estructuro el esquema relacional de base de datos e índices para este proyecto?`)}
+                >
+                  📐 Esquema DB
+                </button>
+                <button
+                  type="button"
+                  className="btn-quick-prompt"
+                  onClick={() => setMensajeChatMentor(`¿Qué medidas de seguridad (OWASP, validación, JWT) debo priorizar en esta arquitectura?`)}
+                >
+                  🛡️ OWASP Seguridad
+                </button>
+                <button
+                  type="button"
+                  className="btn-quick-prompt"
+                  onClick={() => setMensajeChatMentor(`¿Cómo diseño la estrategia y pirámide de pruebas (unitarias e integración) para este proyecto?`)}
+                >
+                  🧪 Estrategia Tests
+                </button>
+                <button
+                  type="button"
+                  className="btn-quick-prompt"
+                  onClick={() => setMensajeChatMentor(`¿Qué cuellos de botella de Big-O o rendimiento debo prevenir al implementar esta lógica?`)}
+                >
+                  ⚡ Optimización Big-O
+                </button>
+                <button
+                  type="button"
+                  className="btn-quick-prompt"
+                  onClick={() => setMensajeChatMentor(`¿Cómo defino los contratos de API REST (códigos HTTP, DTOs y manejo de errores)?`)}
+                >
+                  🔌 Contrato REST
+                </button>
               </div>
 
               <div className="superpowers-tags">
