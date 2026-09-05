@@ -1945,29 +1945,7 @@ function generarRetosMultijugador(categoria = 'mixed', dificultad = 'intermedio'
   return seleccionados;
 }
 
-  // Si aún faltan para alcanzar count, rellenar con restantes de la base
-  if (seleccionados.length < count) {
-    const restantes = poolBase.filter(r => !idsSeleccionados.has(r.id)).sort(() => 0.5 - Math.random());
-    for (const r of restantes) {
-      if (seleccionados.length >= count) break;
-      const canonicalType = getCanonicalType(r.tipo);
-      const tokens = r.opciones_tokens || r.sugerencias || [];
-      const correcciones = r.opciones_correccion || r.opciones_correcion || r.opciones || [];
-      seleccionados.push({
-        ...r,
-        tipo: canonicalType,
-        tipo_legacy: r.tipo_alias || r.tipo,
-        opciones_tokens: tokens,
-        sugerencias: tokens,
-        opciones_correccion: correcciones,
-        opciones_correcion: correcciones
-      });
-      idsSeleccionados.add(r.id);
-    }
-  }
 
-  return seleccionados;
-}
 
 // 7. LOBBY MULTIJUGADOR COMPETITIVO
 router.post('/api/pragma/multiplayer/match/join', async (req, res) => {
