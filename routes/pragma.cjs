@@ -1046,11 +1046,16 @@ router.post('/api/pragma/dungeon/validar', async (req, res) => {
 
   if (valido) {
     try {
+      const isNucleo = room_name === 'nucleo';
+      const rpEarned = isNucleo ? 50 : 15;
+      const essenceEarned = isNucleo ? 3 : 1;
+      const shardsEarned = isNucleo ? 10 : 2;
+
       const pragma = await obtenerPragmaProfile(estudiante_id);
-      pragma.rank_points = (pragma.rank_points || 0) + 15;
+      pragma.rank_points = (pragma.rank_points || 0) + rpEarned;
       if (!pragma.inventory) pragma.inventory = { silicon_shards: 10, memory_threads: 5, logic_cores: 2, javascript_essence: 0, python_essence: 0, java_essence: 0, sql_essence: 0 };
-      pragma.inventory.sql_essence = (pragma.inventory.sql_essence || 0) + 1;
-      pragma.inventory.silicon_shards = (pragma.inventory.silicon_shards || 0) + 2;
+      pragma.inventory.sql_essence = (pragma.inventory.sql_essence || 0) + essenceEarned;
+      pragma.inventory.silicon_shards = (pragma.inventory.silicon_shards || 0) + shardsEarned;
 
       if (!pragma.dungeon_progress) pragma.dungeon_progress = { unlocked_rooms: [] };
       if (!pragma.dungeon_progress.unlocked_rooms.includes(room_name)) {
@@ -1060,11 +1065,12 @@ router.post('/api/pragma/dungeon/validar', async (req, res) => {
       await guardarPragmaProfile(estudiante_id, pragma);
       return res.json({
         valido: true,
-        mensaje: '🔓 ¡Compuerta de Datos Abierta! Consulta ejecutada correctamente.',
+        mensaje: isNucleo ? '👑 ¡Núcleo Central de Datos Conquistado! Recompensas legendarias acreditadas.' : '🔓 ¡Compuerta de Datos Abierta! Consulta ejecutada correctamente.',
         mock_data: room.mockRows,
         columns: room.columns,
-        rp_ganados: 15,
-        sql_essence_ganada: 1,
+        rp_ganados: rpEarned,
+        sql_essence_ganada: essenceEarned,
+        shards_ganados: shardsEarned,
         unlocked_rooms: pragma.dungeon_progress.unlocked_rooms
       });
     } catch (e) {

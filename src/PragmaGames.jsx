@@ -15,7 +15,6 @@ const LOFI_TRACKS = [
 
 export default function PragmaGames({ estudiante, onUpdateEstudiante, backendUrl, listaAmigos, partidaDueloActiva, onLimpiarPartidaDuelo }) {
   const [selectedSubTab, setSelectedSubTab] = useState('lobby'); // lobby, copiloto, zen, taberna, forja, runas, tinder, defense, dungeon
-  const [mainCategory, setMainCategory] = useState('arena'); // arena, arcade
   const pragmaProfile = estudiante?.pragma_profile || {
     rank_points: 0,
     energy: 100,
@@ -38,38 +37,6 @@ export default function PragmaGames({ estudiante, onUpdateEstudiante, backendUrl
 
   return (
     <div className="pragma-container">
-      {/* Selector Superior de Modo: Arena Pragma vs Arcade Individual (Como en Referencia) */}
-      <div className="pragma-top-pills-bar">
-        <button 
-          type="button"
-          className={`top-mode-pill ${mainCategory === 'arena' ? 'active' : ''}`}
-          onClick={() => {
-            setMainCategory('arena');
-            if (!['lobby', 'copiloto', 'zen', 'taberna', 'forja', 'runas'].includes(selectedSubTab)) {
-              setSelectedSubTab('lobby');
-            }
-          }}
-        >
-          <span className="pill-ico">🎮</span>
-          <span className="pill-title">Arena Pragma</span>
-          <span className="pill-sub">Multijugador & Campaña</span>
-        </button>
-        <button 
-          type="button"
-          className={`top-mode-pill ${mainCategory === 'arcade' ? 'active' : ''}`}
-          onClick={() => {
-            setMainCategory('arcade');
-            if (!['tinder', 'defense', 'dungeon'].includes(selectedSubTab)) {
-              setSelectedSubTab('tinder');
-            }
-          }}
-        >
-          <span className="pill-ico">🏆</span>
-          <span className="pill-title">Arcade Individual</span>
-          <span className="pill-sub">Práctica Rápida</span>
-        </button>
-      </div>
-
       {/* Encabezado del Perfil del Jugador */}
       <div className="pragma-header-panel">
         <div className="pragma-user-badge">
@@ -1565,8 +1532,8 @@ function LobbyView({ estudiante, backendUrl, onUpdate, listaAmigos = [], partida
             </button>
           </div>
 
-          {/* RENDERIZAR LOBBY DEL EQUIPO (SÓLO SI ES 2v2 o 4v4) */}
-          {(matchType === '2v2' || matchType === '4v4') && (
+          {/* RENDERIZAR LOBBY DEL EQUIPO (SÓLO SI ES 1v1, 2v2 o 4v4) */}
+          {(matchType === '1v1' || matchType === '2v2' || matchType === '4v4') && (
             <div className="lobby-squad-container-vs w-full max-w-[950px] mt-6">
               <div className="lobby-vs-arena-layout">
                 {/* LADO IZQUIERDO: EQUIPO NARANJA */}
@@ -1574,11 +1541,11 @@ function LobbyView({ estudiante, backendUrl, onUpdate, listaAmigos = [], partida
                   <div className="vs-team-header orange">
                     <span className="team-glow-text">🛡️ Equipo Naranja</span>
                     <span className="team-size-counter">
-                      {orangeSlots.filter((s, idx) => s !== null && idx < (matchType === '2v2' ? 2 : 4)).length} / {matchType === '2v2' ? 2 : 4}
+                      {orangeSlots.filter((s, idx) => s !== null && idx < (matchType === '1v1' ? 1 : matchType === '2v2' ? 2 : 4)).length} / {matchType === '1v1' ? 1 : matchType === '2v2' ? 2 : 4}
                     </span>
                   </div>
                   <div className="vs-slots-list">
-                    {(matchType === '2v2' ? [0, 1] : [0, 1, 2, 3]).map(idx => renderSlot('orange', idx))}
+                    {(matchType === '1v1' ? [0] : matchType === '2v2' ? [0, 1] : [0, 1, 2, 3]).map(idx => renderSlot('orange', idx))}
                   </div>
                 </div>
 
@@ -1594,11 +1561,11 @@ function LobbyView({ estudiante, backendUrl, onUpdate, listaAmigos = [], partida
                   <div className="vs-team-header blue">
                     <span className="team-glow-text">🔮 Equipo Azul</span>
                     <span className="team-size-counter">
-                      {blueSlots.filter((s, idx) => s !== null && idx < (matchType === '2v2' ? 2 : 4)).length} / {matchType === '2v2' ? 2 : 4}
+                      {blueSlots.filter((s, idx) => s !== null && idx < (matchType === '1v1' ? 1 : matchType === '2v2' ? 2 : 4)).length} / {matchType === '1v1' ? 1 : matchType === '2v2' ? 2 : 4}
                     </span>
                   </div>
                   <div className="vs-slots-list">
-                    {(matchType === '2v2' ? [0, 1] : [0, 1, 2, 3]).map(idx => renderSlot('blue', idx))}
+                    {(matchType === '1v1' ? [0] : matchType === '2v2' ? [0, 1] : [0, 1, 2, 3]).map(idx => renderSlot('blue', idx))}
                   </div>
                 </div>
               </div>
@@ -2437,6 +2404,7 @@ function CopilotoView({ estudiante, backendUrl, onUpdate }) {
   const [loading, setLoading] = useState(false);
   const [testResults, setTestResults] = useState(null);
   const [result, setResult] = useState(null);
+  const gutterRef = useRef(null);
 
   useEffect(() => {
     // Intentar obtener retos dinámicos del backend
@@ -2604,15 +2572,18 @@ function CopilotoView({ estudiante, backendUrl, onUpdate }) {
           </div>
 
           <div className="editor-container-with-gutter flex relative bg-slate-900 border border-slate-800 rounded overflow-hidden mb-3">
-            <div className="line-numbers select-none text-right font-mono text-xs py-3 px-2.5 bg-slate-950/80 text-slate-500 border-r border-slate-800/80">
+            <div ref={gutterRef} className="line-numbers select-none text-right font-mono text-xs py-3 px-2.5 bg-slate-950/80 text-slate-500 border-r border-slate-800/80 overflow-y-hidden max-h-[380px] min-h-[180px]">
               {codigoCorregido.split('\n').map((_, idx) => (
                 <div key={idx} className="leading-5">{idx + 1}</div>
               ))}
             </div>
             <textarea
-              className="code-textarea flex-1 font-mono text-xs p-3 leading-5 outline-none bg-transparent resize-none text-emerald-400"
+              className="code-textarea flex-1 font-mono text-xs p-3 leading-5 outline-none bg-transparent resize-none text-emerald-400 min-h-[180px] max-h-[380px] overflow-y-auto"
               value={codigoCorregido}
               onChange={(e) => setCodigoCorregido(e.target.value)}
+              onScroll={(e) => {
+                if (gutterRef.current) gutterRef.current.scrollTop = e.target.scrollTop;
+              }}
               rows={Math.max(10, codigoCorregido.split('\n').length)}
               spellCheck={false}
             />
@@ -2678,22 +2649,22 @@ function CopilotoView({ estudiante, backendUrl, onUpdate }) {
               </div>
               <p className="retro text-xs text-slate-300 mb-3">{result.retroalimentacion}</p>
               
-              <div className="grid grid-cols-1 sm:grid-cols-3 gap-2 pt-2 border-t border-slate-800 text-[11px] font-mono">
-                <div className="p-2 rounded bg-slate-950/50 border border-slate-800">
-                  <span className="text-indigo-400 font-bold block mb-0.5">1. Exactitud Lógica</span>
-                  <span className="text-slate-300">
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-2 pt-2 border-t border-slate-800 text-[11px] font-mono">
+                <div className="p-2.5 rounded bg-slate-950/60 border border-slate-800 min-w-0 break-words flex flex-col justify-between">
+                  <span className="text-indigo-400 font-bold block mb-1">1. Exactitud Lógica</span>
+                  <span className="text-slate-300 leading-relaxed text-[10.5px]">
                     {result.criterios?.exactitud_logica || (result.aprobado ? 'Corrección válida y consistente' : 'Lógica incompleta o con errores')}
                   </span>
                 </div>
-                <div className="p-2 rounded bg-slate-950/50 border border-slate-800">
-                  <span className="text-indigo-400 font-bold block mb-0.5">2. Eficiencia Big-O</span>
-                  <span className="text-slate-300">
+                <div className="p-2.5 rounded bg-slate-950/60 border border-slate-800 min-w-0 break-words flex flex-col justify-between">
+                  <span className="text-indigo-400 font-bold block mb-1">2. Eficiencia Big-O</span>
+                  <span className="text-slate-300 leading-relaxed text-[10.5px]">
                     {result.criterios?.eficiencia_big_o || (result.aprobado ? 'Complejidad temporal y espacial óptima' : 'Cuello de botella no mitigado')}
                   </span>
                 </div>
-                <div className="p-2 rounded bg-slate-950/50 border border-slate-800">
-                  <span className="text-indigo-400 font-bold block mb-0.5">3. Justificación</span>
-                  <span className="text-slate-300">
+                <div className="p-2.5 rounded bg-slate-950/60 border border-slate-800 min-w-0 break-words flex flex-col justify-between">
+                  <span className="text-indigo-400 font-bold block mb-1">3. Justificación</span>
+                  <span className="text-slate-300 leading-relaxed text-[10.5px]">
                     {result.criterios?.justificacion_conceptual || (justificacion ? 'Razonamiento técnico articulado' : 'Falta profundizar causa raíz')}
                   </span>
                 </div>
@@ -2997,22 +2968,20 @@ function ZenView({ estudiante, backendUrl, onUpdate }) {
             </button>
           </div>
 
-          {isPlaying && (
-            <div className="audio-visualizer flex items-end gap-1 h-6 px-2 py-1 bg-slate-950/80 rounded border border-indigo-500/20">
-              {audioBars.map((h, i) => (
-                <div 
-                  key={i} 
-                  className="bar w-1.5 bg-indigo-400 rounded-sm transition-all duration-75"
-                  style={{ height: `${h}px` }}
-                />
-              ))}
-            </div>
-          )}
+          <div className="audio-visualizer flex items-end gap-1 h-6 w-16 px-2 py-1 bg-slate-950/80 rounded border border-indigo-500/20" title={isPlaying ? "Audio reproduciéndose" : "Audio en pausa"}>
+            {audioBars.map((h, i) => (
+              <div 
+                key={i} 
+                className="bar w-1.5 bg-indigo-400 rounded-sm transition-all duration-75"
+                style={{ height: isPlaying ? `${h}px` : '4px', opacity: isPlaying ? 1 : 0.35 }}
+              />
+            ))}
+          </div>
         </div>
       </div>
 
       {/* Barra de Enfoque Pomodoro */}
-      <div className="zen-pomodoro-bar flex items-center justify-between p-3 rounded-lg bg-emerald-950/20 border border-emerald-500/20 my-3">
+      <div className="zen-pomodoro-bar flex items-center justify-between p-3 rounded-lg bg-emerald-950/20 border border-emerald-500/20 my-3 flex-wrap gap-2">
         <div className="flex items-center gap-2">
           <span className="text-emerald-400">⏳</span>
           <span className="text-xs font-medium text-slate-300">Temporizador de Enfoque Profundo:</span>
@@ -3023,21 +2992,21 @@ function ZenView({ estudiante, backendUrl, onUpdate }) {
         <div className="flex items-center gap-2">
           <button
             type="button"
-            className="btn-subtab-pill btn-sm text-xs"
+            className={`px-3 py-1.5 text-xs font-mono font-medium rounded-lg border transition ${pomoRunning ? 'bg-amber-500/20 text-amber-300 border-amber-500/40 hover:bg-amber-500/30' : 'bg-emerald-500/20 text-emerald-300 border-emerald-500/40 hover:bg-emerald-500/30'}`}
             onClick={() => setPomoRunning(!pomoRunning)}
           >
-            {pomoRunning ? 'Pausar' : 'Iniciar 25 min'}
+            {pomoRunning ? '⏸️ Pausar' : '▶️ Iniciar 25 min'}
           </button>
           <button
             type="button"
-            className="btn-subtab-pill btn-sm text-xs"
+            className="px-3 py-1.5 text-xs font-mono font-medium rounded-lg border border-slate-700 bg-slate-800/80 text-slate-300 hover:bg-slate-700 hover:text-white transition"
             onClick={() => {
               setPomoRunning(false);
               setPomoMinutes(25);
               setPomoSeconds(0);
             }}
           >
-            Reiniciar
+            🔄 Reiniciar
           </button>
         </div>
       </div>
@@ -3227,18 +3196,27 @@ function TabernaView({ estudiante, backendUrl, onUpdate }) {
       </div>
 
       {/* Catálogo de Snippets */}
-      <div className="flex gap-2 overflow-x-auto pb-2 mb-3">
-        {CATALOGO_SNIPPETS.map(s => (
-          <button
-            key={s.id}
-            type="button"
-            className={`btn-subtab-pill text-xs whitespace-nowrap ${snippetActivo.id === s.id ? 'active' : ''}`}
-            onClick={() => seleccionarSnippet(s)}
-          >
-            <span className="font-semibold">{s.titulo}</span>
-            <span className="text-[10px] opacity-75 ml-1.5">({s.tecnologia})</span>
-          </button>
-        ))}
+      <div className="taberna-snippets-grid grid grid-cols-2 sm:grid-cols-3 md:grid-cols-6 gap-2 mb-4">
+        {CATALOGO_SNIPPETS.map(s => {
+          const badgeTec = s.tecnologia === 'JavaScript' ? 'JS' : s.tecnologia === 'Python' ? 'Py' : s.tecnologia === 'SQL' ? 'SQL' : s.tecnologia;
+          const badgeColor = s.tecnologia === 'JavaScript' ? 'bg-amber-500/20 text-amber-300 border-amber-500/30' : s.tecnologia === 'Python' ? 'bg-sky-500/20 text-sky-300 border-sky-500/30' : s.tecnologia === 'SQL' ? 'bg-emerald-500/20 text-emerald-300 border-emerald-500/30' : 'bg-purple-500/20 text-purple-300 border-purple-500/30';
+          const isActive = snippetActivo.id === s.id;
+
+          return (
+            <button
+              key={s.id}
+              type="button"
+              onClick={() => seleccionarSnippet(s)}
+              className={`p-2.5 rounded-xl border text-left transition ${isActive ? 'border-indigo-500 bg-indigo-500/15 shadow-md shadow-indigo-500/10' : 'border-slate-800 bg-slate-900/60 hover:border-slate-700 hover:bg-slate-900/90'}`}
+            >
+              <span className={`text-[10px] font-mono px-1.5 py-0.5 rounded font-bold border ${badgeColor}`}>
+                {badgeTec}
+              </span>
+              <h4 className="text-xs font-semibold text-white mt-1.5 truncate" title={s.titulo}>{s.titulo}</h4>
+              <span className="text-[10px] font-mono text-slate-400 block mt-0.5 truncate">{s.meta}</span>
+            </button>
+          );
+        })}
       </div>
 
       <div className="taberna-grid">
@@ -3287,10 +3265,10 @@ function TabernaView({ estudiante, backendUrl, onUpdate }) {
                   title="Límite máximo permitido: 12MB"
                 />
               </div>
-              <div className="flex justify-between text-[10px] text-slate-500 font-mono">
-                <span>0 MB</span>
-                <span className="text-amber-400">▲ Límite 12 MB</span>
-                <span>20 MB</span>
+              <div className="relative w-full h-4 text-[10px] text-slate-500 font-mono mt-1">
+                <span className="absolute left-0 top-0">0 MB</span>
+                <span className="absolute top-0 text-amber-400 font-semibold" style={{ left: '60%', transform: 'translateX(-50%)' }}>▲ Límite 12 MB</span>
+                <span className="absolute right-0 top-0">20 MB</span>
               </div>
             </div>
 
@@ -3298,41 +3276,41 @@ function TabernaView({ estudiante, backendUrl, onUpdate }) {
             <div className="big-o-curves flex flex-col gap-1">
               <div className="flex justify-between items-center text-xs font-mono">
                 <span className="text-slate-400">Curvas de Complejidad Big-O:</span>
-                <span className={`font-bold px-2 py-0.5 rounded ${complejidadActual.includes('O(1)') || complejidadActual.includes('O(N)') ? 'bg-emerald-500/10 text-emerald-400 border border-emerald-500/30' : 'bg-rose-500/10 text-rose-400 border border-rose-500/30'}`}>
+                <span className={`font-bold px-2 py-0.5 rounded ${complejidadActual.includes('O(1)') || (complejidadActual.includes('O(N)') && !complejidadActual.includes('O(N^2)')) ? 'bg-emerald-500/10 text-emerald-400 border border-emerald-500/30' : 'bg-rose-500/10 text-rose-400 border border-rose-500/30'}`}>
                   {complejidadActual}
                 </span>
               </div>
               <div className="p-2 bg-slate-900/90 rounded border border-slate-800">
-                <svg viewBox="0 0 200 80" className="w-full h-20">
+                <svg viewBox="0 0 240 90" className="w-full h-24">
                   {/* Ejes */}
-                  <line x1="15" y1="5" x2="15" y2="70" stroke="#334155" strokeWidth="1" />
-                  <line x1="15" y1="70" x2="195" y2="70" stroke="#334155" strokeWidth="1" />
+                  <line x1="20" y1="8" x2="20" y2="76" stroke="#334155" strokeWidth="1.5" />
+                  <line x1="20" y1="76" x2="230" y2="76" stroke="#334155" strokeWidth="1.5" />
                   
                   {/* Curva O(1) - Verde */}
                   <line 
-                    x1="15" y1="62" x2="195" y2="62" 
+                    x1="20" y1="68" x2="195" y2="68" 
                     stroke={complejidadActual.includes('O(1)') ? '#10b981' : '#334155'} 
                     strokeWidth={complejidadActual.includes('O(1)') ? 3 : 1}
                     strokeDasharray={complejidadActual.includes('O(1)') ? 'none' : '3,3'} 
                   />
-                  <text x="170" y="58" fill="#10b981" fontSize="8" fontFamily="monospace">O(1)</text>
+                  <text x="200" y="71" fill="#10b981" fontSize="9" fontFamily="monospace" fontWeight="bold">O(1)</text>
 
                   {/* Curva O(N) - Azul */}
                   <line 
-                    x1="15" y1="68" x2="190" y2="25" 
+                    x1="20" y1="72" x2="190" y2="28" 
                     stroke={complejidadActual.includes('O(N)') && !complejidadActual.includes('O(N^2)') ? '#818cf8' : '#334155'} 
                     strokeWidth={complejidadActual.includes('O(N)') && !complejidadActual.includes('O(N^2)') ? 3 : 1} 
                   />
-                  <text x="170" y="22" fill="#818cf8" fontSize="8" fontFamily="monospace">O(N)</text>
+                  <text x="195" y="27" fill="#818cf8" fontSize="9" fontFamily="monospace" fontWeight="bold">O(N)</text>
 
                   {/* Curva O(N^2) - Rojo */}
                   <path 
-                    d="M 15 68 Q 100 65 150 10" 
+                    d="M 20 74 Q 110 70 145 12" 
                     fill="none" 
                     stroke={complejidadActual.includes('O(N^2)') ? '#f43f5e' : '#334155'} 
                     strokeWidth={complejidadActual.includes('O(N^2)') ? 3 : 1} 
                   />
-                  <text x="135" y="12" fill="#f43f5e" fontSize="8" fontFamily="monospace">O(N²)</text>
+                  <text x="150" y="15" fill="#f43f5e" fontSize="9" fontFamily="monospace" fontWeight="bold">O(N²)</text>
                 </svg>
               </div>
             </div>
@@ -3526,7 +3504,38 @@ function ForjaView({ estudiante, backendUrl, onUpdate }) {
               <div key={receta.id} className="recipe-card p-3 rounded-lg bg-slate-950/60 border border-slate-800/80 flex items-center justify-between gap-3">
                 <div className="flex-1 min-w-0">
                   <h4 className="text-xs font-semibold text-white truncate">{receta.nombre}</h4>
-                  <p className="cost text-[11px] text-slate-400 font-mono mt-0.5">{receta.costo_txt}</p>
+                  <div className="flex flex-wrap gap-1.5 mt-1.5">
+                    {receta.requiere.shards && (
+                      <span className={`text-[10px] font-mono px-1.5 py-0.5 rounded border flex items-center gap-1 ${(pragma.inventory?.silicon_shards || 0) >= receta.requiere.shards ? 'bg-cyan-950/40 text-cyan-300 border-cyan-500/30' : 'bg-rose-950/30 text-rose-400 border-rose-500/30'}`}>
+                        💎 {receta.requiere.shards} Shards ({pragma.inventory?.silicon_shards || 0}/{receta.requiere.shards})
+                      </span>
+                    )}
+                    {receta.requiere.threads && (
+                      <span className={`text-[10px] font-mono px-1.5 py-0.5 rounded border flex items-center gap-1 ${(pragma.inventory?.memory_threads || 0) >= receta.requiere.threads ? 'bg-amber-950/40 text-amber-300 border-amber-500/30' : 'bg-rose-950/30 text-rose-400 border-rose-500/30'}`}>
+                        ⏳ {receta.requiere.threads} Threads ({pragma.inventory?.memory_threads || 0}/{receta.requiere.threads})
+                      </span>
+                    )}
+                    {receta.requiere.cores && (
+                      <span className={`text-[10px] font-mono px-1.5 py-0.5 rounded border flex items-center gap-1 ${(pragma.inventory?.logic_cores || 0) >= receta.requiere.cores ? 'bg-purple-950/40 text-purple-300 border-purple-500/30' : 'bg-rose-950/30 text-rose-400 border-rose-500/30'}`}>
+                        🧪 {receta.requiere.cores} Cores ({pragma.inventory?.logic_cores || 0}/{receta.requiere.cores})
+                      </span>
+                    )}
+                    {receta.requiere.js_essence && (
+                      <span className={`text-[10px] font-mono px-1.5 py-0.5 rounded border flex items-center gap-1 ${(pragma.inventory?.javascript_essence || 0) >= receta.requiere.js_essence ? 'bg-amber-950/40 text-amber-300 border-amber-500/30' : 'bg-rose-950/30 text-rose-400 border-rose-500/30'}`}>
+                        🟧 {receta.requiere.js_essence} JS Essence ({pragma.inventory?.javascript_essence || 0}/{receta.requiere.js_essence})
+                      </span>
+                    )}
+                    {receta.requiere.py_essence && (
+                      <span className={`text-[10px] font-mono px-1.5 py-0.5 rounded border flex items-center gap-1 ${(pragma.inventory?.python_essence || 0) >= receta.requiere.py_essence ? 'bg-sky-950/40 text-sky-300 border-sky-500/30' : 'bg-rose-950/30 text-rose-400 border-rose-500/30'}`}>
+                        🟦 {receta.requiere.py_essence} Py Essence ({pragma.inventory?.python_essence || 0}/{receta.requiere.py_essence})
+                      </span>
+                    )}
+                    {receta.requiere.sql_essence && (
+                      <span className={`text-[10px] font-mono px-1.5 py-0.5 rounded border flex items-center gap-1 ${(pragma.inventory?.sql_essence || 0) >= receta.requiere.sql_essence ? 'bg-emerald-950/40 text-emerald-300 border-emerald-500/30' : 'bg-rose-950/30 text-rose-400 border-rose-500/30'}`}>
+                        🟩 {receta.requiere.sql_essence} SQL Essence ({pragma.inventory?.sql_essence || 0}/{receta.requiere.sql_essence})
+                      </span>
+                    )}
+                  </div>
                 </div>
                 <div>
                   {desbloqueado ? (
@@ -4131,7 +4140,7 @@ function RunasView({ estudiante, pragmaProfile, backendUrl, onUpdate }) {
               <div className="script-cost-preview">
                 <span>Tu balance: {pragmaProfile.inventory?.silicon_shards || 0} Shards • {pragmaProfile.inventory?.logic_cores || 0} Cores</span>
               </div>
-              <button type="button" className="btn-action mt-3" onClick={transmutarEsencias}>
+              <button type="button" className="btn-action w-full mt-3" onClick={transmutarEsencias}>
                 TRANSMUTAR RECURSOS
               </button>
             </div>
@@ -4142,7 +4151,7 @@ function RunasView({ estudiante, pragmaProfile, backendUrl, onUpdate }) {
               <div className="script-cost-preview">
                 <span>Energía Actual: {currentEnergy}% • Requiere 1 Shard</span>
               </div>
-              <button type="button" className="btn-action mt-3" onClick={recargarEnergiaConShard}>
+              <button type="button" className="btn-action w-full mt-3" onClick={recargarEnergiaConShard}>
                 RESTAURAR ENERGÍA (1 SHARD)
               </button>
             </div>
@@ -5270,6 +5279,313 @@ function DefenseView({ estudiante, backendUrl, onUpdate }) {
 /* ==========================================
    9. SQL DUNGEON CRAWLER (MAZMORRA RELACIONAL)
    ========================================== */
+
+// Diccionario de Metadatos Relacionales por Habitación
+const SQL_ROOMS_DICTIONARY = {
+  tabla_usuarios: {
+    id: "tabla_usuarios",
+    short: "USUARIOS",
+    name: "tabla_usuarios",
+    title: "Compuerta 01: Operadores de Red",
+    desc: "El cortafuegos requiere consultar la tabla 'tabla_usuarios' y extraer únicamente las cuentas en estado activo para rehabilitar las credenciales.",
+    objective: "Filtra usuarios activos usando WHERE activo = true en tabla_usuarios.",
+    hint: "SELECT * FROM tabla_usuarios WHERE activo = true;",
+    pedagogicalGuide: "Aplica la cláusula WHERE sobre la columna booleana 'activo'. En SQL estándar puedes evaluar WHERE activo = true (o activo = 1).",
+    columns: [
+      { name: "id", type: "INT", badge: "int", isPk: true, desc: "ID del operador" },
+      { name: "nombre", type: "VARCHAR(100)", badge: "str", desc: "Nombre completo" },
+      { name: "email", type: "VARCHAR(150)", badge: "str", desc: "Correo institucional" },
+      { name: "activo", type: "BOOLEAN", badge: "bool", desc: "Estado activo (true/false)" },
+      { name: "rol_id", type: "INT", badge: "int", isFk: true, desc: "FK -> tabla_roles(id)" }
+    ],
+    mockSample: [
+      { id: 1, nombre: "Alice Chen", email: "alice@pragma.ai", activo: true, rol_id: 1 },
+      { id: 2, nombre: "Bob Vance", email: "bob@pragma.ai", activo: true, rol_id: 2 },
+      { id: 3, nombre: "Carlos Mendez", email: "carlos@pragma.ai", activo: false, rol_id: 3 },
+      { id: 4, nombre: "Diana Prince", email: "diana@pragma.ai", activo: false, rol_id: 2 }
+    ],
+    analyzeQuery: (q) => {
+      const checks = [];
+      const hasSelect = q.includes('select');
+      const hasTable = q.includes('tabla_usuarios');
+      const hasWhere = q.includes('where');
+      const hasActivo = q.includes('activo = true') || q.includes('activo=true') || q.includes('activo is true') || q.includes('activo = 1') || q.includes('where activo');
+
+      checks.push({ label: "Instrucción SELECT", ok: hasSelect, advice: "Comienza la consulta con la instrucción SELECT." });
+      checks.push({ label: "Origen FROM tabla_usuarios", ok: hasTable, advice: "Especifica el origen de datos: FROM tabla_usuarios." });
+      checks.push({ label: "Filtro WHERE activo = true", ok: hasWhere && hasActivo, advice: "Falta evaluar la condición: WHERE activo = true." });
+      return checks;
+    },
+    validador: (q) => q.includes('from tabla_usuarios') && (q.includes('activo = true') || q.includes('activo=true') || q.includes('activo = 1') || q.includes('activo is true') || q.includes('where activo'))
+  },
+  tabla_ventas: {
+    id: "tabla_ventas",
+    short: "VENTAS",
+    name: "tabla_ventas",
+    title: "Compuerta 02: Bóveda Financiera",
+    desc: "Calcula el volumen financiero consolidado sumando los importes de la columna 'total' de todas las transacciones.",
+    objective: "Calcula el total general con la función de agregación SUM(total) sobre tabla_ventas.",
+    hint: "SELECT SUM(total) FROM tabla_ventas;",
+    pedagogicalGuide: "Las funciones de agregación calculan valores acumulados. Utiliza SUM(total) para calcular la suma de la columna total.",
+    columns: [
+      { name: "id", type: "INT", badge: "int", isPk: true, desc: "ID de transacción" },
+      { name: "fecha", type: "DATE", badge: "date", desc: "Fecha de registro" },
+      { name: "total", type: "NUMERIC(10,2)", badge: "num", desc: "Monto total monetario" },
+      { name: "cliente_id", type: "INT", badge: "int", isFk: true, desc: "ID del cliente" }
+    ],
+    mockSample: [
+      { id: 101, fecha: "2026-03-01", total: 4520.50, cliente_id: 12 },
+      { id: 102, fecha: "2026-03-02", total: 12800.00, cliente_id: 45 },
+      { id: 103, fecha: "2026-03-03", total: 7350.25, cliente_id: 12 },
+      { id: 104, fecha: "2026-03-04", total: 9140.00, cliente_id: 88 }
+    ],
+    analyzeQuery: (q) => {
+      const checks = [];
+      const hasSelect = q.includes('select');
+      const hasTable = q.includes('tabla_ventas');
+      const hasSum = q.includes('sum(total)') || q.includes('sum( total )');
+
+      checks.push({ label: "Instrucción SELECT", ok: hasSelect, advice: "Comienza con SELECT." });
+      checks.push({ label: "Origen FROM tabla_ventas", ok: hasTable, advice: "Falta la cláusula FROM tabla_ventas." });
+      checks.push({ label: "Agregación SUM(total)", ok: hasSum, advice: "Aplica la función SUM(total) sobre la columna total." });
+      return checks;
+    },
+    validador: (q) => q.includes('sum(total)') && q.includes('from tabla_ventas')
+  },
+  tabla_logs: {
+    id: "tabla_logs",
+    short: "LOGS",
+    name: "tabla_logs",
+    title: "Compuerta 03: Telemetría de Fallos",
+    desc: "Audita la telemetría del sistema y cuantifica el número de incidentes críticos cuyo nivel sea 'ERROR'.",
+    objective: "Cuenta registros usando COUNT(*) con el filtro WHERE nivel = 'ERROR'.",
+    hint: "SELECT COUNT(*) FROM tabla_logs WHERE nivel = 'ERROR';",
+    pedagogicalGuide: "Combina la función COUNT(*) con WHERE nivel = 'ERROR' para obtener la cantidad exacta de anomalías.",
+    columns: [
+      { name: "id", type: "INT", badge: "int", isPk: true, desc: "ID secuencial" },
+      { name: "nivel", type: "VARCHAR(20)", badge: "str", desc: "Severidad (INFO, WARN, ERROR)" },
+      { name: "mensaje", type: "TEXT", badge: "str", desc: "Detalle del evento" },
+      { name: "creado_en", type: "TIMESTAMP", badge: "date", desc: "Sello temporal" }
+    ],
+    mockSample: [
+      { id: 501, nivel: "INFO", mensaje: "Handshake SSE establecido", creado_en: "2026-03-04 10:15:00" },
+      { id: 502, nivel: "ERROR", mensaje: "Buffer overflow en puerto 8080", creado_en: "2026-03-04 10:20:12" },
+      { id: 503, nivel: "WARN", mensaje: "Consumo de RAM al 82%", creado_en: "2026-03-04 10:22:05" },
+      { id: 504, nivel: "ERROR", mensaje: "Timeout en sincronización de réplica", creado_en: "2026-03-04 10:25:33" }
+    ],
+    analyzeQuery: (q) => {
+      const checks = [];
+      const hasCount = q.includes('count(') || q.includes('count (*)');
+      const hasTable = q.includes('tabla_logs');
+      const hasError = q.includes("nivel = 'error'") || q.includes('nivel = "error"') || q.includes("nivel='error'");
+
+      checks.push({ label: "Función COUNT(*)", ok: hasCount, advice: "Utiliza COUNT(*) o COUNT(id) para contar registros." });
+      checks.push({ label: "Origen FROM tabla_logs", ok: hasTable, advice: "Especifica FROM tabla_logs." });
+      checks.push({ label: "Filtro nivel = 'ERROR'", ok: hasError, advice: "Filtra los fallos con WHERE nivel = 'ERROR'." });
+      return checks;
+    },
+    validador: (q) => (q.includes('count(') || q.includes('count(*)')) && q.includes('from tabla_logs') && (q.includes("nivel = 'error'") || q.includes('nivel = "error"') || q.includes("nivel='error'"))
+  },
+  tabla_productos: {
+    id: "tabla_productos",
+    short: "PRODUCTOS",
+    name: "tabla_productos",
+    title: "Compuerta 04: Almacén Cuántico",
+    desc: "Localiza el componente de mayor valor monetario ordenando los productos de forma descendente y limitando a 1 resultado.",
+    objective: "Ordena por precio descendente (ORDER BY precio DESC) y aplica LIMIT 1.",
+    hint: "SELECT nombre, precio FROM tabla_productos ORDER BY precio DESC LIMIT 1;",
+    pedagogicalGuide: "Usa ORDER BY [columna] DESC para ordenar de mayor a menor y LIMIT 1 para restringir la salida al primer registro.",
+    columns: [
+      { name: "id", type: "INT", badge: "int", isPk: true, desc: "SKU del producto" },
+      { name: "nombre", type: "VARCHAR(100)", badge: "str", desc: "Designación técnica" },
+      { name: "precio", type: "DECIMAL(10,2)", badge: "num", desc: "Precio unitario USD" },
+      { name: "stock", type: "INT", badge: "int", desc: "Unidades disponibles" }
+    ],
+    mockSample: [
+      { id: 1, nombre: "Quantum Server Core X9", precio: 12499.99, stock: 4 },
+      { id: 2, nombre: "Neural Accelerator A100", precio: 8950.00, stock: 12 },
+      { id: 3, nombre: "Fiber Mesh Switch 400G", precio: 3200.50, stock: 25 },
+      { id: 4, nombre: "Cyber Security Token", precio: 75.00, stock: 120 }
+    ],
+    analyzeQuery: (q) => {
+      const checks = [];
+      const hasTable = q.includes('tabla_productos');
+      const hasOrder = q.includes('order by') && q.includes('precio') && q.includes('desc');
+      const hasLimit = q.includes('limit 1');
+
+      checks.push({ label: "Origen FROM tabla_productos", ok: hasTable, advice: "Apunta a FROM tabla_productos." });
+      checks.push({ label: "Orden ORDER BY precio DESC", ok: hasOrder, advice: "Agrega ORDER BY precio DESC para priorizar el más costoso." });
+      checks.push({ label: "Cláusula LIMIT 1", ok: hasLimit, advice: "Añade LIMIT 1 para retornar únicamente la fila tope." });
+      return checks;
+    },
+    validador: (q) => q.includes('from tabla_productos') && q.includes('order by precio desc') && q.includes('limit 1')
+  },
+  tabla_compras: {
+    id: "tabla_compras",
+    short: "COMPRAS",
+    name: "tabla_compras",
+    title: "Compuerta 05: Agrupación de Compras",
+    desc: "Consolida las transacciones agrupándolas por cliente para contabilizar el total de compras por cada cliente_id.",
+    objective: "Agrupa con GROUP BY cliente_id proyectando cliente_id y COUNT(*).",
+    hint: "SELECT cliente_id, COUNT(*) FROM tabla_compras GROUP BY cliente_id;",
+    pedagogicalGuide: "Al combinar columnas individuales con funciones de agregación como COUNT(*), debes agrupar por dicha columna usando GROUP BY cliente_id.",
+    columns: [
+      { name: "id", type: "INT", badge: "int", isPk: true, desc: "ID de compra" },
+      { name: "cliente_id", type: "INT", badge: "int", isFk: true, desc: "FK de cliente" },
+      { name: "monto", type: "DECIMAL(10,2)", badge: "num", desc: "Monto facturado" },
+      { name: "creado_en", type: "DATE", badge: "date", desc: "Fecha de emisión" }
+    ],
+    mockSample: [
+      { id: 201, cliente_id: 101, monto: 1250.00, creado_en: "2026-02-10" },
+      { id: 202, cliente_id: 102, monto: 850.50, creado_en: "2026-02-11" },
+      { id: 203, cliente_id: 101, monto: 2100.00, creado_en: "2026-02-15" },
+      { id: 204, cliente_id: 108, monto: 450.00, creado_en: "2026-02-18" }
+    ],
+    analyzeQuery: (q) => {
+      const checks = [];
+      const hasTable = q.includes('tabla_compras');
+      const hasClient = q.includes('cliente_id');
+      const hasCount = q.includes('count');
+      const hasGroup = q.includes('group by');
+
+      checks.push({ label: "Origen FROM tabla_compras", ok: hasTable, advice: "Especifica FROM tabla_compras." });
+      checks.push({ label: "Columna cliente_id y COUNT(*)", ok: hasClient && hasCount, advice: "Selecciona cliente_id junto con COUNT(*)." });
+      checks.push({ label: "Agrupación GROUP BY cliente_id", ok: hasGroup && hasClient, advice: "Aplica GROUP BY cliente_id para segmentar por cliente." });
+      return checks;
+    },
+    validador: (q) => q.includes('from tabla_compras') && q.includes('group by cliente_id') && (q.includes('count(*)') || q.includes('count(id)') || q.includes('count('))
+  },
+  tabla_roles: {
+    id: "tabla_roles",
+    short: "ROLES",
+    name: "tabla_roles",
+    title: "Compuerta 06: Enlace Relacional (JOIN)",
+    desc: "Combina la tabla de usuarios con la tabla de roles para asociar a cada operador su rol asignado mediante la clave foránea u.rol_id = r.id.",
+    objective: "Realiza un JOIN entre tabla_usuarios y tabla_roles con la condición ON u.rol_id = r.id.",
+    hint: "SELECT u.nombre, r.nombre AS rol FROM tabla_usuarios u JOIN tabla_roles r ON u.rol_id = r.id;",
+    pedagogicalGuide: "Los JOIN relacionan tablas mediante claves foráneas. Escribe JOIN tabla_roles r ON u.rol_id = r.id para vincular ambas entidades.",
+    columns: [
+      { name: "u.id", type: "INT", badge: "int", desc: "ID de usuario (tabla_usuarios)" },
+      { name: "u.nombre", type: "VARCHAR(100)", badge: "str", desc: "Nombre de usuario" },
+      { name: "r.id", type: "INT", badge: "int", desc: "ID de rol (tabla_roles)" },
+      { name: "r.nombre", type: "VARCHAR(50)", badge: "str", desc: "Nombre del rol asignado" }
+    ],
+    mockSample: [
+      { id: 1, usuario: "Alice Chen", rol: "Arquitecto de Software" },
+      { id: 2, usuario: "Bob Vance", rol: "Ingeniero de Datos" },
+      { id: 3, usuario: "Carlos Mendez", rol: "DevOps Lead" },
+      { id: 5, usuario: "Elena Rostova", rol: "Security Lead" }
+    ],
+    analyzeQuery: (q) => {
+      const checks = [];
+      const hasTable = q.includes('tabla_usuarios');
+      const hasJoin = q.includes('join tabla_roles');
+      const hasOn = q.includes('rol_id = r.id') || q.includes('r.id = u.rol_id') || q.includes('u.rol_id = r.id') || q.includes('rol_id=r.id');
+
+      checks.push({ label: "Tabla Base tabla_usuarios", ok: hasTable, advice: "Inicia desde FROM tabla_usuarios." });
+      checks.push({ label: "Cláusula JOIN tabla_roles", ok: hasJoin, advice: "Agrega JOIN tabla_roles." });
+      checks.push({ label: "Condición ON u.rol_id = r.id", ok: hasOn, advice: "Especifica la relación foránea: ON u.rol_id = r.id." });
+      return checks;
+    },
+    validador: (q) => q.includes('from tabla_usuarios') && q.includes('join tabla_roles') && (q.includes('rol_id = r.id') || q.includes('r.id = u.rol_id') || q.includes('u.rol_id = r.id'))
+  },
+  tabla_alertas: {
+    id: "tabla_alertas",
+    short: "ALERTAS",
+    name: "tabla_alertas",
+    title: "Compuerta 07: Centinela de Incidentes 2026",
+    desc: "Aísla las alertas e intrusiones registradas a partir del ciclo 2026 (fecha >= '2026-01-01') para auditar amenazas contemporáneas.",
+    objective: "Filtra incidentes contemporáneos con WHERE fecha >= '2026-01-01'.",
+    hint: "SELECT * FROM tabla_alertas WHERE fecha >= '2026-01-01';",
+    pedagogicalGuide: "Las fechas en SQL se comparan en formato ISO 'YYYY-MM-DD'. Puedes utilizar el operador >= '2026-01-01'.",
+    columns: [
+      { name: "id", type: "INT", badge: "int", isPk: true, desc: "ID de alerta" },
+      { name: "tipo", type: "VARCHAR(50)", badge: "str", desc: "Tipo de evento de intrusión" },
+      { name: "fecha", type: "DATE", badge: "date", desc: "Fecha de detección" },
+      { name: "severidad", type: "VARCHAR(20)", badge: "str", desc: "Nivel (CRITICAL, HIGH, LOW)" }
+    ],
+    mockSample: [
+      { id: 101, tipo: "SSH_AUTH_FAIL", fecha: "2025-11-20", severidad: "LOW" },
+      { id: 102, tipo: "SQL_INJECTION_ATTEMPT", fecha: "2026-01-14", severidad: "CRITICAL" },
+      { id: 103, tipo: "DDoS_SYN_FLOOD", fecha: "2026-02-01", severidad: "HIGH" },
+      { id: 104, tipo: "PORT_SCAN_BLOCKED", fecha: "2026-03-01", severidad: "MEDIUM" }
+    ],
+    analyzeQuery: (q) => {
+      const checks = [];
+      const hasTable = q.includes('tabla_alertas');
+      const hasWhere = q.includes('where');
+      const has2026 = q.includes('2026') && (q.includes('fecha >') || q.includes('fecha >='));
+
+      checks.push({ label: "Origen FROM tabla_alertas", ok: hasTable, advice: "Apunta a FROM tabla_alertas." });
+      checks.push({ label: "Cláusula WHERE", ok: hasWhere, advice: "Falta la cláusula WHERE de filtro temporal." });
+      checks.push({ label: "Filtro Temporal 2026", ok: has2026, advice: "Filtra eventos del año 2026 (fecha >= '2026-01-01')." });
+      return checks;
+    },
+    validador: (q) => q.includes('from tabla_alertas') && (q.includes("fecha >") || q.includes("fecha >=") || q.includes("2026"))
+  },
+  tabla_pagos: {
+    id: "tabla_pagos",
+    short: "PAGOS",
+    name: "tabla_pagos",
+    title: "Compuerta 08: Pasarela de Liquidaciones",
+    desc: "Identifica las transacciones de pago que se encuentran en estado PENDIENTE para proceder a su validación bancaria.",
+    objective: "Filtra registros pendientes con WHERE estado = 'PENDIENTE'.",
+    hint: "SELECT * FROM tabla_pagos WHERE estado = 'PENDIENTE';",
+    pedagogicalGuide: "Para comparar columnas de texto (VARCHAR), utiliza comillas simples: WHERE estado = 'PENDIENTE'.",
+    columns: [
+      { name: "id", type: "INT", badge: "int", isPk: true, desc: "ID de transacción" },
+      { name: "monto", type: "DECIMAL(10,2)", badge: "num", desc: "Importe monetario" },
+      { name: "estado", type: "VARCHAR(30)", badge: "str", desc: "Estado (PENDIENTE, APROBADO)" },
+      { name: "metodo", type: "VARCHAR(30)", badge: "str", desc: "Pasarela utilizada" }
+    ],
+    mockSample: [
+      { id: 401, monto: 1450.00, estado: "PENDIENTE", metodo: "STRIPE_ESCROW" },
+      { id: 402, monto: 820.00, estado: "APROBADO", metodo: "CREDIT_CARD" },
+      { id: 403, monto: 320.50, estado: "PENDIENTE", metodo: "CRYPTO_TRANSFER" },
+      { id: 404, monto: 5400.00, estado: "RECHAZADO", metodo: "BANK_WIRE" }
+    ],
+    analyzeQuery: (q) => {
+      const checks = [];
+      const hasTable = q.includes('tabla_pagos');
+      const hasEstado = q.includes('estado');
+      const hasPendiente = q.includes('pendiente');
+
+      checks.push({ label: "Origen FROM tabla_pagos", ok: hasTable, advice: "Especifica FROM tabla_pagos." });
+      checks.push({ label: "Columna estado", ok: hasEstado, advice: "Evalúa la columna estado." });
+      checks.push({ label: "Valor 'PENDIENTE'", ok: hasPendiente, advice: "Filtra con WHERE estado = 'PENDIENTE'." });
+      return checks;
+    },
+    validador: (q) => q.includes('from tabla_pagos') && q.includes("estado = 'pendiente'")
+  },
+  nucleo: {
+    id: "nucleo",
+    short: "NÚCLEO",
+    name: "NÚCLEO DE LA BASE DE DATOS",
+    title: "👑 NÚCLEO DE DATOS (Objetivo Final)",
+    desc: "¡Has alcanzado el Núcleo Maestro de Pragma AI! Ejecuta la consulta maestra de dominación relacional para consolidar tu control sobre la arquitectura.",
+    objective: "Ejecuta SELECT 'CONQUISTADO' AS status, 100 AS potencia_control;",
+    hint: "SELECT 'CONQUISTADO' AS status, 100 AS potencia_control;",
+    pedagogicalGuide: "En SQL relacional también puedes emitir consultas que proyecten literales y cálculos sin requerir una tabla de origen física.",
+    columns: [
+      { name: "nucleo_status", type: "VARCHAR(30)", badge: "str", desc: "Estado del enlace de red" },
+      { name: "potencia", type: "INT", badge: "int", desc: "Porcentaje de control asignado" },
+      { name: "cripto_firmas", type: "INT", badge: "int", desc: "Firmas criptográficas obtenidas" }
+    ],
+    mockSample: [
+      { nucleo_status: "DOMINADO", potencia: 100, cripto_firmas: 9999 }
+    ],
+    analyzeQuery: () => [{ label: "Enlace con el Núcleo", ok: true, advice: "Consulta de sincronización lista." }],
+    validador: () => true
+  }
+};
+
+// Matriz de navegación 3x3 de la mazmorra
+const DUNGEON_GRID = [
+  ["tabla_usuarios", "tabla_ventas", "tabla_logs"],
+  ["tabla_productos", "tabla_compras", "tabla_roles"],
+  ["tabla_alertas", "tabla_pagos", "nucleo"]
+];
+
 function DungeonView({ estudiante, backendUrl, onUpdate }) {
   const pragma = estudiante?.pragma_profile || {};
   const activePerks = Array.isArray(pragma.active_perks) ? pragma.active_perks : [];
@@ -5281,14 +5597,27 @@ function DungeonView({ estudiante, backendUrl, onUpdate }) {
   const [loading, setLoading] = useState(false);
   const [feedback, setFeedback] = useState(null);
   const [queryResultData, setQueryResultData] = useState(null);
-  
+  const [pedagogicalChecks, setPedagogicalChecks] = useState([]);
+  const [showMockPreview, setShowMockPreview] = useState(true);
+  const [showHintCard, setShowHintCard] = useState(false);
+  const [tacticalToast, setTacticalToast] = useState(null);
+
+  const textareaRef = useRef(null);
+
   // Persistencia de habitaciones desbloqueadas usando Set
   const initialRooms = Array.isArray(pragma.dungeon_progress?.unlocked_rooms) && pragma.dungeon_progress.unlocked_rooms.length > 0
     ? pragma.dungeon_progress.unlocked_rooms
     : ["tabla_usuarios"];
   const [unlockedRooms, setUnlockedRooms] = useState(initialRooms);
 
-  // Normalizador SQL tolerante a espacios múltiples, saltos de línea, mayúsculas y punto y coma
+  // Toast temporal auto-dismissible
+  useEffect(() => {
+    if (!tacticalToast) return;
+    const t = setTimeout(() => setTacticalToast(null), 3500);
+    return () => clearTimeout(t);
+  }, [tacticalToast]);
+
+  // Normalizador SQL tolerante
   const normalizarSQL = (sql) => {
     if (!sql) return '';
     return sql
@@ -5298,100 +5627,107 @@ function DungeonView({ estudiante, backendUrl, onUpdate }) {
       .toLowerCase();
   };
 
-  // Matriz 3x3 de Base de Datos con nombres completos no truncados
-  const dungeonMap = [
-    [
-      { 
-        id: "tabla_usuarios", 
-        short: "USUARIOS", 
-        name: "tabla_usuarios", 
-        desc: "Filtra usuarios que se encuentren en estado activo.", 
-        hint: "SELECT * FROM tabla_usuarios WHERE activo = true;", 
-        columns: ["id (INT)", "nombre (VARCHAR)", "email (VARCHAR)", "activo (BOOLEAN)", "rol_id (INT)"],
-        validador: (q) => q.includes('from tabla_usuarios') && (q.includes('activo = true') || q.includes('activo = 1') || q.includes('activo is true'))
-      },
-      { 
-        id: "tabla_ventas", 
-        short: "VENTAS", 
-        name: "tabla_ventas", 
-        desc: "Calcula el total de ventas sumado en el sistema.", 
-        hint: "SELECT SUM(total) FROM tabla_ventas;", 
-        columns: ["id (INT)", "fecha (DATE)", "total (NUMERIC)", "cliente_id (INT)"],
-        validador: (q) => q.includes('sum(total)') && q.includes('from tabla_ventas')
-      },
-      { 
-        id: "tabla_logs", 
-        short: "LOGS", 
-        name: "tabla_logs", 
-        desc: "Cuenta el total de registros de logs con nivel de ERROR.", 
-        hint: "SELECT COUNT(*) FROM tabla_logs WHERE nivel = 'ERROR';", 
-        columns: ["id (INT)", "nivel (VARCHAR)", "mensaje (TEXT)", "creado_en (TIMESTAMP)"],
-        validador: (q) => (q.includes('count(*)') || q.includes('count(id)')) && q.includes('from tabla_logs') && q.includes("nivel = 'error'")
-      }
-    ],
-    [
-      { 
-        id: "tabla_productos", 
-        short: "PRODUCTOS", 
-        name: "tabla_productos", 
-        desc: "Obtén el nombre del producto de mayor precio.", 
-        hint: "SELECT nombre FROM tabla_productos ORDER BY precio DESC LIMIT 1;", 
-        columns: ["id (INT)", "nombre (VARCHAR)", "precio (DECIMAL)", "stock (INT)"],
-        validador: (q) => q.includes('from tabla_productos') && q.includes('order by precio desc') && q.includes('limit 1')
-      },
-      { 
-        id: "tabla_compras", 
-        short: "COMPRAS", 
-        name: "tabla_compras", 
-        desc: "Cuenta las compras realizadas agrupadas por cada cliente_id.", 
-        hint: "SELECT cliente_id, COUNT(*) FROM tabla_compras GROUP BY cliente_id;", 
-        columns: ["id (INT)", "cliente_id (INT)", "monto (DECIMAL)", "creado_en (DATE)"],
-        validador: (q) => q.includes('from tabla_compras') && q.includes('group by cliente_id') && (q.includes('count(*)') || q.includes('count(id)'))
-      },
-      { 
-        id: "tabla_roles", 
-        short: "ROLES", 
-        name: "tabla_roles", 
-        desc: "Relaciona los usuarios con su rol correspondiente mediante JOIN.", 
-        hint: "SELECT u.nombre, r.nombre FROM tabla_usuarios u JOIN tabla_roles r ON u.rol_id = r.id;", 
-        columns: ["u.id", "u.nombre", "r.id", "r.nombre AS rol"],
-        validador: (q) => q.includes('from tabla_usuarios') && q.includes('join tabla_roles') && (q.includes('u.rol_id = r.id') || q.includes('r.id = u.rol_id'))
-      }
-    ],
-    [
-      { 
-        id: "tabla_alertas", 
-        short: "ALERTAS", 
-        name: "tabla_alertas", 
-        desc: "Lista todas las alertas registradas a partir del año 2026.", 
-        hint: "SELECT * FROM tabla_alertas WHERE fecha >= '2026-01-01';", 
-        columns: ["id (INT)", "tipo (VARCHAR)", "fecha (DATE)", "severidad (VARCHAR)"],
-        validador: (q) => q.includes('from tabla_alertas') && (q.includes("fecha > '2026-01-01'") || q.includes("fecha >= '2026-01-01'"))
-      },
-      { 
-        id: "tabla_pagos", 
-        short: "PAGOS", 
-        name: "tabla_pagos", 
-        desc: "Busca transacciones de pago cuyo estado sea PENDIENTE.", 
-        hint: "SELECT * FROM tabla_pagos WHERE estado = 'PENDIENTE';", 
-        columns: ["id (INT)", "monto (DECIMAL)", "estado (VARCHAR)", "metodo (VARCHAR)"],
-        validador: (q) => q.includes('from tabla_pagos') && q.includes("estado = 'pendiente'")
-      },
-      { 
-        id: "nucleo", 
-        short: "NÚCLEO", 
-        name: "NÚCLEO DE LA BASE DE DATOS", 
-        desc: "¡Has conquistado el núcleo de datos del sistema!", 
-        hint: "SELECT 'CONQUISTADO' AS status;", 
-        columns: ["nucleo_status (VARCHAR)", "potencia (INT)", "cripto_firmas (INT)"],
-        validador: () => true
-      }
-    ]
-  ];
-
-  const currentRoom = dungeonMap[posY][posX];
+  const currentRoomId = DUNGEON_GRID[posY][posX];
+  const currentRoom = SQL_ROOMS_DICTIONARY[currentRoomId] || SQL_ROOMS_DICTIONARY.tabla_usuarios;
   const isRoomUnlocked = unlockedRooms.includes(currentRoom.id);
 
+  // Obtener coordenadas de una sala
+  const getCoords = (roomId) => {
+    for (let y = 0; y < 3; y++) {
+      for (let x = 0; x < 3; x++) {
+        if (DUNGEON_GRID[y][x] === roomId) return { x, y };
+      }
+    }
+    return null;
+  };
+
+  // Cálculo de Niebla de Guerra y Accesibilidad por Celda
+  const checkCellStatus = (x, y) => {
+    const cellId = DUNGEON_GRID[y][x];
+    const isPlayerHere = (posX === x && posY === y);
+    const isCleared = unlockedRooms.includes(cellId);
+    const distToPlayer = Math.abs(posX - x) + Math.abs(posY - y);
+    const isAdjacentToPlayer = distToPlayer === 1;
+
+    // Conectada a cualquier sala desbloqueada
+    const isAdjacentToAnyCleared = unlockedRooms.some(rId => {
+      const c = getCoords(rId);
+      return c && (Math.abs(c.x - x) + Math.abs(c.y - y) <= 1);
+    });
+
+    // Visibilidad: Entrada siempre visible, salas adyacentes, o desbloqueadas
+    const isDiscovered = isPlayerHere || isCleared || isAdjacentToPlayer || isAdjacentToAnyCleared || (x === 0 && y === 0);
+    // Accesibilidad para clic directo: Adyacente al jugador o ya desbloqueada
+    const isAccessible = isPlayerHere || isCleared || isAdjacentToPlayer;
+
+    return {
+      cellId,
+      roomData: SQL_ROOMS_DICTIONARY[cellId],
+      isPlayerHere,
+      isCleared,
+      isDiscovered,
+      isAccessible,
+      isEntry: x === 0 && y === 0,
+      isBoss: x === 2 && y === 2
+    };
+  };
+
+  // Clic directo en celda del mapa 3x3
+  const handleCellClick = (x, y) => {
+    const status = checkCellStatus(x, y);
+    if (!status.isAccessible) {
+      setTacticalToast("⚠️ Compuerta fuera de rango táctico. Solo puedes moverte a salas contiguas o ya superadas.");
+      return;
+    }
+    setPosX(x);
+    setPosY(y);
+    setFeedback(null);
+    setQueryInput('');
+    setQueryResultData(null);
+    setPedagogicalChecks([]);
+    setShowHintCard(false);
+  };
+
+  // Inserción rápida de snippets SQL
+  const insertarSnippet = (snippet) => {
+    const textarea = textareaRef.current;
+    if (!textarea) {
+      setQueryInput(prev => (prev ? prev + ' ' + snippet : snippet));
+      return;
+    }
+    const start = textarea.selectionStart;
+    const end = textarea.selectionEnd;
+    const currentVal = queryInput;
+    const nuevoTexto = currentVal.substring(0, start) + snippet + currentVal.substring(end);
+    setQueryInput(nuevoTexto);
+    setTimeout(() => {
+      textarea.focus();
+      const newPos = start + snippet.length;
+      textarea.setSelectionRange(newPos, newPos);
+    }, 0);
+  };
+
+  // Copiar consulta sugerida de la pista
+  const copiarPistaAlEditor = () => {
+    setQueryInput(currentRoom.hint);
+    if (textareaRef.current) textareaRef.current.focus();
+  };
+
+  // Movimiento por brújula / cruceta D-pad
+  const mover = (dir) => {
+    setFeedback(null);
+    setQueryInput('');
+    setQueryResultData(null);
+    setPedagogicalChecks([]);
+    setShowHintCard(false);
+
+    if (dir === 'norte' && posY > 0) setPosY(y => y - 1);
+    if (dir === 'sur' && posY < 2) setPosY(y => y + 1);
+    if (dir === 'oeste' && posX > 0) setPosX(x => x - 1);
+    if (dir === 'este' && posX < 2) setPosX(x => x + 1);
+  };
+
+  // Comprobar y ejecutar consulta SQL
   const comprobarSQL = async () => {
     if (!queryInput.trim()) return;
     setLoading(true);
@@ -5399,6 +5735,8 @@ function DungeonView({ estudiante, backendUrl, onUpdate }) {
     setQueryResultData(null);
 
     const qNormalizada = normalizarSQL(queryInput);
+    const checks = currentRoom.analyzeQuery(qNormalizada);
+    setPedagogicalChecks(checks);
 
     try {
       const estudianteId = estudiante?.id || estudiante?.uid || 'estudiante_local';
@@ -5415,53 +5753,61 @@ function DungeonView({ estudiante, backendUrl, onUpdate }) {
       setLoading(false);
 
       if (data.valido) {
-        desbloquearHabitacionExitosa(data.mock_data, data.rp_ganados, data.sql_essence_ganada);
-        setFeedback(data);
+        desbloquearHabitacionExitosa(data.mock_data || currentRoom.mockSample, data.rp_ganados || 15, data.sql_essence_ganada || 1);
+        setFeedback({
+          valido: true,
+          mensaje: data.mensaje || '🔓 ¡Compuerta de Datos Abierta! Consulta ejecutada correctamente.',
+          rp_ganados: data.rp_ganados || 15,
+          sql_essence_ganada: data.sql_essence_ganada || 1
+        });
       } else {
-        // Validación local de tolerancia si el backend fue muy estricto
+        // Tolerancia sintáctica con normalizador si el backend fue restrictivo
         if (currentRoom.validador && currentRoom.validador(qNormalizada)) {
-          desbloquearHabitacionExitosa([
-            { id: 1, resultado: "Sintaxis relacional normalizada y verificada" }
-          ], 15, 1);
+          desbloquearHabitacionExitosa(currentRoom.mockSample, 15, 1);
           setFeedback({
             valido: true,
-            mensaje: "✓ Consulta validada mediante normalizador sintáctico tolerante. ¡Puerta desbloqueada!"
+            mensaje: '🔓 ¡Compuerta Desbloqueada! Consulta verificada mediante normalizador relacional tolerante.',
+            rp_ganados: 15,
+            sql_essence_ganada: 1
           });
         } else {
-          setFeedback(data);
+          setFeedback({
+            valido: false,
+            mensaje: '❌ Sintaxis SQL insuficiente para la compuerta. Revisa el análisis pedagógico detallado abajo.'
+          });
         }
       }
     } catch (err) {
       setLoading(false);
-      // Fallback offline con normalizador
       if (currentRoom.validador && currentRoom.validador(qNormalizada)) {
-        desbloquearHabitacionExitosa([
-          { estado: "Completado", mensaje: "Consulta normalizada exitosa" }
-        ], 15, 1);
+        desbloquearHabitacionExitosa(currentRoom.mockSample, 15, 1);
         setFeedback({
           valido: true,
-          mensaje: "✓ ¡Consulta SQL relacional correcta! Habitación desbloqueada."
+          mensaje: '🔓 ¡Compuerta Desbloqueada! Consulta correcta en modo de contingencia local.',
+          rp_ganados: 15,
+          sql_essence_ganada: 1
         });
       } else {
         setFeedback({
           valido: false,
-          mensaje: "❌ Sintaxis no satisface los requisitos de la habitación. Revisa columnas o filtros."
+          mensaje: '❌ Sintaxis SQL no satisface los requisitos de la compuerta. Revisa el análisis pedagógico abajo.'
         });
       }
     }
   };
 
-  const desbloquearHabitacionExitosa = (mockData, rp, essence) => {
-    const updatedSet = new Set([...unlockedRooms, currentRoom.id]);
+  const desbloquearHabitacionExitosa = (mockData, rp, essence, shards = 2, targetRoomId = null) => {
+    const roomIdToUnlock = targetRoomId || currentRoom.id;
+    const updatedSet = new Set([...unlockedRooms, roomIdToUnlock]);
     const updatedList = Array.from(updatedSet);
     setUnlockedRooms(updatedList);
-    setQueryResultData(mockData || [{ status: "OK", rows: 1 }]);
+    setQueryResultData(mockData && mockData.length > 0 ? mockData : currentRoom.mockSample);
 
     const copy = { ...(estudiante?.pragma_profile || {}) };
-    if (!copy.inventory) copy.inventory = { silicon_shards: 10, memory_threads: 5, logic_cores: 2, sql_essence: 0 };
+    if (!copy.inventory) copy.inventory = { silicon_shards: 15, memory_threads: 5, logic_cores: 2, javascript_essence: 0, python_essence: 0, java_essence: 0, sql_essence: 0 };
     copy.rank_points = (copy.rank_points || 0) + (rp || 15);
     copy.inventory.sql_essence = (copy.inventory.sql_essence || 0) + (essence || 1);
-    copy.inventory.silicon_shards = (copy.inventory.silicon_shards || 0) + 2;
+    copy.inventory.silicon_shards = (copy.inventory.silicon_shards || 0) + (shards || 2);
 
     if (!copy.dungeon_progress) copy.dungeon_progress = {};
     copy.dungeon_progress.unlocked_rooms = updatedList;
@@ -5469,185 +5815,543 @@ function DungeonView({ estudiante, backendUrl, onUpdate }) {
     onUpdate(copy);
   };
 
-  const mover = (dir) => {
-    setFeedback(null);
-    setQueryInput('');
-    setQueryResultData(null);
+  // Despacho reactivo de victoria y recompensas de la sala Núcleo [2,2]
+  useEffect(() => {
+    if (currentRoom.id === 'nucleo' && !unlockedRooms.includes('nucleo')) {
+      desbloquearHabitacionExitosa(currentRoom.mockSample, 50, 3, 10, 'nucleo');
+    }
+  }, [currentRoom.id, unlockedRooms]);
 
-    if (dir === 'derecha' && posX < 2) setPosX(x => x + 1);
-    if (dir === 'abajo' && posY < 2) setPosY(y => y + 1);
-    if (dir === 'izquierda' && posX > 0) setPosX(x => x - 1);
-    if (dir === 'arriba' && posY > 0) setPosY(y => y - 1);
+  // Métricas del HUD Dark Tactical
+  const totalSalas = 9;
+  const salasSuperadas = unlockedRooms.length;
+  const porcentajeExploracion = Math.round((salasSuperadas / totalSalas) * 100);
+  const esenciasSqlActuales = pragma.inventory?.sql_essence || 0;
+
+  // Renderizador de badge de tipo de dato
+  const renderTypeBadge = (col) => {
+    let colorClass = "bg-slate-800 text-slate-300 border-slate-700";
+    if (col.badge === 'int') colorClass = "bg-cyan-950/60 text-cyan-300 border-cyan-500/40";
+    if (col.badge === 'str') colorClass = "bg-emerald-950/60 text-emerald-300 border-emerald-500/40";
+    if (col.badge === 'bool') colorClass = "bg-purple-950/60 text-purple-300 border-purple-500/40";
+    if (col.badge === 'num') colorClass = "bg-amber-950/60 text-amber-300 border-amber-500/40";
+    if (col.badge === 'date') colorClass = "bg-rose-950/60 text-rose-300 border-rose-500/40";
+
+    return (
+      <span className={`text-[10px] font-mono px-2 py-0.5 rounded border font-semibold ${colorClass}`}>
+        {col.type}
+      </span>
+    );
   };
 
   return (
     <div className="dungeon-panel glass-panel">
-      <div className="dungeon-header-top mb-4">
-        <h2>🗝️ SQL DUNGEON CRAWLER: LABERINTO DE DATOS</h2>
-        <p className="panel-desc">
-          Explora la cuadrícula relacional 3x3. Cada habitación requiere una consulta SQL normalizada para desbloquear su compuerta.
-        </p>
-      </div>
+      {/* Toast Táctico */}
+      {tacticalToast && (
+        <div className="tactical-toast-alert animate-scale-in">
+          {tacticalToast}
+        </div>
+      )}
 
-      <div className="dungeon-layout">
-        {/* Mapa 2D Izquierda */}
-        <div className="map-view">
-          <h3 className="text-xs font-mono text-indigo-300 uppercase tracking-wider mb-2">MAPA DE LA MAZMORRA (3X3)</h3>
-          <div className="dungeon-grid-visual">
-            {dungeonMap.map((row, y) => (
-              <div key={y} className="grid-row flex gap-2 mb-2">
-                {row.map((cell, x) => {
-                  const isPlayerHere = posX === x && posY === y;
-                  const isUnlocked = unlockedRooms.includes(cell.id);
-                  return (
-                    <div 
-                      key={x} 
-                      className={`grid-cell p-3 rounded-lg border text-center cursor-pointer transition-all flex-1 min-h-[56px] flex flex-col items-center justify-center font-mono ${
-                        isPlayerHere 
-                          ? 'border-indigo-500 bg-indigo-500/20 shadow-md shadow-indigo-500/20 font-bold text-white' 
-                          : isUnlocked 
-                          ? 'border-emerald-500/40 bg-emerald-950/20 text-emerald-300' 
-                          : 'border-slate-800 bg-slate-900/60 text-slate-400 hover:border-slate-700'
-                      }`}
-                      onClick={() => {
-                        setPosX(x);
-                        setPosY(y);
-                        setFeedback(null);
-                        setQueryInput('');
-                        setQueryResultData(null);
-                      }}
-                      title={`Ir a ${cell.name}`}
-                    >
-                      <span className="grid-cell-label text-xs tracking-wider block">{cell.short}</span>
-                      {isUnlocked && !isPlayerHere && <span className="unlocked-dot text-[10px] text-emerald-400 font-bold mt-0.5">✓ SUPERADA</span>}
-                      {isPlayerHere && <span className="text-[10px] text-indigo-300 font-bold mt-0.5">● AQUÍ</span>}
-                    </div>
-                  );
-                })}
-              </div>
-            ))}
+      {/* Barra Superior HUD Dark Tactical */}
+      <div className="dungeon-hud-bar mb-4">
+        <div className="dungeon-hud-header-flex">
+          <div>
+            <h2 className="dungeon-main-title flex items-center gap-2">
+              <span>🗝️</span>
+              <span>SQL DUNGEON CRAWLER: LABERINTO DE DATOS</span>
+            </h2>
+            <p className="dungeon-subtitle">
+              Navega por la matriz relacional 3x3. Formula consultas SQL precisas para vulnerar los cortafuegos y alcanzar el Núcleo.
+            </p>
           </div>
-
-          <div className="dungeon-controls mt-4 flex flex-col items-center gap-1.5">
-            <button className="btn-dpad px-3 py-1 text-xs rounded bg-slate-800 border border-slate-700 text-white font-mono hover:bg-slate-700" onClick={() => mover('arriba')} disabled={posY === 0}>
-              ▲ ARRIBA
-            </button>
-            <div className="horizontal-moves flex gap-3">
-              <button className="btn-dpad px-3 py-1 text-xs rounded bg-slate-800 border border-slate-700 text-white font-mono hover:bg-slate-700" onClick={() => mover('izquierda')} disabled={posX === 0}>
-                ◀ IZQUIERDA
-              </button>
-              <button className="btn-dpad px-3 py-1 text-xs rounded bg-slate-800 border border-slate-700 text-white font-mono hover:bg-slate-700" onClick={() => mover('derecha')} disabled={posX === 2}>
-                DERECHA ▶
-              </button>
-            </div>
-            <button className="btn-dpad px-3 py-1 text-xs rounded bg-slate-800 border border-slate-700 text-white font-mono hover:bg-slate-700" onClick={() => mover('abajo')} disabled={posY === 2}>
-              ▼ ABAJO
-            </button>
+          <div className="dungeon-location-pill">
+            <span className="text-slate-400 font-mono text-xs">SALA ACTUAL:</span>
+            <span className="text-cyan-400 font-mono text-xs font-bold">[{posX},{posY}] · {currentRoom.short}</span>
           </div>
         </div>
 
-        {/* Habitación Activa Derecha */}
-        <div className="room-workspace flex-1">
-          <div className="room-header-row mb-2 flex justify-between items-start">
-            <div>
-              <h3 className="text-sm font-semibold text-white font-mono">
-                HABITACIÓN: <span className="text-indigo-400">{currentRoom.name}</span>
+        {/* Indicadores de Telemetría Táctica */}
+        <div className="dungeon-stats-strip mt-3">
+          <div className="dungeon-stat-card">
+            <span className="stat-label">🗺️ EXPLORACIÓN</span>
+            <div className="stat-value-group">
+              <span className="stat-val text-cyan-400 font-mono font-bold">{porcentajeExploracion}%</span>
+              <span className="stat-sub font-mono">({salasSuperadas}/{totalSalas})</span>
+            </div>
+            <div className="stat-progress-track mt-1">
+              <div className="stat-progress-fill" style={{ width: `${porcentajeExploracion}%` }} />
+            </div>
+          </div>
+
+          <div className="dungeon-stat-card">
+            <span className="stat-label">🗝️ CRIPTOLLAVES</span>
+            <div className="stat-value-group">
+              <span className="stat-val text-amber-400 font-mono font-bold">{salasSuperadas}</span>
+              <span className="stat-sub font-mono">/ 9 Obtenidas</span>
+            </div>
+          </div>
+
+          <div className="dungeon-stat-card">
+            <span className="stat-label">🟩 ESENCIAS SQL</span>
+            <div className="stat-value-group">
+              <span className="stat-val text-emerald-400 font-mono font-bold">+{esenciasSqlActuales}</span>
+              <span className="stat-sub font-mono">Acumuladas</span>
+            </div>
+          </div>
+
+          <div className="dungeon-stat-card">
+            <span className="stat-label">🛡️ INTEGRIDAD</span>
+            <div className="stat-value-group">
+              <span className="stat-val text-indigo-400 font-mono font-bold">100%</span>
+              <span className="stat-sub font-mono text-emerald-400">ENLACE ACTIVO</span>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      {/* Layout Principal: Mapa Izquierda + Habitación Derecha */}
+      <div className="dungeon-layout">
+        {/* Columna Izquierda: Mapa 3x3 y Brújula */}
+        <div className="dungeon-map-column">
+          <div className="dungeon-map-card">
+            <div className="map-card-header flex justify-between items-center mb-2">
+              <h3 className="map-title font-mono text-xs text-indigo-300 uppercase tracking-wider flex items-center gap-1.5">
+                <span>🧭</span>
+                <span>MAPA DE LA MAZMORRA (3X3)</span>
               </h3>
-              <p className="desc text-slate-300 text-xs mt-0.5">{currentRoom.desc}</p>
+              <span className="text-[10px] font-mono text-slate-400">CLIC PARA MOVER</span>
             </div>
-            {isRoomUnlocked && (
-              <span className="text-[11px] font-mono px-2.5 py-0.5 rounded bg-emerald-950/60 border border-emerald-500/40 text-emerald-300 font-bold">
-                ✓ COMPUERTA DESBLOQUEADA
-              </span>
-            )}
-          </div>
 
-          {/* Schema Columns Chips */}
-          <div className="schema-chips-wrap mb-3 flex flex-wrap items-center gap-1.5">
-            <span className="text-xs text-slate-400 font-mono mr-1">Esquema:</span>
-            {currentRoom.columns.map((col, idx) => (
-              <span key={idx} className="schema-col-pill text-[11px] font-mono px-2 py-0.5 rounded bg-slate-900 border border-slate-800 text-slate-300">
-                {col}
-              </span>
-            ))}
-          </div>
+            {/* Matriz 3x3 con Niebla de Guerra */}
+            <div className="dungeon-grid-visual">
+              {DUNGEON_GRID.map((row, y) => (
+                <div key={y} className="dungeon-grid-row flex gap-2 mb-2">
+                  {row.map((cellId, x) => {
+                    const status = checkCellStatus(x, y);
+                    let cellStateClass = "cell-fog";
+                    let statusIcon = "🌫️";
+                    let statusLabel = "OCULTA";
 
-          {/* Pista de Runa Grid Runner */}
-          {hasSqlHintPerk && (
-            <div className="rune-hint-banner p-2.5 rounded-lg bg-indigo-950/30 border border-indigo-500/30 text-xs font-mono text-indigo-300 mb-3 flex items-center gap-2">
-              <span>🗝️ Pista Grid Runner:</span>
-              <code className="text-emerald-400 font-semibold">{currentRoom.hint}</code>
+                    if (status.isPlayerHere) {
+                      cellStateClass = "cell-player-here";
+                      statusIcon = "🤖";
+                      statusLabel = "AQUÍ";
+                    } else if (status.isCleared) {
+                      cellStateClass = "cell-cleared";
+                      statusIcon = "🚪";
+                      statusLabel = "SUPERADA";
+                    } else if (status.isDiscovered && status.isAccessible) {
+                      cellStateClass = "cell-accessible";
+                      statusIcon = "🔒";
+                      statusLabel = "COMPUERTA";
+                    } else if (status.isDiscovered) {
+                      cellStateClass = "cell-discovered";
+                      statusIcon = "🔒";
+                      statusLabel = "LEJANA";
+                    }
+
+                    return (
+                      <div
+                        key={x}
+                        className={`dungeon-grid-cell ${cellStateClass}`}
+                        onClick={() => handleCellClick(x, y)}
+                        title={
+                          status.isPlayerHere
+                            ? `Operador aquí: ${status.roomData.name}`
+                            : status.isCleared
+                            ? `Superada: ${status.roomData.name} (Clic para entrar)`
+                            : status.isAccessible
+                            ? `Compuerta accesible: ${status.roomData.name} (Clic para ingresar)`
+                            : status.isDiscovered
+                            ? `Compuerta visible: ${status.roomData.name} (Muévete más cerca)`
+                            : "Zona no descubierta (Cubierta por niebla táctica)"
+                        }
+                      >
+                        {/* Badges de entrada y jefe */}
+                        {status.isEntry && <span className="cell-special-badge entry-badge">📍 ENTRADA</span>}
+                        {status.isBoss && <span className="cell-special-badge boss-badge">👑 NÚCLEO</span>}
+
+                        <div className="cell-icon-wrap text-base">{statusIcon}</div>
+                        <span className="cell-room-code text-xs font-mono font-bold tracking-wider">
+                          {status.isDiscovered ? status.roomData.short : "???"}
+                        </span>
+                        <span className="cell-status-text text-[9px] font-mono font-semibold uppercase">
+                          {statusLabel}
+                        </span>
+
+                        {status.isPlayerHere && (
+                          <div className="player-halo-pulse" />
+                        )}
+                      </div>
+                    );
+                  })}
+                </div>
+              ))}
             </div>
-          )}
 
-          {currentRoom.id !== 'nucleo' ? (
-            <>
-              <div className="sql-box flex flex-col gap-2">
-                <textarea
-                  className="code-textarea sql-textarea font-mono text-xs w-full bg-slate-900 border border-slate-800 text-emerald-400 p-3 rounded outline-none focus:border-indigo-500"
-                  placeholder="Escribe tu consulta SQL relacional (tolerante a mayúsculas, espacios y ;)..."
-                  value={queryInput}
-                  onChange={(e) => setQueryInput(e.target.value)}
-                  rows={4}
-                  spellCheck={false}
-                />
-                <button 
-                  type="button" 
-                  className="btn-action text-xs font-mono font-bold tracking-wider py-2.5" 
-                  onClick={comprobarSQL}
-                  disabled={loading}
+            {/* Brújula / D-pad Táctico */}
+            <div className="dungeon-compass-container mt-3">
+              <div className="compass-header flex justify-between items-center mb-1 text-[11px] font-mono text-slate-400">
+                <span>CONTROLES DIRECCIONALES</span>
+                <span className="text-cyan-400 font-bold">N · S · E · O</span>
+              </div>
+              <div className="compass-cross-layout">
+                <button
+                  type="button"
+                  className="btn-compass btn-compass-n"
+                  onClick={() => mover('norte')}
+                  disabled={posY === 0}
+                  title="Mover al Norte"
                 >
-                  {loading ? 'ANALIZANDO SINTAXIS RELACIONAL...' : 'COMPROBAR CONSULTA SQL'}
+                  ▲ NORTE
+                </button>
+                <div className="compass-mid-row">
+                  <button
+                    type="button"
+                    className="btn-compass btn-compass-w"
+                    onClick={() => mover('oeste')}
+                    disabled={posX === 0}
+                    title="Mover al Oeste"
+                  >
+                    ◀ OESTE
+                  </button>
+                  <div className="compass-radar-core">
+                    <span className="radar-coord font-mono">[{posX},{posY}]</span>
+                  </div>
+                  <button
+                    type="button"
+                    className="btn-compass btn-compass-e"
+                    onClick={() => mover('este')}
+                    disabled={posX === 2}
+                    title="Mover al Este"
+                  >
+                    ESTE ▶
+                  </button>
+                </div>
+                <button
+                  type="button"
+                  className="btn-compass btn-compass-s"
+                  onClick={() => mover('sur')}
+                  disabled={posY === 2}
+                  title="Mover al Sur"
+                >
+                  ▼ SUR
                 </button>
               </div>
+            </div>
+          </div>
+        </div>
 
-              {feedback && (
-                <div className={`sql-feedback-card p-3 rounded-lg border text-xs font-mono mt-3 ${feedback.valido ? 'bg-emerald-950/40 border-emerald-500/40 text-emerald-300' : 'bg-rose-950/40 border-rose-500/40 text-rose-300'}`}>
-                  <p>{feedback.mensaje}</p>
-                  {feedback.valido && (
-                    <span className="text-xs text-emerald-400 font-bold block mt-1">
-                      +{feedback.rp_ganados || 15} RP · +{feedback.sql_essence_ganada || 1} Esencia SQL · +2 💎 Shards
-                    </span>
-                  )}
+        {/* Columna Derecha: Habitación Activa, Esquema y Consola */}
+        <div className="dungeon-room-column">
+          {/* Cabecera de la Habitación */}
+          <div className="room-tactical-header mb-3">
+            <div className="flex justify-between items-start flex-wrap gap-2">
+              <div>
+                <div className="flex items-center gap-2">
+                  <span className="room-badge-pill font-mono text-xs px-2.5 py-0.5 rounded bg-indigo-950/80 border border-indigo-500/40 text-indigo-300 font-bold">
+                    SALA [{posX},{posY}]
+                  </span>
+                  <h3 className="room-heading text-base font-mono font-bold text-white">
+                    {currentRoom.title}
+                  </h3>
                 </div>
-              )}
+                <p className="room-objective text-xs text-slate-300 mt-1 font-mono">
+                  {currentRoom.desc}
+                </p>
+              </div>
 
-              {/* Visualización de Tabla SQL de Resultados */}
-              {queryResultData && queryResultData.length > 0 && (
-                <div className="sql-result-table-wrap mt-3 bg-slate-950/80 border border-slate-800 rounded-lg p-3">
-                  <div className="table-title-header text-xs font-mono text-slate-400 mb-2">
-                    <span>Resultado de la Consulta ({queryResultData.length} filas):</span>
-                  </div>
-                  <table className="sql-mock-table w-full text-xs font-mono border-collapse">
+              {isRoomUnlocked ? (
+                <span className="room-unlocked-badge font-mono text-xs px-3 py-1 rounded bg-emerald-950/70 border border-emerald-500/50 text-emerald-300 font-bold flex items-center gap-1.5 shadow-[0_0_12px_rgba(16,185,129,0.25)]">
+                  <span>✓</span>
+                  <span>COMPUERTA DESBLOQUEADA</span>
+                </span>
+              ) : (
+                <span className="room-locked-badge font-mono text-xs px-3 py-1 rounded bg-amber-950/70 border border-amber-500/50 text-amber-300 font-bold flex items-center gap-1.5">
+                  <span>🔒</span>
+                  <span>REQUIERE CONSULTA SQL</span>
+                </span>
+              )}
+            </div>
+          </div>
+
+          {/* Pilar 1: Esquema Relacional de la Tabla */}
+          <div className="schema-tactical-panel mb-3">
+            <div className="schema-panel-header flex justify-between items-center mb-2">
+              <div className="flex items-center gap-2">
+                <span className="text-cyan-400 font-mono text-xs">📊 ESQUEMA RELACIONAL:</span>
+                <code className="text-emerald-300 font-mono text-xs font-bold bg-slate-900 px-2 py-0.5 rounded border border-slate-800">
+                  {currentRoom.name}
+                </code>
+              </div>
+              <button
+                type="button"
+                className="btn-toggle-sample text-[11px] font-mono text-indigo-300 hover:text-indigo-200 underline"
+                onClick={() => setShowMockPreview(!showMockPreview)}
+              >
+                {showMockPreview ? '👁️ Ocultar Preview de Datos' : '👁️ Ver Preview de Registros'}
+              </button>
+            </div>
+
+            {/* Badges de Columnas con Tipos */}
+            <div className="schema-columns-list flex flex-wrap gap-2 mb-2.5">
+              {currentRoom.columns.map((col, idx) => (
+                <div key={idx} className="column-spec-chip flex items-center gap-1.5 px-2 py-1 rounded bg-slate-900/90 border border-slate-800" title={col.desc}>
+                  <span className="col-name font-mono text-xs font-bold text-slate-200">{col.name}</span>
+                  {renderTypeBadge(col)}
+                  {col.isPk && <span className="text-[9px] font-mono font-bold text-amber-400 bg-amber-950/60 border border-amber-500/30 px-1 rounded" title="Primary Key">PK</span>}
+                  {col.isFk && <span className="text-[9px] font-mono font-bold text-indigo-400 bg-indigo-950/60 border border-indigo-500/30 px-1 rounded" title="Foreign Key">FK</span>}
+                </div>
+              ))}
+            </div>
+
+            {/* Preview de Registros de Muestra (Mock Sample) */}
+            {showMockPreview && currentRoom.mockSample && currentRoom.mockSample.length > 0 && (
+              <div className="mock-preview-table-container mt-2">
+                <div className="mock-preview-header text-[11px] font-mono text-slate-400 mb-1 flex items-center gap-1.5">
+                  <span>📋 Registros de muestra en '{currentRoom.name}' ({currentRoom.mockSample.length} filas):</span>
+                </div>
+                <div className="overflow-x-auto rounded border border-slate-800 bg-slate-950/90">
+                  <table className="dungeon-sample-table w-full text-xs font-mono border-collapse">
                     <thead>
-                      <tr className="border-b border-slate-800 bg-slate-900/60">
-                        {Object.keys(queryResultData[0]).map((key, i) => (
-                          <th key={i} className="p-2 text-left text-slate-300 font-semibold">{key}</th>
+                      <tr className="border-b border-slate-800 bg-slate-900/80">
+                        {Object.keys(currentRoom.mockSample[0]).map((key, i) => (
+                          <th key={i} className="p-2 text-left text-cyan-400 font-semibold">{key}</th>
                         ))}
                       </tr>
                     </thead>
                     <tbody>
-                      {queryResultData.map((row, rIdx) => (
-                        <tr key={rIdx} className="border-b border-slate-800/40 hover:bg-slate-900/30">
+                      {currentRoom.mockSample.map((row, rIdx) => (
+                        <tr key={rIdx} className="border-b border-slate-800/40 hover:bg-slate-900/40">
                           {Object.values(row).map((val, cIdx) => (
-                            <td key={cIdx} className="p-2 text-slate-300">{String(val)}</td>
+                            <td key={cIdx} className="p-2 text-slate-300">
+                              {typeof val === 'boolean' ? (
+                                <span className={val ? 'text-emerald-400 font-bold' : 'text-rose-400 font-bold'}>{String(val)}</span>
+                              ) : (
+                                String(val)
+                              )}
+                            </td>
                           ))}
                         </tr>
                       ))}
                     </tbody>
                   </table>
                 </div>
+              </div>
+            )}
+          </div>
+
+          {/* Pilar 3: Consola, Snippets y Visor */}
+          {currentRoom.id !== 'nucleo' ? (
+            <div className="dungeon-console-section">
+              {/* Barra de Snippets Rápidos */}
+              <div className="sql-snippets-strip mb-2 flex items-center flex-wrap gap-1.5">
+                <span className="text-[11px] font-mono text-slate-400 mr-1 flex items-center gap-1">
+                  <span>⚡</span>
+                  <span>SNIPPETS:</span>
+                </span>
+                {[
+                  "SELECT * FROM ",
+                  "WHERE ",
+                  "JOIN ",
+                  "GROUP BY ",
+                  "ORDER BY ",
+                  "LIMIT 1",
+                  "AND ",
+                  "SUM()",
+                  "COUNT(*)"
+                ].map((snippet, sIdx) => (
+                  <button
+                    key={sIdx}
+                    type="button"
+                    className="btn-snippet-pill"
+                    onClick={() => insertarSnippet(snippet)}
+                    title={`Insertar '${snippet}' en el editor`}
+                  >
+                    {snippet.trim()}
+                  </button>
+                ))}
+              </div>
+
+              {/* Editor SQL */}
+              <div className="sql-editor-wrap">
+                <textarea
+                  ref={textareaRef}
+                  className="code-textarea sql-dungeon-textarea font-mono text-xs w-full bg-slate-950 border border-slate-800 text-emerald-300 p-3 rounded-lg outline-none focus:border-cyan-500 transition-all"
+                  placeholder={`-- Escribe tu consulta SQL para ${currentRoom.name}...\nSELECT * FROM ${currentRoom.name} ...;`}
+                  value={queryInput}
+                  onChange={(e) => setQueryInput(e.target.value)}
+                  rows={4}
+                  spellCheck={false}
+                />
+
+                {/* Barra de Acciones y Pistas */}
+                <div className="sql-editor-actions mt-2 flex justify-between items-center flex-wrap gap-2">
+                  <div className="flex items-center gap-2">
+                    <button
+                      type="button"
+                      className={`btn-dungeon-subaction ${showHintCard ? 'active' : ''}`}
+                      onClick={() => setShowHintCard(!showHintCard)}
+                    >
+                      💡 {showHintCard ? 'Ocultar Pistas' : 'Pistas / Ayuda Didáctica'}
+                    </button>
+                    {hasSqlHintPerk && (
+                      <span className="text-[11px] font-mono px-2 py-1 rounded bg-indigo-950/60 border border-indigo-500/40 text-indigo-300 flex items-center gap-1">
+                        🗝️ Grid Runner Activo
+                      </span>
+                    )}
+                  </div>
+
+                  <div className="flex items-center gap-2">
+                    <button
+                      type="button"
+                      className="btn-dungeon-clear"
+                      onClick={() => setQueryInput('')}
+                      title="Limpiar editor"
+                    >
+                      Limpiar
+                    </button>
+                    <button
+                      type="button"
+                      className="btn-sql-submit-tactical"
+                      onClick={comprobarSQL}
+                      disabled={loading || !queryInput.trim()}
+                    >
+                      {loading ? 'ANALIZANDO SINTAXIS RELACIONAL...' : '⚡ EJECUTAR CONSULTA SQL'}
+                    </button>
+                  </div>
+                </div>
+              </div>
+
+              {/* Tarjeta de Pistas y Ayuda Didáctica */}
+              {(showHintCard || hasSqlHintPerk) && (
+                <div className="didactic-hint-card p-3 rounded-lg bg-indigo-950/40 border border-indigo-500/40 mt-3 animate-scale-in">
+                  <div className="flex justify-between items-start">
+                    <div className="flex items-center gap-2">
+                      <span className="text-amber-400 text-base">💡</span>
+                      <h4 className="text-xs font-mono font-bold text-indigo-200 uppercase">
+                        GUÍA CONCEPTUAL DE LA SALA
+                      </h4>
+                    </div>
+                    <button
+                      type="button"
+                      className="text-xs font-mono text-cyan-400 hover:text-cyan-300 font-bold underline"
+                      onClick={copiarPistaAlEditor}
+                    >
+                      Copiar Consulta Sugerida al Editor
+                    </button>
+                  </div>
+                  <p className="text-xs font-mono text-slate-300 mt-1.5 leading-relaxed">
+                    {currentRoom.pedagogicalGuide}
+                  </p>
+                  <div className="suggested-query-box mt-2 p-2 rounded bg-slate-950/80 border border-slate-800 flex items-center justify-between">
+                    <code className="text-emerald-400 font-mono text-xs font-bold">{currentRoom.hint}</code>
+                  </div>
+                </div>
               )}
-            </>
+
+              {/* Feedback Pedagógico Detallado */}
+              {feedback && (
+                <div className={`sql-feedback-banner mt-3 p-3 rounded-lg border text-xs font-mono ${feedback.valido ? 'feedback-ok-tactical' : 'feedback-err-tactical'}`}>
+                  <div className="flex items-center gap-2 font-bold">
+                    <span>{feedback.valido ? '✓' : '⚠️'}</span>
+                    <span>{feedback.mensaje}</span>
+                  </div>
+
+                  {feedback.valido && (
+                    <div className="mt-2 text-emerald-300 font-bold flex items-center gap-3">
+                      <span>+{feedback.rp_ganados || 15} RP</span>
+                      <span>+{feedback.sql_essence_ganada || 1} Esencia SQL</span>
+                      <span>+2 💎 Shards de Silicio</span>
+                    </div>
+                  )}
+
+                  {/* Checklist Pedagógico para consultas fallidas */}
+                  {!feedback.valido && pedagogicalChecks.length > 0 && (
+                    <div className="pedagogical-checklist mt-2 pt-2 border-t border-rose-500/20">
+                      <span className="text-[11px] font-bold text-rose-300 block mb-1">
+                        ANÁLISIS DE REQUISITOS DE CONSULTA:
+                      </span>
+                      <ul className="space-y-1">
+                        {pedagogicalChecks.map((check, cIdx) => (
+                          <li key={cIdx} className="flex items-start gap-1.5 text-[11px]">
+                            <span className={check.ok ? 'text-emerald-400 font-bold' : 'text-rose-400 font-bold'}>
+                              {check.ok ? '✓' : '✗'}
+                            </span>
+                            <span className={check.ok ? 'text-slate-300' : 'text-rose-200'}>
+                              <strong>{check.label}:</strong> {check.ok ? 'Correcto' : check.advice}
+                            </span>
+                          </li>
+                        ))}
+                      </ul>
+                    </div>
+                  )}
+                </div>
+              )}
+
+              {/* Visor Interactivo de Resultados de Consulta */}
+              {queryResultData && queryResultData.length > 0 && (
+                <div className="sql-results-viewer mt-3 bg-slate-950/90 border border-slate-800 rounded-lg p-3">
+                  <div className="results-header flex justify-between items-center text-xs font-mono text-slate-400 mb-2">
+                    <span className="font-bold text-cyan-400 flex items-center gap-1.5">
+                      <span>📊</span>
+                      <span>RESULTADO DE LA CONSULTA ({queryResultData.length} {queryResultData.length === 1 ? 'registro' : 'registros'}):</span>
+                    </span>
+                    <span className="text-[10px] text-slate-500 font-mono">CONEXIÓN VIRTUAL ACTIVA</span>
+                  </div>
+                  <div className="overflow-x-auto">
+                    <table className="dungeon-results-table w-full text-xs font-mono border-collapse">
+                      <thead>
+                        <tr className="border-b border-slate-800 bg-slate-900/80">
+                          {Object.keys(queryResultData[0]).map((key, i) => (
+                            <th key={i} className="p-2 text-left text-cyan-300 font-semibold">{key}</th>
+                          ))}
+                        </tr>
+                      </thead>
+                      <tbody>
+                        {queryResultData.map((row, rIdx) => (
+                          <tr key={rIdx} className="border-b border-slate-800/40 hover:bg-slate-900/30">
+                            {Object.values(row).map((val, cIdx) => (
+                              <td key={cIdx} className="p-2 text-slate-300">
+                                {typeof val === 'boolean' ? (
+                                  <span className={val ? 'text-emerald-400 font-bold' : 'text-rose-400 font-bold'}>{String(val)}</span>
+                                ) : (
+                                  String(val)
+                                )}
+                              </td>
+                            ))}
+                          </tr>
+                        ))}
+                      </tbody>
+                    </table>
+                  </div>
+                </div>
+              )}
+            </div>
           ) : (
-            <div className="victory-room-card p-6 rounded-xl bg-indigo-950/20 border border-indigo-500/30 text-center animate-scale-in">
-              <div className="text-4xl mb-2">🎉 👑 🗝️</div>
-              <h3 className="text-lg text-emerald-400 font-bold font-mono">¡NÚCLEO DE DATOS CONQUISTADO!</h3>
-              <p className="text-xs text-slate-300 mt-2 font-mono max-w-md mx-auto">
-                Has dominado los filtros relacionales, agregaciones, ordenamientos y joins en el laberinto SQL.
+            /* Habitación del Jefe: Núcleo de Datos */
+            <div className="victory-room-card p-6 rounded-xl bg-gradient-to-br from-indigo-950/50 via-slate-950 to-emerald-950/40 border border-emerald-500/40 text-center animate-scale-in">
+              <div className="text-5xl mb-3">👑 🗝️ 🟩</div>
+              <h3 className="text-xl text-emerald-400 font-bold font-mono tracking-wider">
+                ¡NÚCLEO CENTRAL DE DATOS CONQUISTADO!
+              </h3>
+              <p className="text-xs text-slate-300 mt-2 font-mono max-w-lg mx-auto leading-relaxed">
+                Has demostrado dominio absoluto sobre filtros relacionales (WHERE), funciones de agregación (SUM, COUNT), ordenamientos con límite (ORDER BY, LIMIT) y uniones foráneas complejas (JOIN).
               </p>
-              <div className="mt-4 p-3 rounded-lg bg-emerald-950/40 border border-emerald-500/30 text-xs text-emerald-300 font-mono">
-                ⭐ Título Desbloqueado: Arquitecto de Consultas Relacionales Pragma
+              <div className="mt-4 p-3 rounded-lg bg-emerald-950/50 border border-emerald-500/40 text-xs text-emerald-300 font-mono inline-block">
+                ⭐ Título Honorífico: Arquitecto de Consultas Relacionales Pragma
+              </div>
+              <div className="mt-4 flex justify-center gap-4 text-xs font-mono text-cyan-300">
+                <span className="px-3 py-1.5 rounded bg-slate-900 border border-slate-800 font-bold">
+                  +50 RP Ganados
+                </span>
+                <span className="px-3 py-1.5 rounded bg-slate-900 border border-slate-800 font-bold">
+                  +3 Esencias SQL
+                </span>
+                <span className="px-3 py-1.5 rounded bg-slate-900 border border-slate-800 font-bold">
+                  +10 💎 Shards
+                </span>
               </div>
             </div>
           )}
@@ -5656,4 +6360,5 @@ function DungeonView({ estudiante, backendUrl, onUpdate }) {
     </div>
   );
 }
+
 

@@ -261,12 +261,11 @@ router.post('/api/estudiantes/:id/stats', async (req, res) => {
       return res.status(400).json({ error: 'No se enviaron datos para actualizar' });
     }
 
-    const { doc, getFirestore, initializeApp } = require('firebase/app');
-    const { updateDoc } = require('firebase/firestore');
+    const { doc, setDoc } = require('firebase/firestore');
     const { firestoreDb } = require('../db.cjs');
 
     const docRef = doc(firestoreDb, 'profesor_estudiantes', id);
-    await updateDoc(docRef, fieldsToUpdate);
+    await setDoc(docRef, fieldsToUpdate, { merge: true });
 
     res.json({ success: true, updated: fieldsToUpdate });
   } catch (error) {
