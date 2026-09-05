@@ -42,7 +42,7 @@ router.post('/api/mentor/crear-plan', async (req, res) => {
     const pcStr = typeof est.perfil_cognitivo === 'object' ? JSON.stringify(est.perfil_cognitivo||{}) : (est.perfil_cognitivo||'{}');
     const sp = `Eres un Arquitecto de Software Senior. Diseña un Plan de Implementación ULTRA-DETALLADO en JSON:\n{"titulo":"...","introduccion_pedagogica":"...","plan_markdown":"...","conceptos_clave":[{"termino":"...","explicacion":"..."}]}`;
     const up = `Plan para: "${idea_proyecto}". ${github_url?`Repo: ${github_url}`:''} Nivel: ${est.nivel_actual}. Perfil: ${pcStr}`;
-    const cc = await ejecutarGroqConReintentos([{role:'system',content:sp},{role:'user',content:up}],'llama-3.3-70b-versatile',{type:'json_object'});
+    const cc = await ejecutarGroqConReintentos([{role:'system',content:sp},{role:'user',content:up}],'openai/gpt-oss-120b',{type:'json_object'});
     const data = parsearJSONGroq(cc.choices[0].message.content);
     const planUuid = crypto.randomUUID();
     const docUrl = await generarDocumentoWord(data.titulo,'PLAN DE IMPLEMENTACIÓN',data.introduccion_pedagogica,data.plan_markdown,planUuid,'plan');
@@ -93,7 +93,7 @@ router.post('/api/mentor/chat', async (req, res) => {
     else if(personalidad==='Tech Lead') dp='TONO TECH LEAD CASUAL.';
     const sp=`${dp}\nMentor para: "${plan.titulo}". Plan:\n${plan.plan_markdown}\nPerfil: ${pcStr}\nJSON: {"mensaje_chat":"...","documento_ayuda_titulo":"...","documento_ayuda_markdown":"..."}`;
     const msgs=[{role:'system',content:sp},...hist.map(m=>({role:m.remitente==='estudiante'?'user':'assistant',content:m.documento_ayuda?JSON.stringify({mensaje_chat:m.texto,documento_ayuda_titulo:m.documento_ayuda.titulo,documento_ayuda_markdown:m.documento_ayuda.markdown}):m.texto})),{role:'user',content:mensaje}];
-    const cc = await ejecutarGroqConReintentos(msgs,'llama-3.3-70b-versatile',{type:'json_object'});
+    const cc = await ejecutarGroqConReintentos(msgs,'openai/gpt-oss-120b',{type:'json_object'});
     const data = parsearJSONGroq(cc.choices[0].message.content);
     const docUuid = crypto.randomUUID();
     const docUrl = await generarDocumentoWord(data.documento_ayuda_titulo,'GUÍA DE AYUDA',null,data.documento_ayuda_markdown,docUuid,'ayuda');
@@ -123,7 +123,7 @@ router.post('/api/mentor/documentos/regenerar', async (req, res) => {
     const pr = await client.query('SELECT * FROM profesor_mentor_planes WHERE id = $1',[da.plan_id]);
     const plan = pr.rows[0];
     const sp=`Mentor para: "${plan.titulo}". Regenera guía para: "${da.mensaje_estudiante}". Previa:\n${da.documento_markdown}\nJSON: {"mensaje_chat":"...","documento_ayuda_titulo":"...","documento_ayuda_markdown":"..."}`;
-    const cc = await ejecutarGroqConReintentos([{role:'system',content:sp}],'llama-3.3-70b-versatile',{type:'json_object'});
+    const cc = await ejecutarGroqConReintentos([{role:'system',content:sp}],'openai/gpt-oss-120b',{type:'json_object'});
     const data = parsearJSONGroq(cc.choices[0].message.content);
     const docUrl = await generarDocumentoWord(data.documento_ayuda_titulo,'GUÍA (REGENERADA)',null,data.documento_ayuda_markdown,documento_id,'ayuda_regen');
     await client.query(`UPDATE profesor_mentor_documentos_ayuda SET respuesta_mentor=$1, documento_markdown=$2, word_url=$3 WHERE id=$4`,[data.mensaje_chat,data.documento_ayuda_markdown,docUrl,documento_id]);

@@ -437,7 +437,7 @@ router.post('/api/pragma/copiloto/evaluar', async (req, res) => {
 
     const completion = await ejecutarGroqConReintentos(
       [{ role: 'user', content: prompt }],
-      'llama-3.1-8b-instant',
+      'openai/gpt-oss-20b',
       { type: 'json_object' }
     );
 
@@ -492,7 +492,7 @@ router.post('/api/pragma/zen/acertijo', async (req, res) => {
 
     const completion = await ejecutarGroqConReintentos(
       [{ role: 'user', content: prompt }],
-      'llama-3.1-8b-instant',
+      'openai/gpt-oss-20b',
       { type: 'json_object' }
     );
 
@@ -527,7 +527,7 @@ router.post('/api/pragma/zen/resolver', async (req, res) => {
 
     const completion = await ejecutarGroqConReintentos(
       [{ role: 'user', content: prompt }],
-      'llama-3.1-8b-instant',
+      'openai/gpt-oss-20b',
       { type: 'json_object' }
     );
 
@@ -575,7 +575,7 @@ router.post('/api/pragma/taberna/optimizar', async (req, res) => {
 
     const completion = await ejecutarGroqConReintentos(
       [{ role: 'user', content: prompt }],
-      'llama-3.1-8b-instant',
+      'openai/gpt-oss-20b',
       { type: 'json_object' }
     );
 
@@ -1255,196 +1255,204 @@ const POOL_RETOS_MULTIJUGADOR = [
   // ==========================================
   // 1. TRIVIA TÉCNICA (trivia)
   // ==========================================
+  // Novato
   {
-    id: 'trivia_1',
+    id: 'trivia_nov_1',
+    tipo: 'trivia',
+    categoria: 'arcade',
+    lenguaje: 'JavaScript',
+    dificultad: 'novato',
+    titulo: 'Declaración de Variables',
+    pregunta: '¿Qué palabra reservada se usa en JavaScript para declarar una variable cuyo valor puede cambiar?',
+    opciones: ['let', 'const', 'static', 'fixed'],
+    correcta: 0,
+    explicacion: 'let permite declarar variables reasignables con ámbito de bloque.'
+  },
+  {
+    id: 'trivia_nov_2',
+    tipo: 'trivia',
+    categoria: 'arcade',
+    lenguaje: 'JavaScript',
+    dificultad: 'novato',
+    titulo: 'Tipos de Datos Booleanos',
+    pregunta: '¿Qué tipo de dato representa exclusivamente un valor de verdadero o falso (true / false)?',
+    opciones: ['Boolean', 'String', 'Number', 'Undefined'],
+    correcta: 0,
+    explicacion: 'El tipo Boolean contiene únicamente dos valores lógicos: true o false.'
+  },
+  {
+    id: 'trivia_nov_3',
+    tipo: 'trivia',
+    categoria: 'arcade',
+    lenguaje: 'JavaScript',
+    dificultad: 'novato',
+    titulo: 'Salida de Datos en Consola',
+    pregunta: '¿Qué instrucción se utiliza para mostrar un mensaje o valor en la consola del navegador?',
+    opciones: ['console.log("Hola")', 'print.screen("Hola")', 'terminal.write("Hola")', 'display.show("Hola")'],
+    correcta: 0,
+    explicacion: 'console.log() imprime datos en la consola de depuración del entorno.'
+  },
+  {
+    id: 'trivia_nov_4',
+    tipo: 'trivia',
+    categoria: 'arcade',
+    lenguaje: 'JavaScript',
+    dificultad: 'novato',
+    titulo: 'Identificación de Texto (String)',
+    pregunta: '¿Cuál de las siguientes opciones representa un texto (String) escrito de forma válida?',
+    opciones: ['"Hola Mundo"', 'Hola Mundo', '[Hola Mundo]', '<Hola Mundo>'],
+    correcta: 0,
+    explicacion: 'Los textos o cadenas (String) deben estar delimitados por comillas simples o dobles.'
+  },
+  // Intermedio
+  {
+    id: 'trivia_int_1',
     tipo: 'trivia',
     categoria: 'arcade',
     lenguaje: 'JavaScript',
     dificultad: 'intermedio',
-    titulo: 'Complejidad Computacional en V8',
-    pregunta: '¿Cuál es la complejidad temporal promedio de búsqueda en un Map/Set bien balanceado en JavaScript/V8?',
-    opciones: ['O(N)', 'O(log N)', 'O(1)', 'O(N log N)'],
-    correcta: 2,
-    explicacion: 'Las tablas Hash permiten acceso en O(1) promedio gracias a su función de hashing.'
+    titulo: 'Transformación de Arrays con Map',
+    pregunta: '¿Qué método de Array se utiliza para transformar cada elemento y retornar un nuevo array sin mutar el original?',
+    opciones: ['map()', 'forEach()', 'filter()', 'push()'],
+    correcta: 0,
+    explicacion: 'map() aplica una función a cada elemento y genera un nuevo array resultante.'
   },
   {
-    id: 'trivia_2',
+    id: 'trivia_int_2',
     tipo: 'trivia',
     categoria: 'arcade',
-    lenguaje: 'React',
+    lenguaje: 'JavaScript',
     dificultad: 'intermedio',
-    titulo: 'React Hooks y Memorización',
-    pregunta: '¿Qué Hook de React se utiliza para memorizar la definición de una función y evitar recrearla en cada render?',
-    opciones: ['useMemo', 'useCallback', 'useRef', 'useEffect'],
-    correcta: 1,
-    explicacion: 'useCallback memoriza una instancia de función en lugar de su resultado evaluado.'
+    titulo: 'Template Literals',
+    pregunta: '¿Qué sintaxis permite incrustar variables dentro de una cadena de texto usando comillas invertidas?',
+    opciones: ['Template Literals (${variable})', 'Concatenación Estricta', 'Interpolación Regex', 'Macro String'],
+    correcta: 0,
+    explicacion: 'Los Template Literals con acentos graves permiten evaluar expresiones con ${...}.'
   },
+  // Experto
   {
-    id: 'trivia_3',
+    id: 'trivia_exp_1',
     tipo: 'trivia',
     categoria: 'arcade',
     lenguaje: 'JavaScript',
     dificultad: 'experto',
-    titulo: 'Event Loop & Concurrencia',
-    pregunta: '¿En qué orden se procesan las Microtareas (Promise.then) frente a Macrotareas (setTimeout)?',
+    titulo: 'Event Loop & Microtareas',
+    pregunta: '¿En qué orden procesa el Event Loop las Microtareas (Promise.then) frente a las Macrotareas (setTimeout)?',
     opciones: [
-      'Se ejecutan después de todas las macrotareas',
-      'Tienen prioridad y se vacían por completo antes del siguiente ciclo de macrotareas',
-      'Se ejecutan en hilos paralelos aislados del hilo principal',
-      'El motor elige aleatoriamente según la carga de CPU'
+      'Las microtareas tienen prioridad y se vacían antes de la siguiente macrotarea',
+      'Las macrotareas se ejecutan primero en cada ciclo',
+      'Se procesan en hilos paralelos independientes',
+      'El motor alterna aleatoriamente según la carga de CPU'
     ],
-    correcta: 1,
-    explicacion: 'La cola de microtareas se vacía por completo antes de continuar con la siguiente macrotarea.'
+    correcta: 0,
+    explicacion: 'La cola de microtareas se vacía por completo antes de despachar la siguiente macrotarea.'
   },
   {
-    id: 'trivia_js_novato',
+    id: 'trivia_exp_2',
     tipo: 'trivia',
     categoria: 'arcade',
     lenguaje: 'JavaScript',
-    dificultad: 'novato',
-    titulo: 'Tipos Primitivos en JavaScript',
-    pregunta: '¿Cuál es el resultado de evaluar typeof NaN en JavaScript estándar?',
-    opciones: ['"number"', '"nan"', '"undefined"', '"object"'],
-    correcta: 0,
-    explicacion: 'En la especificación IEEE 754 de JavaScript, NaN (Not-a-Number) es técnicamente de tipo numérico.'
-  },
-  {
-    id: 'py_trivia_1',
-    tipo: 'trivia',
-    categoria: 'arcade',
-    lenguaje: 'Python',
-    dificultad: 'novato',
-    titulo: 'Tipos de Datos Inmutables en Python',
-    pregunta: '¿Cuál de las siguientes estructuras de datos nativas es INMUTABLE en Python?',
-    opciones: ['list (Lista)', 'dict (Diccionario)', 'tuple (Tupla)', 'set (Conjunto)'],
-    correcta: 2,
-    explicacion: 'Las tuplas (tuple) en Python son inmutables una vez creadas.'
-  },
-  {
-    id: 'sql_trivia_1',
-    tipo: 'trivia',
-    categoria: 'arcade',
-    lenguaje: 'SQL',
-    dificultad: 'novato',
-    titulo: 'Cláusulas de Agregación en SQL',
-    pregunta: '¿Cuál es la diferencia fundamental entre las cláusulas WHERE y HAVING en SQL estándar?',
-    opciones: [
-      'WHERE filtra registros antes de agrupar; HAVING filtra sobre grupos creados por GROUP BY',
-      'WHERE solo opera sobre números; HAVING sobre columnas de texto',
-      'HAVING se evalúa antes de FROM en el orden del motor',
-      'No hay diferencia, son palabras reservadas equivalentes'
-    ],
-    correcta: 0,
-    explicacion: 'WHERE filtra filas antes de agrupar; HAVING evalúa condiciones sobre agregaciones de GROUP BY.'
-  },
-  {
-    id: 'exp_trivia_1',
-    tipo: 'trivia',
-    categoria: 'arcade',
-    lenguaje: 'General',
     dificultad: 'experto',
-    titulo: 'Consistencia Distribuida (Teorema CAP)',
-    pregunta: 'Según el Teorema CAP, en presencia de una partición de red (P), ¿qué compromiso debe elegir un sistema distribuido?',
-    opciones: [
-      'Elegir entre Consistencia estricta (C) o Disponibilidad alta (A)',
-      'Elegir entre Rendimiento de disco o Cifrado en tránsito',
-      'Garantizar los tres atributos simultáneamente mediante consenso Paxos',
-      'Descartar la partición reiniciando forzosamente los nodos maestro'
-    ],
+    titulo: 'Complejidad Hash en V8',
+    pregunta: '¿Cuál es la complejidad temporal promedio de búsqueda por clave en un Map/Set en el motor V8?',
+    opciones: ['O(1)', 'O(log N)', 'O(N)', 'O(N log N)'],
     correcta: 0,
-    explicacion: 'Ante una partición de red inevitable, el sistema debe optar entre consistencia o disponibilidad.'
+    explicacion: 'Las tablas Hash permiten acceso O(1) en promedio.'
   },
 
   // ==========================================
   // 2. BUG HUNTER (bug_hunter / refactor)
   // ==========================================
+  // Novato
   {
-    id: 'bug_hunter_1',
+    id: 'bug_nov_1',
     tipo: 'bug_hunter',
     tipo_alias: 'refactor',
     categoria: 'arcade',
     lenguaje: 'JavaScript',
     dificultad: 'novato',
-    titulo: 'Auditoría de Bucle Infinito',
-    descripcion: 'Identifica la línea del fallo y selecciona la corrección para evitar que el bucle quede atrapado infinitamente.',
+    titulo: 'Tipografía en Declaración de Variable',
+    descripcion: 'Una variable fue declarada como "lett" en lugar de "let". Identifica la línea y selecciona la corrección.',
     linea_bug: 2,
-    codigo_con_bug: 'for (let i = 5; i >= 0; i--) {\n  if (i === 0) i = 5;\n}',
-    opciones_correcion: [
-      'for (let i = 5; i > 0; i--) { break; }',
-      'Eliminar "if (i === 0) i = 5;" para permitir que la condición i >= 0 finalice.',
-      'Cambiar el decremento i-- por i++.'
+    codigo_con_bug: 'let precio = 25;\nlett descuento = 5;\nlet total = precio - descuento;',
+    opciones_correccion: [
+      'let descuento = 5;',
+      'const descuento == 5;',
+      'delete descuento;'
     ],
-    correcta: 1
+    correcta: 0
   },
   {
-    id: 'bug_hunter_2',
+    id: 'bug_nov_2',
+    tipo: 'bug_hunter',
+    tipo_alias: 'refactor',
+    categoria: 'arcade',
+    lenguaje: 'JavaScript',
+    dificultad: 'novato',
+    titulo: 'Comillas de Texto Sin Cerrar',
+    descripcion: 'La cadena de texto no tiene comilla de cierre en la línea 2, causando un error de sintaxis.',
+    linea_bug: 2,
+    codigo_con_bug: 'let saludo = "Hola";\nlet nombre = "Eliab;\nconsole.log(saludo + " " + nombre);',
+    opciones_correccion: [
+      'let nombre = "Eliab";',
+      'let nombre = Eliab;',
+      'let nombre = \'Eliab";'
+    ],
+    correcta: 0
+  },
+  {
+    id: 'bug_nov_3',
+    tipo: 'bug_hunter',
+    tipo_alias: 'refactor',
+    categoria: 'arcade',
+    lenguaje: 'JavaScript',
+    dificultad: 'novato',
+    titulo: 'Operador Incorrecto en Suma',
+    descripcion: 'La función sumar está restando los parámetros en lugar de sumarlos.',
+    linea_bug: 2,
+    codigo_con_bug: 'function sumar(a, b) {\n  let resultado = a - b;\n  return resultado;\n}',
+    opciones_correccion: [
+      'let resultado = a + b;',
+      'let resultado = a * b;',
+      'return a;'
+    ],
+    correcta: 0
+  },
+  // Intermedio
+  {
+    id: 'bug_int_1',
     tipo: 'bug_hunter',
     tipo_alias: 'refactor',
     categoria: 'arcade',
     lenguaje: 'JavaScript',
     dificultad: 'intermedio',
-    titulo: 'Mutación Directa de Estado Reactivo',
-    descripcion: 'Identifica la línea con la mutación directa prohibida y aplica la actualización inmutable correcta.',
+    titulo: 'Límite de Array Excedido (Off-by-One)',
+    descripcion: 'El bucle usa <= en lugar de < y accede a un índice indefinido al final del array.',
     linea_bug: 2,
-    codigo_con_bug: 'function agregarItem(estado, nuevoItem) {\n  estado.items.push(nuevoItem);\n  return estado;\n}',
-    opciones_correcion: [
-      'return { ...estado, items: [...estado.items, nuevoItem] };',
-      'estado.items = estado.items.push(nuevoItem); return estado;',
-      'delete estado.items; return estado;'
+    codigo_con_bug: 'function mostrarItems(items) {\n  for (let i = 0; i <= items.length; i++) {\n    console.log(items[i]);\n  }\n}',
+    opciones_correccion: [
+      'for (let i = 0; i < items.length; i++) {',
+      'for (let i = 1; i <= items.length; i++) {',
+      'for (let i = items.length; i > 0; i++) {'
     ],
     correcta: 0
   },
+  // Experto
   {
-    id: 'py_bug_hunter_1',
-    tipo: 'bug_hunter',
-    tipo_alias: 'refactor',
-    categoria: 'arcade',
-    lenguaje: 'Python',
-    dificultad: 'intermedio',
-    titulo: 'Parámetro por Defecto Mutable',
-    descripcion: 'Localiza la línea que comparte el argumento mutable entre llamadas y corrígela con None idomático.',
-    linea_bug: 1,
-    codigo_con_bug: 'def agregar_item(item, items=[]):\n    items.append(item)\n    return items',
-    opciones_correcion: [
-      'def agregar_item(item, items=None):\n    if items is None: items = []\n    items.append(item)\n    return items',
-      'def agregar_item(item, items=()):\n    items += (item,)\n    return items',
-      'Cambiar items.append por items.insert(0, item)'
-    ],
-    correcta: 0
-  },
-  {
-    id: 'sql_bug_hunter_1',
-    tipo: 'bug_hunter',
-    tipo_alias: 'refactor',
-    categoria: 'arcade',
-    lenguaje: 'SQL',
-    dificultad: 'intermedio',
-    titulo: 'Conflicto de Agrupamiento en GROUP BY',
-    descripcion: 'Identifica la línea errónea donde una columna seleccionada no está agregada ni agrupada.',
-    linea_bug: 3,
-    codigo_con_bug: 'SELECT departamento, categoria, AVG(salario)\nFROM empleados\nGROUP BY departamento;',
-    opciones_correcion: [
-      'SELECT departamento, categoria, AVG(salario) FROM empleados GROUP BY departamento, categoria;',
-      'Eliminar AVG(salario) de la consulta.',
-      'Reemplazar GROUP BY por ORDER BY departamento;'
-    ],
-    correcta: 0
-  },
-  {
-    id: 'exp_bug_hunter_1',
+    id: 'bug_exp_1',
     tipo: 'bug_hunter',
     tipo_alias: 'refactor',
     categoria: 'arcade',
     lenguaje: 'JavaScript',
     dificultad: 'experto',
-    titulo: 'Condición de Carrera en Transferencias',
-    descripcion: 'Identifica la vulnerabilidad Reentrancy/Race condition al enviar fondos antes de debitar el balance.',
-    linea_bug: 3,
-    codigo_con_bug: 'async function transferir(origen, destino, monto) {\n  const saldo = await obtenerSaldo(origen);\n  if (saldo >= monto) {\n    await enviarDinero(destino, monto);\n    await debitarSaldo(origen, monto);\n  }\n}',
-    opciones_correcion: [
-      'Debitar el saldo antes de enviar el dinero (Checks-Effects-Interactions) o ejecutar una transacción atómica con lock.',
-      'Añadir un setTimeout de 100ms antes de enviarDinero.',
-      'Convertir la función en síncrona suprimiendo las palabras reservadas async/await.'
+    titulo: 'Mutación Directa de Estado Reactivo',
+    descripcion: 'Identifica la línea con la mutación directa prohibida y aplica la actualización inmutable correcta.',
+    linea_bug: 2,
+    codigo_con_bug: 'function agregarItem(estado, nuevoItem) {\n  estado.items.push(nuevoItem);\n  return estado;\n}',
+    opciones_correccion: [
+      'return { ...estado, items: [...estado.items, nuevoItem] };',
+      'estado.items = estado.items.push(nuevoItem); return estado;',
+      'delete estado.items; return estado;'
     ],
     correcta: 0
   },
@@ -1452,367 +1460,395 @@ const POOL_RETOS_MULTIJUGADOR = [
   // ==========================================
   // 3. CODE SORTER (code_sorter / sorter)
   // ==========================================
+  // Novato (3 líneas simples y directas)
   {
-    id: 'code_sorter_1',
+    id: 'sorter_nov_1',
     tipo: 'code_sorter',
     tipo_alias: 'sorter',
     categoria: 'pragma',
     lenguaje: 'JavaScript',
     dificultad: 'novato',
-    titulo: 'Pipeline Funcional de Arrays',
-    lineas: ['  .map(n => n * 2);', 'return numeros', '  .filter(n => n % 2 === 0)'],
-    lineas_ordenadas: ['return numeros', '  .filter(n => n % 2 === 0)', '  .map(n => n * 2);']
+    titulo: 'Declarar Variable, Saludar y Mostrar',
+    lineas: ['console.log(saludo);', 'let saludo = "Hola, " + nombre;', 'let nombre = "Eliab";'],
+    lineas_ordenadas: ['let nombre = "Eliab";', 'let saludo = "Hola, " + nombre;', 'console.log(saludo);']
   },
   {
-    id: 'code_sorter_2',
+    id: 'sorter_nov_2',
+    tipo: 'code_sorter',
+    tipo_alias: 'sorter',
+    categoria: 'pragma',
+    lenguaje: 'JavaScript',
+    dificultad: 'novato',
+    titulo: 'Función Simple de Suma',
+    lineas: ['  return a + b;', 'function sumar(a, b) {', '}'],
+    lineas_ordenadas: ['function sumar(a, b) {', '  return a + b;', '}']
+  },
+  {
+    id: 'sorter_nov_3',
+    tipo: 'code_sorter',
+    tipo_alias: 'sorter',
+    categoria: 'pragma',
+    lenguaje: 'JavaScript',
+    dificultad: 'novato',
+    titulo: 'Condicional Mayor de Edad',
+    lineas: ['  console.log("Mayor de edad");', 'if (edad >= 18) {', '}'],
+    lineas_ordenadas: ['if (edad >= 18) {', '  console.log("Mayor de edad");', '}']
+  },
+  // Intermedio (4 líneas)
+  {
+    id: 'sorter_int_1',
     tipo: 'code_sorter',
     tipo_alias: 'sorter',
     categoria: 'pragma',
     lenguaje: 'JavaScript',
     dificultad: 'intermedio',
-    titulo: 'Bloque Asíncrono Seguro con Try / Catch',
-    lineas: ['  } catch (err) {', '  try {', '    const res = await fetch(url);', '    console.error(err);', '  }'],
-    lineas_ordenadas: ['  try {', '    const res = await fetch(url);', '  } catch (err) {', '    console.error(err);', '  }']
+    titulo: 'Pipeline de Números Pares Duplicados',
+    lineas: ['  .map(n => n * 2);', 'return numeros', '  .filter(n => n % 2 === 0);'],
+    lineas_ordenadas: ['return numeros', '  .filter(n => n % 2 === 0);', '  .map(n => n * 2);']
   },
+  // Experto (5 líneas)
   {
-    id: 'code_sorter_py_1',
+    id: 'sorter_exp_1',
     tipo: 'code_sorter',
     tipo_alias: 'sorter',
     categoria: 'pragma',
-    lenguaje: 'Python',
-    dificultad: 'novato',
-    titulo: 'Context Manager para Lectura de Archivos',
-    lineas: ['    contenido = f.read()', 'with open("datos.txt", "r") as f:', 'print(contenido)'],
-    lineas_ordenadas: ['with open("datos.txt", "r") as f:', '    contenido = f.read()', 'print(contenido)']
-  },
-  {
-    id: 'code_sorter_sql_1',
-    tipo: 'code_sorter',
-    tipo_alias: 'sorter',
-    categoria: 'pragma',
-    lenguaje: 'SQL',
-    dificultad: 'intermedio',
-    titulo: 'Orden Lógico de Ejecución de Consulta SQL',
-    lineas: ['SELECT id, nombre', 'WHERE activo = true', 'FROM usuarios', 'ORDER BY nombre ASC'],
-    lineas_ordenadas: ['FROM usuarios', 'WHERE activo = true', 'SELECT id, nombre', 'ORDER BY nombre ASC']
+    lenguaje: 'JavaScript',
+    dificultad: 'experto',
+    titulo: 'Reintentos Exponenciales Asíncronos',
+    lineas: [
+      '    await sleep(2 ** intento * 100);',
+      'for (let intento = 0; intento < 3; intento++) {',
+      '  try { return await fetch(url); } catch (e) {',
+      '  }',
+      '} throw new Error("Fallo final");'
+    ],
+    lineas_ordenadas: [
+      'for (let intento = 0; intento < 3; intento++) {',
+      '  try { return await fetch(url); } catch (e) {',
+      '    await sleep(2 ** intento * 100);',
+      '  }',
+      '} throw new Error("Fallo final");'
+    ]
   },
 
   // ==========================================
   // 4. FILL THE CODE (fill_code / fill-blank)
   // ==========================================
+  // Novato (1 o 2 huecos básicos)
   {
-    id: 'fill_code_1',
+    id: 'fill_nov_1',
+    tipo: 'fill_code',
+    tipo_alias: 'fill-blank',
+    categoria: 'pragma',
+    lenguaje: 'JavaScript',
+    dificultad: 'novato',
+    titulo: 'Condicional If Básico',
+    codigo_con_huecos: 'let edad = 18;\n___1___ (edad >= 18) {\n  console.log("Acceso permitido");\n}',
+    respuestas: { '1': 'if' },
+    sugerencias: ['if', 'while', 'for', 'else'],
+    opciones_tokens: ['if', 'while', 'for', 'else']
+  },
+  {
+    id: 'fill_nov_2',
+    tipo: 'fill_code',
+    tipo_alias: 'fill-blank',
+    categoria: 'pragma',
+    lenguaje: 'JavaScript',
+    dificultad: 'novato',
+    titulo: 'Retornar Resultado de Función',
+    codigo_con_huecos: 'function multiplicar(x, y) {\n  ___1___ x * y;\n}',
+    respuestas: { '1': 'return' },
+    sugerencias: ['return', 'send', 'output', 'give'],
+    opciones_tokens: ['return', 'send', 'output', 'give']
+  },
+  {
+    id: 'fill_nov_3',
+    tipo: 'fill_code',
+    tipo_alias: 'fill-blank',
+    categoria: 'pragma',
+    lenguaje: 'JavaScript',
+    dificultad: 'novato',
+    titulo: 'Declaración y Uso de Variable',
+    codigo_con_huecos: '___1___ puntos = 50;\nconsole.log(___2___);',
+    respuestas: { '1': 'let', '2': 'puntos' },
+    sugerencias: ['let', 'puntos', 'function', 'class'],
+    opciones_tokens: ['let', 'puntos', 'function', 'class']
+  },
+  // Intermedio
+  {
+    id: 'fill_int_1',
     tipo: 'fill_code',
     tipo_alias: 'fill-blank',
     categoria: 'pragma',
     lenguaje: 'JavaScript',
     dificultad: 'intermedio',
+    titulo: 'Transformación con Map y Flecha',
+    codigo_con_huecos: 'const dobles = numeros.___1___(n => n ___2___ 2);',
+    respuestas: { '1': 'map', '2': '*' },
+    sugerencias: ['map', '*', 'filter', '+', 'reduce'],
+    opciones_tokens: ['map', '*', 'filter', '+', 'reduce']
+  },
+  // Experto
+  {
+    id: 'fill_exp_1',
+    tipo: 'fill_code',
+    tipo_alias: 'fill-blank',
+    categoria: 'pragma',
+    lenguaje: 'JavaScript',
+    dificultad: 'experto',
     titulo: 'Consumo Asíncrono de APIs con Await',
     codigo_con_huecos: 'const response = ___1___ fetch("/api/datos");\nconst payload = ___2___ response.json();',
-    respuestas: {
-      '1': 'await',
-      '2': 'await'
-    },
-    sugerencias: ['await', 'async', 'then', 'yield']
-  },
-  {
-    id: 'fill_code_py_1',
-    tipo: 'fill_code',
-    tipo_alias: 'fill-blank',
-    categoria: 'pragma',
-    lenguaje: 'Python',
-    dificultad: 'intermedio',
-    titulo: 'List Comprehensions Filtradas en Python',
-    codigo_con_huecos: 'pares = [x * 2 ___1___ x in numeros ___2___ x % 2 == 0]',
-    respuestas: {
-      '1': 'for',
-      '2': 'if'
-    },
-    sugerencias: ['for', 'if', 'in', 'while']
-  },
-  {
-    id: 'fill_code_sql_1',
-    tipo: 'fill_code',
-    tipo_alias: 'fill-blank',
-    categoria: 'pragma',
-    lenguaje: 'SQL',
-    dificultad: 'novato',
-    titulo: 'Unión de Tablas con Left Join',
-    codigo_con_huecos: 'SELECT u.nombre, o.total\nFROM usuarios u\n___1___ JOIN ordenes o ___2___ u.id = o.usuario_id;',
-    respuestas: {
-      '1': 'LEFT',
-      '2': 'ON'
-    },
-    sugerencias: ['LEFT', 'ON', 'WHERE', 'INNER']
+    respuestas: { '1': 'await', '2': 'await' },
+    sugerencias: ['await', 'async', 'then', 'yield'],
+    opciones_tokens: ['await', 'async', 'then', 'yield']
   },
 
   // ==========================================
   // 5. OUTPUT PREDICTOR (output_predictor / output)
   // ==========================================
+  // Novato
   {
-    id: 'output_predictor_1',
+    id: 'output_nov_1',
+    tipo: 'output_predictor',
+    tipo_alias: 'output',
+    categoria: 'arcade',
+    lenguaje: 'JavaScript',
+    dificultad: 'novato',
+    titulo: 'Suma de Dos Números',
+    codigo: 'let a = 10;\nlet b = 5;\nconsole.log(a + b);',
+    opciones: ['15', '105', '5', 'undefined'],
+    correcta: 0,
+    explicacion: '10 + 5 da como resultado numérico 15.'
+  },
+  {
+    id: 'output_nov_2',
+    tipo: 'output_predictor',
+    tipo_alias: 'output',
+    categoria: 'arcade',
+    lenguaje: 'JavaScript',
+    dificultad: 'novato',
+    titulo: 'Incremento de Puntos',
+    codigo: 'let puntos = 20;\npuntos = puntos + 10;\nconsole.log(puntos);',
+    opciones: ['30', '20', '2010', '10'],
+    correcta: 0,
+    explicacion: '20 + 10 se evalúa a 30 y se almacena en la variable puntos.'
+  },
+  {
+    id: 'output_nov_3',
+    tipo: 'output_predictor',
+    tipo_alias: 'output',
+    categoria: 'arcade',
+    lenguaje: 'JavaScript',
+    dificultad: 'novato',
+    titulo: 'Unión de Textos (Concatenación)',
+    codigo: 'let nombre = "Ana";\nconsole.log("Hola " + nombre);',
+    opciones: ['"Hola Ana"', '"Hola nombre"', '"Ana"', 'undefined'],
+    correcta: 0,
+    explicacion: 'El operador + une "Hola " con "Ana", produciendo "Hola Ana".'
+  },
+  // Intermedio
+  {
+    id: 'output_int_1',
     tipo: 'output_predictor',
     tipo_alias: 'output',
     categoria: 'arcade',
     lenguaje: 'JavaScript',
     dificultad: 'intermedio',
-    titulo: 'Predicción de Salida: Coerción Implícita',
-    codigo: 'console.log(1 + +"2" + "2");',
-    opciones: ['"32"', '"122"', 'NaN', '3'],
+    titulo: 'Longitud de un Array',
+    codigo: 'let frutas = ["manzana", "pera", "uva"];\nconsole.log(frutas.length);',
+    opciones: ['3', '2', '4', 'undefined'],
     correcta: 0,
-    explicacion: 'El operador unario +"2" convierte a número 2; 1 + 2 = 3; luego 3 + "2" resulta en "32".'
+    explicacion: 'La propiedad length devuelve la cantidad de elementos en el array (3).'
   },
+  // Experto
   {
-    id: 'output_predictor_2',
+    id: 'output_exp_1',
     tipo: 'output_predictor',
     tipo_alias: 'output',
     categoria: 'arcade',
     lenguaje: 'JavaScript',
     dificultad: 'experto',
-    titulo: 'Predicción de Salida: Scoping & IIFE',
-    codigo: 'let a = 10;\n(() => {\n  let a = 20;\n  a += 5;\n})();\nconsole.log(a);',
-    opciones: ['25', '10', 'undefined', 'ReferenceError'],
-    correcta: 1,
-    explicacion: 'La variable a dentro de la IIFE está en su propio ámbito léxico; la variable externa permanece en 10.'
-  },
-  {
-    id: 'output_predictor_py_1',
-    tipo: 'output_predictor',
-    tipo_alias: 'output',
-    categoria: 'arcade',
-    lenguaje: 'Python',
-    dificultad: 'novato',
-    titulo: 'Slicing con Paso Invertido en Python',
-    codigo: 'cadena = "PRAGMA"\nprint(cadena[::-1])',
-    opciones: ['"AMGARP"', '"PRAGMA"', '"P"', 'SyntaxError'],
+    titulo: 'Coerción Unaria Implícita',
+    codigo: 'console.log(1 + +"2" + "2");',
+    opciones: ['"32"', '"122"', 'NaN', '3'],
     correcta: 0,
-    explicacion: 'El paso -1 en el slicing de Python invierte la secuencia de caracteres por completo.'
-  },
-  {
-    id: 'output_predictor_sql_1',
-    tipo: 'output_predictor',
-    tipo_alias: 'output',
-    categoria: 'arcade',
-    lenguaje: 'SQL',
-    dificultad: 'intermedio',
-    titulo: 'Comportamiento de COUNT con Valores NULL',
-    codigo: '-- Tabla: estudiantes\n-- id | mentor_id\n--  1 | 10\n--  2 | NULL\n--  3 | 20\nSELECT COUNT(*), COUNT(mentor_id) FROM estudiantes;',
-    opciones: ['3, 2', '3, 3', '2, 2', 'Error de sintaxis'],
-    correcta: 0,
-    explicacion: 'COUNT(*) cuenta todas las filas; COUNT(columna) descarta aquellas donde el valor es NULL.'
+    explicacion: 'El operador unario +"2" convierte a 2; 1 + 2 = 3; luego 3 + "2" resulta en "32".'
   },
 
   // ==========================================
   // 6. FLASHCARD BATTLE (flashcard)
   // ==========================================
+  // Novato
   {
-    id: 'flashcard_1',
+    id: 'flashcard_nov_1',
+    tipo: 'flashcard',
+    categoria: 'arcade',
+    lenguaje: 'JavaScript',
+    dificultad: 'novato',
+    titulo: 'Fundamentos Iniciales de Programación',
+    flashcards: [
+      { afirmacion: 'Una variable declarada con let puede cambiar de valor a lo largo del programa.', es_verdadero: true },
+      { afirmacion: 'El tipo de dato Boolean solo puede ser true (verdadero) o false (falso).', es_verdadero: true },
+      { afirmacion: 'La instrucción console.log() se usa para mostrar mensajes en la consola.', es_verdadero: true },
+      { afirmacion: 'Un número como 25 debe escribirse siempre obligatoriamente entre comillas.', es_verdadero: false }
+    ]
+  },
+  // Intermedio
+  {
+    id: 'flashcard_int_1',
     tipo: 'flashcard',
     categoria: 'arcade',
     lenguaje: 'JavaScript',
     dificultad: 'intermedio',
-    titulo: 'Duelo Flashcard: Runtime Web & JavaScript',
+    titulo: 'Arrays e Inmutabilidad',
+    flashcards: [
+      { afirmacion: 'Array.prototype.map retorna un nuevo array sin mutar el array original.', es_verdadero: true },
+      { afirmacion: 'Una constante const impide modificar las propiedades internas de un objeto.', es_verdadero: false },
+      { afirmacion: 'El operador === compara valor y tipo de dato sin conversiones implícitas.', es_verdadero: true }
+    ]
+  },
+  // Experto
+  {
+    id: 'flashcard_exp_1',
+    tipo: 'flashcard',
+    categoria: 'arcade',
+    lenguaje: 'JavaScript',
+    dificultad: 'experto',
+    titulo: 'Runtime Web & Event Loop',
     flashcards: [
       { afirmacion: 'Las microtareas (Promise.then) tienen prioridad sobre las macrotareas (setTimeout).', es_verdadero: true },
-      { afirmacion: 'Array.prototype.map retorna un nuevo array sin mutar el array original.', es_verdadero: true },
-      { afirmacion: 'const en JavaScript hace inmutables las propiedades internas de un objeto.', es_verdadero: false }
-    ]
-  },
-  {
-    id: 'py_flashcard_1',
-    tipo: 'flashcard',
-    categoria: 'arcade',
-    lenguaje: 'Python',
-    dificultad: 'intermedio',
-    titulo: 'Duelo Flashcard: Arquitectura de Python',
-    flashcards: [
-      { afirmacion: 'El Global Interpreter Lock (GIL) de CPython previene ejecución nativa simultánea de bytecode en varios hilos.', es_verdadero: true },
-      { afirmacion: 'Los generadores con yield cargan toda la secuencia a memoria RAM inmediatamente.', es_verdadero: false },
-      { afirmacion: '__init__ es el método que reserva la memoria física antes de __new__.', es_verdadero: false }
-    ]
-  },
-  {
-    id: 'sql_flashcard_1',
-    tipo: 'flashcard',
-    categoria: 'arcade',
-    lenguaje: 'SQL',
-    dificultad: 'experto',
-    titulo: 'Duelo Flashcard: Principios ACID & Índices',
-    flashcards: [
-      { afirmacion: 'El principio de Aislamiento (Isolation) garantiza que transacciones concurrentes no interfieran entre sí.', es_verdadero: true },
-      { afirmacion: 'Crear un índice B-Tree acelera lecturas sin ningún impacto en inserciones o escrituras (INSERT).', es_verdadero: false },
-      { afirmacion: 'Una clave foránea con ON DELETE CASCADE borra registros dependientes de la tabla hija.', es_verdadero: true }
+      { afirmacion: 'Un Closure permite a una función recordar el ámbito léxico donde fue creada.', es_verdadero: true },
+      { afirmacion: 'Object.freeze() realiza automáticamente una congelación profunda recursiva de sub-objetos.', es_verdadero: false }
     ]
   },
 
   // ==========================================
   // 7. CODE TYPER (code_typer / typer)
   // ==========================================
+  // Novato (Sintaxis elemental, 16 a 24 caracteres)
   {
-    id: 'code_typer_1',
+    id: 'typer_nov_1',
     tipo: 'code_typer',
     tipo_alias: 'typer',
     categoria: 'pragma',
-    lenguaje: 'React',
+    lenguaje: 'JavaScript',
     dificultad: 'novato',
-    titulo: 'Speedrun de Sintaxis: Estado Reactivo',
+    titulo: 'Variable de Texto',
+    codigo: 'let nombre = "Eliab";',
+    descripcion: 'Escribe la variable con su valor de texto exacto.'
+  },
+  {
+    id: 'typer_nov_2',
+    tipo: 'code_typer',
+    tipo_alias: 'typer',
+    categoria: 'pragma',
+    lenguaje: 'JavaScript',
+    dificultad: 'novato',
+    titulo: 'Imprimir en Consola',
+    codigo: 'console.log("Hola Mundo");',
+    descripcion: 'Escribe la instrucción de consola respetando comillas y paréntesis.'
+  },
+  {
+    id: 'typer_nov_3',
+    tipo: 'code_typer',
+    tipo_alias: 'typer',
+    categoria: 'pragma',
+    lenguaje: 'JavaScript',
+    dificultad: 'novato',
+    titulo: 'Variable de Puntuación',
+    codigo: 'let puntuacion = 100;',
+    descripcion: 'Escribe la asignación numérica.'
+  },
+  // Intermedio (30 a 45 caracteres)
+  {
+    id: 'typer_int_1',
+    tipo: 'code_typer',
+    tipo_alias: 'typer',
+    categoria: 'pragma',
+    lenguaje: 'JavaScript',
+    dificultad: 'intermedio',
+    titulo: 'Función Flecha Duplicadora',
+    codigo: 'const duplicar = n => n * 2;',
+    descripcion: 'Escribe la función flecha con precisión.'
+  },
+  // Experto (50+ caracteres)
+  {
+    id: 'typer_exp_1',
+    tipo: 'code_typer',
+    tipo_alias: 'typer',
+    categoria: 'pragma',
+    lenguaje: 'JavaScript',
+    dificultad: 'experto',
+    titulo: 'Hook de Estado en React',
     codigo: 'const [operador, setOperador] = useState(null);',
-    descripcion: 'Escribe la declaración de estado a máxima velocidad y precisión.'
-  },
-  {
-    id: 'code_typer_py_1',
-    tipo: 'code_typer',
-    tipo_alias: 'typer',
-    categoria: 'pragma',
-    lenguaje: 'Python',
-    dificultad: 'novato',
-    titulo: 'Speedrun de Sintaxis: Función de Promedio',
-    codigo: 'def calcular_promedio(valores): return sum(valores) / len(valores)',
-    descripcion: 'Escribe la función en una sola línea respetando la sintaxis de Python.'
-  },
-  {
-    id: 'code_typer_sql_1',
-    tipo: 'code_typer',
-    tipo_alias: 'typer',
-    categoria: 'pragma',
-    lenguaje: 'SQL',
-    dificultad: 'novato',
-    titulo: 'Speedrun de Sintaxis: Inserción SQL',
-    codigo: 'INSERT INTO usuarios (nombre, email) VALUES (\'Ada\', \'ada@pragma.ai\');',
-    descripcion: 'Escribe la sentencia de inserción respetando comillas y delimitadores.'
+    descripcion: 'Escribe la desestructuración del hook React.'
   },
 
   // ==========================================
   // 8. MEMORY MATCH (memory_match / memory)
   // ==========================================
+  // Novato (3 parejas = 6 cartas, conceptos elementales)
   {
-    id: 'memory_match_1',
+    id: 'memory_nov_1',
     tipo: 'memory_match',
     tipo_alias: 'memory',
     categoria: 'arcade',
     lenguaje: 'General',
     dificultad: 'novato',
-    titulo: 'Matriz Conceptual: Paradigmas de Software',
+    titulo: 'Conceptos Iniciales de Programación',
     cartas: [
-      { id: 'm1', matchingId: 'p1', texto: 'Closure', flipped: false, matched: false },
-      { id: 'm2', matchingId: 'p1', texto: 'Ámbito Léxico Recordado', flipped: false, matched: false },
-      { id: 'm3', matchingId: 'p2', texto: 'Idempotencia', flipped: false, matched: false },
-      { id: 'm4', matchingId: 'p2', texto: 'Mismo Resultado Siempre', flipped: false, matched: false },
-      { id: 'm5', matchingId: 'p3', texto: 'Polimorfismo', flipped: false, matched: false },
-      { id: 'm6', matchingId: 'p3', texto: 'Múltiples Formas de Acción', flipped: false, matched: false }
+      { id: 'm1', matchingId: 'p1', texto: 'Variable', flipped: false, matched: false },
+      { id: 'm2', matchingId: 'p1', texto: 'Guarda un dato en memoria', flipped: false, matched: false },
+      { id: 'm3', matchingId: 'p2', texto: 'String', flipped: false, matched: false },
+      { id: 'm4', matchingId: 'p2', texto: 'Texto entre comillas', flipped: false, matched: false },
+      { id: 'm5', matchingId: 'p3', texto: 'Boolean', flipped: false, matched: false },
+      { id: 'm6', matchingId: 'p3', texto: 'Valor true o false', flipped: false, matched: false }
     ]
   },
+  // Intermedio (4 parejas = 8 cartas)
   {
-    id: 'memory_match_py_1',
+    id: 'memory_int_1',
     tipo: 'memory_match',
     tipo_alias: 'memory',
     categoria: 'arcade',
-    lenguaje: 'Python',
+    lenguaje: 'General',
     dificultad: 'intermedio',
-    titulo: 'Matriz Conceptual: Construcciones de Python',
+    titulo: 'Estructuras y Métodos en JavaScript',
     cartas: [
-      { id: 'py1', matchingId: 'pair1', texto: 'yield', flipped: false, matched: false },
-      { id: 'py2', matchingId: 'pair1', texto: 'Generador Perezoso', flipped: false, matched: false },
-      { id: 'py3', matchingId: 'pair2', texto: '@property', flipped: false, matched: false },
-      { id: 'py4', matchingId: 'pair2', texto: 'Getter Dinámico en Clase', flipped: false, matched: false }
+      { id: 'mi1', matchingId: 'pi1', texto: 'Array', flipped: false, matched: false },
+      { id: 'mi2', matchingId: 'pi1', texto: 'Lista ordenada de elementos', flipped: false, matched: false },
+      { id: 'mi3', matchingId: 'pi2', texto: 'Objeto', flipped: false, matched: false },
+      { id: 'mi4', matchingId: 'pi2', texto: 'Colección de clave y valor', flipped: false, matched: false },
+      { id: 'mi5', matchingId: 'pi3', texto: 'Array.map', flipped: false, matched: false },
+      { id: 'mi6', matchingId: 'pi3', texto: 'Transforma cada elemento', flipped: false, matched: false },
+      { id: 'mi7', matchingId: 'pi4', texto: 'Función Flecha', flipped: false, matched: false },
+      { id: 'mi8', matchingId: 'pi4', texto: 'Sintaxis corta () => {}', flipped: false, matched: false }
     ]
   },
+  // Experto (4 parejas = 8 cartas)
   {
-    id: 'memory_match_sql_1',
-    tipo: 'memory_match',
-    tipo_alias: 'memory',
-    categoria: 'arcade',
-    lenguaje: 'SQL',
-    dificultad: 'intermedio',
-    titulo: 'Matriz Conceptual: Bases de Datos',
-    cartas: [
-      { id: 'sql1', matchingId: 'spair1', texto: 'PRIMARY KEY', flipped: false, matched: false },
-      { id: 'sql2', matchingId: 'spair1', texto: 'Único y No Nulo', flipped: false, matched: false },
-      { id: 'sql3', matchingId: 'spair2', texto: 'INDEX', flipped: false, matched: false },
-      { id: 'sql4', matchingId: 'spair2', texto: 'Árbol B de Búsqueda Rápida', flipped: false, matched: false }
-    ]
-  },
-  {
-    id: 'memory_match_exp_1',
+    id: 'memory_exp_1',
     tipo: 'memory_match',
     tipo_alias: 'memory',
     categoria: 'arcade',
     lenguaje: 'General',
     dificultad: 'experto',
-    titulo: 'Matriz Conceptual: Patrones de Diseño',
+    titulo: 'Paradigmas y Patrones Avanzados',
     cartas: [
-      { id: 'pat1', matchingId: 'pair_pat1', texto: 'Singleton', flipped: false, matched: false },
-      { id: 'pat2', matchingId: 'pair_pat1', texto: 'Instancia Única Global', flipped: false, matched: false },
-      { id: 'pat3', matchingId: 'pair_pat2', texto: 'Observer', flipped: false, matched: false },
-      { id: 'pat4', matchingId: 'pair_pat2', texto: 'Publicador - Suscriptor de Eventos', flipped: false, matched: false }
-    ]
-  },
-  {
-    id: 'code_typer_js_2',
-    tipo: 'code_typer',
-    tipo_alias: 'typer',
-    categoria: 'pragma',
-    lenguaje: 'JavaScript',
-    dificultad: 'intermedio',
-    titulo: 'Speedrun de Sintaxis: Memoización y Recursión',
-    codigo: 'const memoize = fn => { const cache = new Map(); return x => cache.get(x) ?? cache.set(x, fn(x)).get(x); };',
-    descripcion: 'Escribe la función de memoización de orden superior con máxima precisión.'
-  },
-  {
-    id: 'code_typer_exp_1',
-    tipo: 'code_typer',
-    tipo_alias: 'typer',
-    categoria: 'pragma',
-    lenguaje: 'React',
-    dificultad: 'experto',
-    titulo: 'Speedrun de Sintaxis: Hook Personalizado de Throttle',
-    codigo: 'const useThrottle = (val, ms = 200) => { const [res, setRes] = useState(val); useEffect(() => { const t = setTimeout(() => setRes(val), ms); return () => clearTimeout(t); }, [val, ms]); return res; };',
-    descripcion: 'Transcribe la implementación del hook custom a toda velocidad.'
-  },
-  {
-    id: 'code_sorter_exp_1',
-    tipo: 'code_sorter',
-    tipo_alias: 'sorter',
-    categoria: 'pragma',
-    lenguaje: 'JavaScript',
-    dificultad: 'experto',
-    titulo: 'Pipeline de Reintentos Exponenciales',
-    lineas: ['    await sleep(2 ** intento * 100);', 'for (let intento = 0; intento < 3; intento++) {', '  try { return await fetch(url); } catch (e) {', '  }', '} throw new Error("Fallo final");'],
-    lineas_ordenadas: ['for (let intento = 0; intento < 3; intento++) {', '  try { return await fetch(url); } catch (e) {', '    await sleep(2 ** intento * 100);', '  }', '} throw new Error("Fallo final");']
-  },
-  {
-    id: 'fill_code_exp_1',
-    tipo: 'fill_code',
-    tipo_alias: 'fill-blank',
-    categoria: 'pragma',
-    lenguaje: 'SQL',
-    dificultad: 'experto',
-    titulo: 'Window Functions y Cláusula Over',
-    codigo_con_huecos: 'SELECT depto, salario, ___1___() OVER (PARTITION BY depto ORDER BY salario ___2___) as rank_salario FROM empleados;',
-    respuestas: {
-      '1': 'DENSE_RANK',
-      '2': 'DESC'
-    },
-    sugerencias: ['DENSE_RANK', 'DESC', 'ASC', 'ROW_NUMBER'],
-    opciones_tokens: ['DENSE_RANK', 'DESC', 'ASC', 'ROW_NUMBER']
-  },
-  {
-    id: 'flashcard_nov_1',
-    tipo: 'flashcard',
-    categoria: 'arcade',
-    lenguaje: 'General',
-    dificultad: 'novato',
-    titulo: 'Duelo Flashcard: Fundamentos de Programación',
-    flashcards: [
-      { afirmacion: 'Una variable declarada con const puede ser reasignada libremente en cualquier momento.', es_verdadero: false },
-      { afirmacion: 'Un algoritmo O(1) ejecuta sus operaciones en tiempo constante independientemente del tamaño de entrada.', es_verdadero: true },
-      { afirmacion: 'En SQL, DELETE FROM usuarios borra los registros pero preserva la estructura de la tabla.', es_verdadero: true }
+      { id: 'me1', matchingId: 'pe1', texto: 'Closure', flipped: false, matched: false },
+      { id: 'me2', matchingId: 'pe1', texto: 'Ámbito léxico recordado', flipped: false, matched: false },
+      { id: 'me3', matchingId: 'pe2', texto: 'Idempotencia', flipped: false, matched: false },
+      { id: 'me4', matchingId: 'pe2', texto: 'Mismo resultado siempre', flipped: false, matched: false },
+      { id: 'me5', matchingId: 'pe3', texto: 'Polimorfismo', flipped: false, matched: false },
+      { id: 'me6', matchingId: 'pe3', texto: 'Múltiples formas de acción', flipped: false, matched: false },
+      { id: 'me7', matchingId: 'pe4', texto: 'Inmutabilidad', flipped: false, matched: false },
+      { id: 'me8', matchingId: 'pe4', texto: 'Estado que no puede alterarse', flipped: false, matched: false }
     ]
   }
 ];
 
 function generarRetosMultijugador(categoria = 'mixed', dificultad = 'intermedio', lenguaje = 'JavaScript') {
-  let pool = [...POOL_RETOS_MULTIJUGADOR];
+  const pool = [...POOL_RETOS_MULTIJUGADOR];
 
   // 1. Filtrado por tecnología
   const langQuery = (lenguaje || 'JavaScript').trim().toLowerCase();
@@ -1822,34 +1858,38 @@ function generarRetosMultijugador(categoria = 'mixed', dificultad = 'intermedio'
     if (rLang === langQuery) return true;
     if (langQuery.includes('react') && (rLang === 'react' || rLang === 'javascript')) return true;
     if (langQuery.includes('node') && (rLang === 'javascript' || rLang === 'general')) return true;
-    if (langQuery.includes('html') && (rLang === 'html/css' || rLang === 'javascript')) return true;
-    if (langQuery.includes('css') && (rLang === 'html/css' || rLang === 'javascript')) return true;
     return false;
   });
 
   const poolBase = poolFiltradoLenguaje.length >= 4 ? poolFiltradoLenguaje : pool;
 
-  // 2. Filtrado por dificultad
+  // 2. Filtrado estricto por dificultad
   const difQuery = (dificultad || 'intermedio').trim().toLowerCase();
   let poolDificultad = poolBase.filter(r => {
     const rDif = (r.dificultad || 'intermedio').toLowerCase();
     if (difQuery === 'novato' || difQuery === 'principiante') {
-      return rDif === 'novato' || rDif === 'intermedio';
+      return rDif === 'novato';
     }
     if (difQuery === 'experto') {
-      return rDif === 'experto' || rDif === 'intermedio';
+      return rDif === 'experto';
     }
-    return true;
+    return rDif === 'intermedio';
   });
 
-  if (poolDificultad.length < 4) {
-    poolDificultad = poolBase;
+  // Si no hay suficientes en poolBase con el lenguaje, buscar en el pool global pero estrictamente en esa dificultad
+  if (poolDificultad.length < 3) {
+    poolDificultad = pool.filter(r => {
+      const rDif = (r.dificultad || 'intermedio').toLowerCase();
+      if (difQuery === 'novato' || difQuery === 'principiante') return rDif === 'novato';
+      if (difQuery === 'experto') return rDif === 'experto';
+      return rDif === 'intermedio';
+    });
   }
 
-  // 3. Cantidad de retos de la partida según dificultad
+  // 3. Cantidad de retos de la partida según dificultad (Escalonamiento real)
   const count = (difQuery === 'novato' || difQuery === 'principiante') ? 3 : difQuery === 'experto' ? 5 : 4;
 
-  // 4. Selección diversa garantizando que cada reto sea de un minijuego diferente de los 8
+  // 4. Selección diversa garantizando variedad de modos oficiales
   const modosOficiales = ['trivia', 'bug_hunter', 'code_sorter', 'fill_code', 'output_predictor', 'flashcard', 'code_typer', 'memory_match'];
   const shuffledModos = [...modosOficiales].sort(() => 0.5 - Math.random());
 
@@ -1858,17 +1898,10 @@ function generarRetosMultijugador(categoria = 'mixed', dificultad = 'intermedio'
 
   for (const modo of shuffledModos) {
     if (seleccionados.length >= count) break;
-    let candidatos = poolDificultad.filter(r => {
+    const candidatos = poolDificultad.filter(r => {
       const canonical = getCanonicalType(r.tipo);
       return canonical === modo && !idsSeleccionados.has(r.id);
     });
-
-    if (candidatos.length === 0) {
-      candidatos = poolBase.filter(r => {
-        const canonical = getCanonicalType(r.tipo);
-        return canonical === modo && !idsSeleccionados.has(r.id);
-      });
-    }
 
     if (candidatos.length > 0) {
       const elegido = candidatos[Math.floor(Math.random() * candidatos.length)];
@@ -1887,6 +1920,30 @@ function generarRetosMultijugador(categoria = 'mixed', dificultad = 'intermedio'
       idsSeleccionados.add(elegido.id);
     }
   }
+
+  // Si aún faltan para llegar a count, completar del poolDificultad estricto
+  if (seleccionados.length < count) {
+    const restantes = poolDificultad.filter(r => !idsSeleccionados.has(r.id));
+    for (const r of restantes) {
+      if (seleccionados.length >= count) break;
+      const canonicalType = getCanonicalType(r.tipo);
+      const tokens = r.opciones_tokens || r.sugerencias || [];
+      const correcciones = r.opciones_correccion || r.opciones_correcion || r.opciones || [];
+      seleccionados.push({
+        ...r,
+        tipo: canonicalType,
+        tipo_legacy: r.tipo_alias || r.tipo,
+        opciones_tokens: tokens,
+        sugerencias: tokens,
+        opciones_correccion: correcciones,
+        opciones_correcion: correcciones
+      });
+      idsSeleccionados.add(r.id);
+    }
+  }
+
+  return seleccionados;
+}
 
   // Si aún faltan para alcanzar count, rellenar con restantes de la base
   if (seleccionados.length < count) {
@@ -2119,14 +2176,15 @@ router.post('/api/pragma/multiplayer/match/proceed-bots', async (req, res) => {
   try {
     const docRef = doc(firestoreDb, 'pragma_matchmaking', estudiante_id);
     const docSnap = await getDoc(docRef);
-    const ticket = docSnap.exists() ? docSnap.data() : {
+    const ticketData = docSnap.exists() ? docSnap.data() : {};
+    const ticket = {
       estudiante_id,
-      nombre: "Tú",
-      tipo_match: "1v1",
-      categoria: "mixed",
-      dificultad: "intermedio",
-      lenguaje: "JavaScript",
-      rank_points: 0
+      nombre: ticketData.nombre || "Tú",
+      tipo_match: ticketData.tipo_match || req.body.tipo_match || "1v1",
+      categoria: ticketData.categoria || req.body.categoria || "mixed",
+      dificultad: ticketData.dificultad || req.body.dificultad || "intermedio",
+      lenguaje: ticketData.lenguaje || req.body.lenguaje || "JavaScript",
+      rank_points: ticketData.rank_points || 0
     };
 
     let totalOponentesRealesNecesarios = 1;

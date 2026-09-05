@@ -644,18 +644,38 @@ function parsearJSONGroq(rawText) {
   }
 }
 
-async function ejecutarGroqConReintentos(messages, model = 'llama-3.3-70b-versatile', responseFormat = null, maxReintentos = 6) {
+const MODEL_ALIASES = {
+  'llama-3.3-70b-versatile': 'openai/gpt-oss-120b',
+  'llama-3.1-70b-versatile': 'openai/gpt-oss-120b',
+  'llama3-70b-8192': 'openai/gpt-oss-120b',
+  'llama-3.1-8b-instant': 'openai/gpt-oss-20b',
+  'llama3-8b-8192': 'openai/gpt-oss-20b',
+  'mixtral-8x7b-32768': 'groq/compound',
+  'gemma2-9b-it': 'openai/gpt-oss-20b'
+};
+
+const RESILIENT_FALLBACK_MODELS = [
+  'openai/gpt-oss-120b',
+  'openai/gpt-oss-20b',
+  'groq/compound',
+  'groq/compound-mini'
+];
+
+async function ejecutarGroqConReintentos(messages, model = 'openai/gpt-oss-120b', responseFormat = null, maxReintentos = 6) {
   let delay = 1000;
   if (groqClients.length === 0) {
     throw new Error('No hay claves API de Groq configuradas en el pool.');
   }
+
+  // Normalizar modelo si es un alias antiguo o deprecado
+  let activeModel = MODEL_ALIASES[model] || model;
 
   for (let intento = 1; intento <= maxReintentos; intento++) {
     const activeIndex = currentClientIndex;
     const activeClient = groqClients[activeIndex];
 
     try {
-      const params = { messages, model };
+      const params = { messages, model: activeModel };
       if (responseFormat) {
         params.response_format = responseFormat;
       }
@@ -675,8 +695,18 @@ async function ejecutarGroqConReintentos(messages, model = 'llama-3.3-70b-versat
       return completion;
     } catch (error) {
       currentClientIndex = (currentClientIndex + 1) % groqClients.length;
-      const isRateLimit = error.status === 429 || (error.message && error.message.includes('429')) || (error.message && error.message.includes('Rate limit'));
-      console.warn(`[Groq Resiliencia] Intento ${intento} falló usando clave índice ${activeIndex}. Error: ${error.message || error}. Rotando a clave índice ${currentClientIndex}...`);
+      const errorMsg = error.message || String(error);
+      const isRateLimit = error.status === 429 || errorMsg.includes('429') || errorMsg.includes('Rate limit') || errorMsg.includes('tokens');
+      const isModelNotFound = error.status === 404 || errorMsg.includes('model_not_found') || errorMsg.includes('does not exist');
+
+      console.warn(`[Groq Resiliencia] Intento ${intento} con modelo ${activeModel} (clave ${activeIndex}) falló: ${errorMsg}.`);
+
+      // Si el modelo no existe o dio rate limit de tokens, rotar al siguiente modelo disponible del pool de resiliencia
+      if (isModelNotFound || (isRateLimit && intento > 2)) {
+        const nextModel = RESILIENT_FALLBACK_MODELS.find(m => m !== activeModel) || 'openai/gpt-oss-20b';
+        console.warn(`[Groq Resiliencia] Conmutando automáticamente a modelo alternativo: ${nextModel}...`);
+        activeModel = nextModel;
+      }
 
       if (intento === maxReintentos) {
         throw error;
@@ -769,7 +799,7 @@ async function actualizarPerfilCognitivo(estudianteId, nuevoMensajeEstudiante, r
 
     const chatCompletion = await ejecutarGroqConReintentos(
       [{ role: 'system', content: systemPrompt }],
-      'llama-3.3-70b-versatile',
+      'openai/gpt-oss-120b',
       { type: 'json_object' }
     );
 
@@ -854,7 +884,7 @@ async function actualizarPerfilCognitivoConEvaluacion(estudianteId, tareaTitulo,
 
     const chatCompletion = await ejecutarGroqConReintentos(
       [{ role: 'system', content: systemPrompt }],
-      'llama-3.3-70b-versatile',
+      'openai/gpt-oss-120b',
       { type: 'json_object' }
     );
 

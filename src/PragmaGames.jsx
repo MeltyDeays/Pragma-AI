@@ -489,192 +489,537 @@ function LobbyView({ estudiante, backendUrl, onUpdate, listaAmigos = [], partida
   // Pool de los 8 minijuegos canónicos del online táctico
   const RETOS_MULTIPLAYER = {
     arcade: [
-      // 1. TRIVIA TÉCNICA (JavaScript, Python, SQL)
+      // 1. TRIVIA TÉCNICA (trivia)
+      // Novato
       {
-        id: 'trivia_js_1',
+        id: 'trivia_nov_1',
+        tipo: 'trivia',
+        lenguaje: 'JavaScript',
+        dificultad: 'novato',
+        titulo: 'Declaración de Variables',
+        pregunta: '¿Qué palabra reservada se usa en JavaScript para declarar una variable cuyo valor puede cambiar?',
+        opciones: ['let', 'const', 'static', 'fixed'],
+        correcta: 0,
+        explicacion: 'let permite declarar variables reasignables con ámbito de bloque.'
+      },
+      {
+        id: 'trivia_nov_2',
+        tipo: 'trivia',
+        lenguaje: 'JavaScript',
+        dificultad: 'novato',
+        titulo: 'Tipos de Datos Booleanos',
+        pregunta: '¿Qué tipo de dato representa exclusivamente un valor de verdadero o falso (true / false)?',
+        opciones: ['Boolean', 'String', 'Number', 'Undefined'],
+        correcta: 0,
+        explicacion: 'El tipo Boolean contiene únicamente dos valores lógicos: true o false.'
+      },
+      {
+        id: 'trivia_nov_3',
+        tipo: 'trivia',
+        lenguaje: 'JavaScript',
+        dificultad: 'novato',
+        titulo: 'Salida de Datos en Consola',
+        pregunta: '¿Qué instrucción se utiliza para mostrar un mensaje o valor en la consola del navegador?',
+        opciones: ['console.log("Hola")', 'print.screen("Hola")', 'terminal.write("Hola")', 'display.show("Hola")'],
+        correcta: 0,
+        explicacion: 'console.log() imprime datos en la consola de depuración del entorno.'
+      },
+      {
+        id: 'trivia_nov_4',
+        tipo: 'trivia',
+        lenguaje: 'JavaScript',
+        dificultad: 'novato',
+        titulo: 'Identificación de Texto (String)',
+        pregunta: '¿Cuál de las siguientes opciones representa un texto (String) escrito de forma válida?',
+        opciones: ['"Hola Mundo"', 'Hola Mundo', '[Hola Mundo]', '<Hola Mundo>'],
+        correcta: 0,
+        explicacion: 'Los textos o cadenas (String) deben estar delimitados por comillas simples o dobles.'
+      },
+      // Intermedio
+      {
+        id: 'trivia_int_1',
         tipo: 'trivia',
         lenguaje: 'JavaScript',
         dificultad: 'intermedio',
-        titulo: 'Complejidad Computacional V8',
-        pregunta: '¿Cuál es la complejidad temporal promedio de búsqueda en un Map/Set hash en el motor V8?',
-        opciones: ['O(N)', 'O(log N)', 'O(1)', 'O(N log N)'],
-        correcta: 2,
-        explicacion: 'Las tablas Hash permiten acceso en O(1) promedio gracias a su función de hashing.'
+        titulo: 'Transformación de Arrays con Map',
+        pregunta: '¿Qué método de Array se utiliza para transformar cada elemento y retornar un nuevo array sin mutar el original?',
+        opciones: ['map()', 'forEach()', 'filter()', 'push()'],
+        correcta: 0,
+        explicacion: 'map() aplica una función a cada elemento y genera un nuevo array resultante.'
       },
       {
-        id: 'trivia_py_1',
+        id: 'trivia_int_2',
         tipo: 'trivia',
-        lenguaje: 'Python',
-        dificultad: 'novato',
-        titulo: 'Inmutabilidad en Python',
-        pregunta: '¿Cuál de las siguientes estructuras de datos en Python es completamente INMUTABLE?',
-        opciones: ['list (Lista)', 'dict (Diccionario)', 'tuple (Tupla)', 'set (Conjunto)'],
-        correcta: 2,
-        explicacion: 'Las tuplas (tuple) en Python son colecciones inmutables ordenadas.'
-      },
-      {
-        id: 'trivia_sql_1',
-        tipo: 'trivia',
-        lenguaje: 'SQL',
+        lenguaje: 'JavaScript',
         dificultad: 'intermedio',
-        titulo: 'Filtrado Agregado SQL',
-        pregunta: '¿Qué cláusula SQL se utiliza obligatoriamente para filtrar resultados tras GROUP BY con agregaciones como COUNT() o SUM()?',
-        opciones: ['WHERE', 'HAVING', 'GROUP FILTER', 'ORDER BY'],
-        correcta: 1,
-        explicacion: 'HAVING filtra sobre los grupos agregados; WHERE filtra filas antes de agrupar.'
+        titulo: 'Template Literals',
+        pregunta: '¿Qué sintaxis permite incrustar variables dentro de una cadena de texto usando comillas invertidas?',
+        opciones: ['Template Literals (${variable})', 'Concatenación Estricta', 'Interpolación Regex', 'Macro String'],
+        correcta: 0,
+        explicacion: 'Los Template Literals con acentos graves permiten evaluar expresiones con ${...}.'
+      },
+      // Experto
+      {
+        id: 'trivia_exp_1',
+        tipo: 'trivia',
+        lenguaje: 'JavaScript',
+        dificultad: 'experto',
+        titulo: 'Event Loop & Microtareas',
+        pregunta: '¿En qué orden procesa el Event Loop las Microtareas (Promise.then) frente a las Macrotareas (setTimeout)?',
+        opciones: [
+          'Las microtareas tienen prioridad y se vacían antes de la siguiente macrotarea',
+          'Las macrotareas se ejecutan primero en cada ciclo',
+          'Se procesan en hilos paralelos independientes',
+          'El motor alterna aleatoriamente según la carga de CPU'
+        ],
+        correcta: 0,
+        explicacion: 'La cola de microtareas se vacía por completo antes de despachar la siguiente macrotarea.'
+      },
+      {
+        id: 'trivia_exp_2',
+        tipo: 'trivia',
+        lenguaje: 'JavaScript',
+        dificultad: 'experto',
+        titulo: 'Complejidad Hash en V8',
+        pregunta: '¿Cuál es la complejidad temporal promedio de búsqueda por clave en un Map/Set en el motor V8?',
+        opciones: ['O(1)', 'O(log N)', 'O(N)', 'O(N log N)'],
+        correcta: 0,
+        explicacion: 'Las tablas Hash permiten acceso O(1) en promedio.'
       },
 
-      // 2. BUG HUNTER (Identificar línea con bug + aplicar parche)
+      // 2. BUG HUNTER (bug_hunter)
+      // Novato
       {
-        id: 'bug_hunter_js_1',
+        id: 'bug_nov_1',
+        tipo: 'bug_hunter',
+        lenguaje: 'JavaScript',
+        dificultad: 'novato',
+        titulo: 'Tipografía en Declaración de Variable',
+        descripcion: 'Una variable fue declarada como "lett" en lugar de "let". Identifica la línea y selecciona la corrección.',
+        linea_bug: 2,
+        codigo_con_bug: 'let precio = 25;\nlett descuento = 5;\nlet total = precio - descuento;',
+        opciones_correccion: [
+          'let descuento = 5;',
+          'const descuento == 5;',
+          'delete descuento;'
+        ],
+        correcta: 0
+      },
+      {
+        id: 'bug_nov_2',
+        tipo: 'bug_hunter',
+        lenguaje: 'JavaScript',
+        dificultad: 'novato',
+        titulo: 'Comillas de Texto Sin Cerrar',
+        descripcion: 'La cadena de texto no tiene comilla de cierre en la línea 2, causando un error de sintaxis.',
+        linea_bug: 2,
+        codigo_con_bug: 'let saludo = "Hola";\nlet nombre = "Eliab;\nconsole.log(saludo + " " + nombre);',
+        opciones_correccion: [
+          'let nombre = "Eliab";',
+          'let nombre = Eliab;',
+          'let nombre = \'Eliab";'
+        ],
+        correcta: 0
+      },
+      {
+        id: 'bug_nov_3',
+        tipo: 'bug_hunter',
+        lenguaje: 'JavaScript',
+        dificultad: 'novato',
+        titulo: 'Operador Incorrecto en Suma',
+        descripcion: 'La función sumar está restando los parámetros en lugar de sumarlos.',
+        linea_bug: 2,
+        codigo_con_bug: 'function sumar(a, b) {\n  let resultado = a - b;\n  return resultado;\n}',
+        opciones_correccion: [
+          'let resultado = a + b;',
+          'let resultado = a * b;',
+          'return a;'
+        ],
+        correcta: 0
+      },
+      // Intermedio
+      {
+        id: 'bug_int_1',
         tipo: 'bug_hunter',
         lenguaje: 'JavaScript',
         dificultad: 'intermedio',
-        titulo: 'Bug Hunter: Bucle Infinito',
-        descripcion: 'La reasignación dentro del bucle impide que la condición de salida i >= 0 se cumpla.',
-        codigo_con_bug: 'function contadorRegresivo() {\n  for (let i = 5; i >= 0; i--) {\n    if (i === 0) i = 5;\n    console.log(i);\n  }\n}',
-        linea_bug: 3,
-        opciones_correcion: [
-          'for (let i = 5; i > 0; i--) { break; }',
-          'Eliminar "if (i === 0) i = 5;" para permitir que i decremente hasta finalizar.',
-          'Cambiar el decremento i-- por i++.'
+        titulo: 'Límite de Array Excedido (Off-by-One)',
+        descripcion: 'El bucle usa <= en lugar de < y accede a un índice indefinido al final del array.',
+        linea_bug: 2,
+        codigo_con_bug: 'function mostrarItems(items) {\n  for (let i = 0; i <= items.length; i++) {\n    console.log(items[i]);\n  }\n}',
+        opciones_correccion: [
+          'for (let i = 0; i < items.length; i++) {',
+          'for (let i = 1; i <= items.length; i++) {',
+          'for (let i = items.length; i > 0; i++) {'
         ],
-        correcta: 1
+        correcta: 0
       },
+      // Experto
       {
-        id: 'bug_hunter_py_1',
+        id: 'bug_exp_1',
         tipo: 'bug_hunter',
-        lenguaje: 'Python',
-        dificultad: 'intermedio',
-        titulo: 'Bug Hunter: Prevención KeyError',
-        descripcion: 'El acceso directo por corchetes arroja KeyError si la propiedad opcional no existe.',
-        codigo_con_bug: 'def obtener_rol(usuario):\n  # Lanza KeyError si "rol" no fue definido en el diccionario\n  rol = usuario["rol"]\n  return rol.upper()',
-        linea_bug: 3,
-        opciones_correcion: [
-          'rol = usuario.get("rol", "invitado")',
-          'rol = usuario.fetch("rol")',
-          'rol = usuario["rol"] or "invitado"'
+        lenguaje: 'JavaScript',
+        dificultad: 'experto',
+        titulo: 'Mutación Directa de Estado Reactivo',
+        descripcion: 'Identifica la línea con la mutación directa prohibida y aplica la actualización inmutable correcta.',
+        linea_bug: 2,
+        codigo_con_bug: 'function agregarItem(estado, nuevoItem) {\n  estado.items.push(nuevoItem);\n  return estado;\n}',
+        opciones_correccion: [
+          'return { ...estado, items: [...estado.items, nuevoItem] };',
+          'estado.items = estado.items.push(nuevoItem); return estado;',
+          'delete estado.items; return estado;'
         ],
         correcta: 0
       },
 
-      // 3. CODE SORTER (Reordenamiento de código táctico)
+      // 3. CODE SORTER (code_sorter)
+      // Novato (3 líneas simples y directas)
       {
-        id: 'code_sorter_js_1',
+        id: 'sorter_nov_1',
+        tipo: 'code_sorter',
+        lenguaje: 'JavaScript',
+        dificultad: 'novato',
+        titulo: 'Declarar Variable, Saludar y Mostrar',
+        lineas: ['console.log(saludo);', 'let saludo = "Hola, " + nombre;', 'let nombre = "Eliab";'],
+        lineas_ordenadas: ['let nombre = "Eliab";', 'let saludo = "Hola, " + nombre;', 'console.log(saludo);']
+      },
+      {
+        id: 'sorter_nov_2',
+        tipo: 'code_sorter',
+        lenguaje: 'JavaScript',
+        dificultad: 'novato',
+        titulo: 'Función Simple de Suma',
+        lineas: ['  return a + b;', 'function sumar(a, b) {', '}'],
+        lineas_ordenadas: ['function sumar(a, b) {', '  return a + b;', '}']
+      },
+      {
+        id: 'sorter_nov_3',
+        tipo: 'code_sorter',
+        lenguaje: 'JavaScript',
+        dificultad: 'novato',
+        titulo: 'Condicional Mayor de Edad',
+        lineas: ['  console.log("Mayor de edad");', 'if (edad >= 18) {', '}'],
+        lineas_ordenadas: ['if (edad >= 18) {', '  console.log("Mayor de edad");', '}']
+      },
+      // Intermedio (4 líneas)
+      {
+        id: 'sorter_int_1',
         tipo: 'code_sorter',
         lenguaje: 'JavaScript',
         dificultad: 'intermedio',
-        titulo: 'Code Sorter: Pipeline Funcional',
-        lineas: ['  .map(n => n * 2);', 'return numeros', '  .filter(n => n % 2 === 0)'],
-        lineas_ordenadas: ['return numeros', '  .filter(n => n % 2 === 0)', '  .map(n => n * 2);']
+        titulo: 'Pipeline de Números Pares Duplicados',
+        lineas: ['  .map(n => n * 2);', 'return numeros', '  .filter(n => n % 2 === 0);'],
+        lineas_ordenadas: ['return numeros', '  .filter(n => n % 2 === 0);', '  .map(n => n * 2);']
       },
+      // Experto (5 líneas)
       {
-        id: 'code_sorter_sql_1',
+        id: 'sorter_exp_1',
         tipo: 'code_sorter',
-        lenguaje: 'SQL',
-        dificultad: 'novato',
-        titulo: 'Code Sorter: Consulta Canónica',
-        lineas: ['ORDER BY fecha_creacion DESC;', 'WHERE activo = TRUE', 'SELECT id, nombre, email', 'FROM usuarios'],
-        lineas_ordenadas: ['SELECT id, nombre, email', 'FROM usuarios', 'WHERE activo = TRUE', 'ORDER BY fecha_creacion DESC;']
-      },
-
-      // 4. FILL THE CODE (Completar huecos de sintaxis)
-      {
-        id: 'fill_code_js_1',
-        tipo: 'fill_code',
         lenguaje: 'JavaScript',
-        dificultad: 'intermedio',
-        titulo: 'Fill the Code: Fetch Asíncrono',
-        codigo_con_huecos: 'const response = ___1___ fetch("/api/datos");\nconst payload = ___2___ response.json();',
-        respuestas: { '1': 'await', '2': 'await' },
-        opciones_tokens: ['await', 'async', 'yield', 'then']
-      },
-      {
-        id: 'fill_code_py_1',
-        tipo: 'fill_code',
-        lenguaje: 'Python',
-        dificultad: 'intermedio',
-        titulo: 'Fill the Code: List Comprehension',
-        codigo_con_huecos: 'pares = [x ___1___ x in range(10) ___2___ x % 2 == 0]',
-        respuestas: { '1': 'for', '2': 'if' },
-        opciones_tokens: ['for', 'if', 'while', 'in']
-      },
-
-      // 5. OUTPUT PREDICTOR (Predecir stdout de consola)
-      {
-        id: 'output_js_1',
-        tipo: 'output_predictor',
-        lenguaje: 'JavaScript',
-        dificultad: 'novato',
-        titulo: 'Output Predictor: Coerción Unaria',
-        codigo: 'console.log(1 + +"2" + "2");',
-        opciones: ['"32"', '"122"', 'NaN', '3'],
-        correcta: 0,
-        explicacion: 'El operador unario +"2" convierte a número 2; 1 + 2 = 3; luego 3 + "2" resulta en "32".'
-      },
-      {
-        id: 'output_py_1',
-        tipo: 'output_predictor',
-        lenguaje: 'Python',
-        dificultad: 'intermedio',
-        titulo: 'Output Predictor: Slicing Inverso',
-        codigo: 'nums = [10, 20, 30, 40, 50]\nprint(nums[::-2])',
-        opciones: ['[50, 30, 10]', '[50, 40, 30]', '[10, 30, 50]', '[40, 20]'],
-        correcta: 0,
-        explicacion: 'El paso negativo -2 recorre la lista en reversa saltando de 2 en 2 desde el final.'
-      },
-
-      // 6. FLASHCARD BATTLE (Duelo V/F de alta velocidad)
-      {
-        id: 'flashcard_battle_1',
-        tipo: 'flashcard',
-        lenguaje: 'General',
-        dificultad: 'novato',
-        titulo: 'Flashcard Battle: Arquitectura Web',
-        flashcards: [
-          { afirmacion: 'Las microtareas (Promise.then) tienen prioridad en el Event Loop sobre las macrotareas (setTimeout).', es_verdadero: true },
-          { afirmacion: 'Array.prototype.map en JavaScript muta el array original in-place.', es_verdadero: false },
-          { afirmacion: 'const en JavaScript previene que un objeto añada nuevas propiedades.', es_verdadero: false }
+        dificultad: 'experto',
+        titulo: 'Reintentos Exponenciales Asíncronos',
+        lineas: [
+          '    await sleep(2 ** intento * 100);',
+          'for (let intento = 0; intento < 3; intento++) {',
+          '  try { return await fetch(url); } catch (e) {',
+          '  }',
+          '} throw new Error("Fallo final");'
+        ],
+        lineas_ordenadas: [
+          'for (let intento = 0; intento < 3; intento++) {',
+          '  try { return await fetch(url); } catch (e) {',
+          '    await sleep(2 ** intento * 100);',
+          '  }',
+          '} throw new Error("Fallo final");'
         ]
       },
 
-      // 7. CODE TYPER (Speedrun y precisión de sintaxis)
+      // 4. FILL THE CODE (fill_code)
+      // Novato (1 o 2 huecos elementales)
       {
-        id: 'code_typer_js_1',
+        id: 'fill_nov_1',
+        tipo: 'fill_code',
+        lenguaje: 'JavaScript',
+        dificultad: 'novato',
+        titulo: 'Condicional If Básico',
+        codigo_con_huecos: 'let edad = 18;\n___1___ (edad >= 18) {\n  console.log("Acceso permitido");\n}',
+        respuestas: { '1': 'if' },
+        sugerencias: ['if', 'while', 'for', 'else'],
+        opciones_tokens: ['if', 'while', 'for', 'else']
+      },
+      {
+        id: 'fill_nov_2',
+        tipo: 'fill_code',
+        lenguaje: 'JavaScript',
+        dificultad: 'novato',
+        titulo: 'Retornar Resultado de Función',
+        codigo_con_huecos: 'function multiplicar(x, y) {\n  ___1___ x * y;\n}',
+        respuestas: { '1': 'return' },
+        sugerencias: ['return', 'send', 'output', 'give'],
+        opciones_tokens: ['return', 'send', 'output', 'give']
+      },
+      {
+        id: 'fill_nov_3',
+        tipo: 'fill_code',
+        lenguaje: 'JavaScript',
+        dificultad: 'novato',
+        titulo: 'Declaración y Uso de Variable',
+        codigo_con_huecos: '___1___ puntos = 50;\nconsole.log(___2___);',
+        respuestas: { '1': 'let', '2': 'puntos' },
+        sugerencias: ['let', 'puntos', 'function', 'class'],
+        opciones_tokens: ['let', 'puntos', 'function', 'class']
+      },
+      // Intermedio
+      {
+        id: 'fill_int_1',
+        tipo: 'fill_code',
+        lenguaje: 'JavaScript',
+        dificultad: 'intermedio',
+        titulo: 'Transformación con Map y Flecha',
+        codigo_con_huecos: 'const dobles = numeros.___1___(n => n ___2___ 2);',
+        respuestas: { '1': 'map', '2': '*' },
+        sugerencias: ['map', '*', 'filter', '+', 'reduce'],
+        opciones_tokens: ['map', '*', 'filter', '+', 'reduce']
+      },
+      // Experto
+      {
+        id: 'fill_exp_1',
+        tipo: 'fill_code',
+        lenguaje: 'JavaScript',
+        dificultad: 'experto',
+        titulo: 'Consumo Asíncrono de APIs con Await',
+        codigo_con_huecos: 'const response = ___1___ fetch("/api/datos");\nconst payload = ___2___ response.json();',
+        respuestas: { '1': 'await', '2': 'await' },
+        sugerencias: ['await', 'async', 'then', 'yield'],
+        opciones_tokens: ['await', 'async', 'then', 'yield']
+      },
+
+      // 5. OUTPUT PREDICTOR (output_predictor)
+      // Novato
+      {
+        id: 'output_nov_1',
+        tipo: 'output_predictor',
+        lenguaje: 'JavaScript',
+        dificultad: 'novato',
+        titulo: 'Suma de Dos Números',
+        codigo: 'let a = 10;\nlet b = 5;\nconsole.log(a + b);',
+        opciones: ['15', '105', '5', 'undefined'],
+        correcta: 0,
+        explicacion: '10 + 5 da como resultado numérico 15.'
+      },
+      {
+        id: 'output_nov_2',
+        tipo: 'output_predictor',
+        lenguaje: 'JavaScript',
+        dificultad: 'novato',
+        titulo: 'Incremento de Puntos',
+        codigo: 'let puntos = 20;\npuntos = puntos + 10;\nconsole.log(puntos);',
+        opciones: ['30', '20', '2010', '10'],
+        correcta: 0,
+        explicacion: '20 + 10 se evalúa a 30 y se almacena en la variable puntos.'
+      },
+      {
+        id: 'output_nov_3',
+        tipo: 'output_predictor',
+        lenguaje: 'JavaScript',
+        dificultad: 'novato',
+        titulo: 'Unión de Textos (Concatenación)',
+        codigo: 'let nombre = "Ana";\nconsole.log("Hola " + nombre);',
+        opciones: ['"Hola Ana"', '"Hola nombre"', '"Ana"', 'undefined'],
+        correcta: 0,
+        explicacion: 'El operador + une "Hola " con "Ana", produciendo "Hola Ana".'
+      },
+      // Intermedio
+      {
+        id: 'output_int_1',
+        tipo: 'output_predictor',
+        lenguaje: 'JavaScript',
+        dificultad: 'intermedio',
+        titulo: 'Longitud de un Array',
+        codigo: 'let frutas = ["manzana", "pera", "uva"];\nconsole.log(frutas.length);',
+        opciones: ['3', '2', '4', 'undefined'],
+        correcta: 0,
+        explicacion: 'La propiedad length devuelve la cantidad de elementos en el array (3).'
+      },
+      // Experto
+      {
+        id: 'output_exp_1',
+        tipo: 'output_predictor',
+        lenguaje: 'JavaScript',
+        dificultad: 'experto',
+        titulo: 'Coerción Unaria Implícita',
+        codigo: 'console.log(1 + +"2" + "2");',
+        opciones: ['"32"', '"122"', 'NaN', '3'],
+        correcta: 0,
+        explicacion: 'El operador unario +"2" convierte a 2; 1 + 2 = 3; luego 3 + "2" resulta en "32".'
+      },
+
+      // 6. FLASHCARD BATTLE (flashcard)
+      // Novato
+      {
+        id: 'flashcard_nov_1',
+        tipo: 'flashcard',
+        lenguaje: 'JavaScript',
+        dificultad: 'novato',
+        titulo: 'Fundamentos Iniciales de Programación',
+        flashcards: [
+          { afirmacion: 'Una variable declarada con let puede cambiar de valor a lo largo del programa.', es_verdadero: true },
+          { afirmacion: 'El tipo de dato Boolean solo puede ser true (verdadero) o false (falso).', es_verdadero: true },
+          { afirmacion: 'La instrucción console.log() se usa para mostrar mensajes en la consola.', es_verdadero: true },
+          { afirmacion: 'Un número como 25 debe escribirse siempre obligatoriamente entre comillas.', es_verdadero: false }
+        ]
+      },
+      // Intermedio
+      {
+        id: 'flashcard_int_1',
+        tipo: 'flashcard',
+        lenguaje: 'JavaScript',
+        dificultad: 'intermedio',
+        titulo: 'Arrays e Inmutabilidad',
+        flashcards: [
+          { afirmacion: 'Array.prototype.map retorna un nuevo array sin mutar el array original.', es_verdadero: true },
+          { afirmacion: 'Una constante const impide modificar las propiedades internas de un objeto.', es_verdadero: false },
+          { afirmacion: 'El operador === compara valor y tipo de dato sin conversiones implícitas.', es_verdadero: true }
+        ]
+      },
+      // Experto
+      {
+        id: 'flashcard_exp_1',
+        tipo: 'flashcard',
+        lenguaje: 'JavaScript',
+        dificultad: 'experto',
+        titulo: 'Runtime Web & Event Loop',
+        flashcards: [
+          { afirmacion: 'Las microtareas (Promise.then) tienen prioridad sobre las macrotareas (setTimeout).', es_verdadero: true },
+          { afirmacion: 'Un Closure permite a una función recordar el ámbito léxico donde fue creada.', es_verdadero: true },
+          { afirmacion: 'Object.freeze() realiza automáticamente una congelación profunda recursiva de sub-objetos.', es_verdadero: false }
+        ]
+      },
+
+      // 7. CODE TYPER (code_typer)
+      // Novato (Sintaxis elemental, 16 a 24 caracteres)
+      {
+        id: 'typer_nov_1',
         tipo: 'code_typer',
         lenguaje: 'JavaScript',
         dificultad: 'novato',
-        titulo: 'Code Typer: React State',
-        codigo: 'const [duelo, setDuelo] = useState(true);',
-        descripcion: 'Escribe el snippet React a máxima velocidad con 100% de precisión.'
+        titulo: 'Variable de Texto',
+        codigo: 'let nombre = "Eliab";',
+        descripcion: 'Escribe la variable con su valor de texto exacto.'
+      },
+      {
+        id: 'typer_nov_2',
+        tipo: 'code_typer',
+        lenguaje: 'JavaScript',
+        dificultad: 'novato',
+        titulo: 'Imprimir en Consola',
+        codigo: 'console.log("Hola Mundo");',
+        descripcion: 'Escribe la instrucción de consola respetando comillas y paréntesis.'
+      },
+      {
+        id: 'typer_nov_3',
+        tipo: 'code_typer',
+        lenguaje: 'JavaScript',
+        dificultad: 'novato',
+        titulo: 'Variable de Puntuación',
+        codigo: 'let puntuacion = 100;',
+        descripcion: 'Escribe la asignación numérica.'
+      },
+      // Intermedio (30 a 45 caracteres)
+      {
+        id: 'typer_int_1',
+        tipo: 'code_typer',
+        lenguaje: 'JavaScript',
+        dificultad: 'intermedio',
+        titulo: 'Función Flecha Duplicadora',
+        codigo: 'const duplicar = n => n * 2;',
+        descripcion: 'Escribe la función flecha con precisión.'
+      },
+      // Experto (50+ caracteres)
+      {
+        id: 'typer_exp_1',
+        tipo: 'code_typer',
+        lenguaje: 'JavaScript',
+        dificultad: 'experto',
+        titulo: 'Hook de Estado en React',
+        codigo: 'const [operador, setOperador] = useState(null);',
+        descripcion: 'Escribe la desestructuración del hook React.'
       },
 
-      // 8. MEMORY MATCH (Matriz de conceptos pares)
+      // 8. MEMORY MATCH (memory_match)
+      // Novato (3 parejas = 6 cartas, conceptos elementales)
       {
-        id: 'memory_match_1',
+        id: 'memory_nov_1',
         tipo: 'memory_match',
         lenguaje: 'General',
         dificultad: 'novato',
-        titulo: 'Memory Match: Paradigmas de Software',
+        titulo: 'Conceptos Iniciales de Programación',
         cartas: [
-          { id: 'm1', matchingId: 'p1', texto: 'Closure', flipped: false, matched: false },
-          { id: 'm2', matchingId: 'p1', texto: 'Ámbito Léxico Recordado', flipped: false, matched: false },
-          { id: 'm3', matchingId: 'p2', texto: 'Idempotencia', flipped: false, matched: false },
-          { id: 'm4', matchingId: 'p2', texto: 'Mismo Resultado Siempre', flipped: false, matched: false },
-          { id: 'm5', matchingId: 'p3', texto: 'Inmutabilidad', flipped: false, matched: false },
-          { id: 'm6', matchingId: 'p3', texto: 'Estado No Modificable', flipped: false, matched: false }
+          { id: 'm1', matchingId: 'p1', texto: 'Variable', flipped: false, matched: false },
+          { id: 'm2', matchingId: 'p1', texto: 'Guarda un dato en memoria', flipped: false, matched: false },
+          { id: 'm3', matchingId: 'p2', texto: 'String', flipped: false, matched: false },
+          { id: 'm4', matchingId: 'p2', texto: 'Texto entre comillas', flipped: false, matched: false },
+          { id: 'm5', matchingId: 'p3', texto: 'Boolean', flipped: false, matched: false },
+          { id: 'm6', matchingId: 'p3', texto: 'Valor true o false', flipped: false, matched: false }
+        ]
+      },
+      // Intermedio (4 parejas = 8 cartas)
+      {
+        id: 'memory_int_1',
+        tipo: 'memory_match',
+        lenguaje: 'General',
+        dificultad: 'intermedio',
+        titulo: 'Estructuras y Métodos en JavaScript',
+        cartas: [
+          { id: 'mi1', matchingId: 'pi1', texto: 'Array', flipped: false, matched: false },
+          { id: 'mi2', matchingId: 'pi1', texto: 'Lista ordenada de elementos', flipped: false, matched: false },
+          { id: 'mi3', matchingId: 'pi2', texto: 'Objeto', flipped: false, matched: false },
+          { id: 'mi4', matchingId: 'pi2', texto: 'Colección de clave y valor', flipped: false, matched: false },
+          { id: 'mi5', matchingId: 'pi3', texto: 'Array.map', flipped: false, matched: false },
+          { id: 'mi6', matchingId: 'pi3', texto: 'Transforma cada elemento', flipped: false, matched: false },
+          { id: 'mi7', matchingId: 'pi4', texto: 'Función Flecha', flipped: false, matched: false },
+          { id: 'mi8', matchingId: 'pi4', texto: 'Sintaxis corta () => {}', flipped: false, matched: false }
+        ]
+      },
+      // Experto (4 parejas = 8 cartas)
+      {
+        id: 'memory_exp_1',
+        tipo: 'memory_match',
+        lenguaje: 'General',
+        dificultad: 'experto',
+        titulo: 'Paradigmas y Patrones Avanzados',
+        cartas: [
+          { id: 'me1', matchingId: 'pe1', texto: 'Closure', flipped: false, matched: false },
+          { id: 'me2', matchingId: 'pe1', texto: 'Ámbito léxico recordado', flipped: false, matched: false },
+          { id: 'me3', matchingId: 'pe2', texto: 'Idempotencia', flipped: false, matched: false },
+          { id: 'me4', matchingId: 'pe2', texto: 'Mismo resultado siempre', flipped: false, matched: false },
+          { id: 'me5', matchingId: 'pe3', texto: 'Polimorfismo', flipped: false, matched: false },
+          { id: 'me6', matchingId: 'pe3', texto: 'Múltiples formas de acción', flipped: false, matched: false },
+          { id: 'me7', matchingId: 'pe4', texto: 'Inmutabilidad', flipped: false, matched: false },
+          { id: 'me8', matchingId: 'pe4', texto: 'Estado que no puede alterarse', flipped: false, matched: false }
         ]
       }
     ],
     pragma: [
       {
-        id: 'code_sorter_py_1',
+        id: 'sorter_py_nov_1',
         tipo: 'code_sorter',
         lenguaje: 'Python',
         dificultad: 'novato',
-        titulo: 'Code Sorter: Función Cuadrática',
-        lineas: ['    return resultado', 'def calcular_cuadrado(x):', '    resultado = x ** 2'],
-        lineas_ordenadas: ['def calcular_cuadrado(x):', '    resultado = x ** 2', '    return resultado']
+        titulo: 'Función Simple Cuadrática',
+        lineas: ['    return resultado', 'def calcular_cuadrado(x):', '    resultado = x * x'],
+        lineas_ordenadas: ['def calcular_cuadrado(x):', '    resultado = x * x', '    return resultado']
+      },
+      {
+        id: 'fill_py_nov_1',
+        tipo: 'fill_code',
+        lenguaje: 'Python',
+        dificultad: 'novato',
+        titulo: 'Condicional If en Python',
+        codigo_con_huecos: 'x = 10\n___1___ x > 5:\n    print("Mayor")',
+        respuestas: { '1': 'if' },
+        sugerencias: ['if', 'while', 'for', 'else'],
+        opciones_tokens: ['if', 'while', 'for', 'else']
       },
       {
         id: 'fill_code_sql_1',
@@ -684,6 +1029,7 @@ function LobbyView({ estudiante, backendUrl, onUpdate, listaAmigos = [], partida
         titulo: 'Fill the Code: Agrupación SQL',
         codigo_con_huecos: 'SELECT pais, COUNT(*) ___1___ usuarios ___2___ COUNT(*) > 5;',
         respuestas: { '1': 'FROM', '2': 'HAVING' },
+        sugerencias: ['FROM', 'HAVING', 'WHERE', 'ORDER BY'],
         opciones_tokens: ['FROM', 'HAVING', 'WHERE', 'ORDER BY']
       },
       {
@@ -695,7 +1041,7 @@ function LobbyView({ estudiante, backendUrl, onUpdate, listaAmigos = [], partida
         descripcion: 'Uso incorrecto de WHERE sobre valores agregados en lugar de HAVING.',
         codigo_con_bug: 'SELECT departamento, AVG(salario)\nFROM empleados\nWHERE AVG(salario) > 5000\nGROUP BY departamento;',
         linea_bug: 3,
-        opciones_correcion: [
+        opciones_correccion: [
           'Cambiar "WHERE AVG(salario) > 5000" por "HAVING AVG(salario) > 5000" después de GROUP BY.',
           'Eliminar GROUP BY departamento.',
           'Usar ORDER BY en vez de WHERE.'
@@ -707,15 +1053,15 @@ function LobbyView({ estudiante, backendUrl, onUpdate, listaAmigos = [], partida
         tipo: 'code_typer',
         lenguaje: 'Python',
         dificultad: 'novato',
-        titulo: 'Code Typer: List Comprehension',
-        codigo: 'cuadrados = [x**2 for x in range(10)]',
-        descripcion: 'Escribe la comprensión de listas en Python sin cometer errores.'
+        titulo: 'Variable Numérica en Python',
+        codigo: 'puntuacion = 100',
+        descripcion: 'Escribe la asignación numérica en Python.'
       },
       {
         id: 'output_sql_1',
         tipo: 'output_predictor',
         lenguaje: 'SQL',
-        dificultad: 'novato',
+        dificultad: 'intermedio',
         titulo: 'Output Predictor: Conteo DISTINCT',
         codigo: '-- Tabla: [1, 2, 2, 3, 3, 3]\nSELECT COUNT(DISTINCT valor) FROM numeros;',
         opciones: ['3', '6', '1', '2'],
@@ -981,46 +1327,85 @@ function LobbyView({ estudiante, backendUrl, onUpdate, listaAmigos = [], partida
   };
 
   const initiateActiveMatch = (backendMatch = null) => {
+    const resolverTipo = (r) => {
+      const t = r.tipo;
+      if (t === 'refactor' || t === 'bug_hunter') return 'bug_hunter';
+      if (t === 'sorter' || t === 'code_sorter') return 'code_sorter';
+      if (t === 'fill-blank' || t === 'fill_code') return 'fill_code';
+      if (t === 'output' || t === 'output_predictor') return 'output_predictor';
+      if (t === 'typer' || t === 'code_typer') return 'code_typer';
+      if (t === 'memory' || t === 'memory_match') return 'memory_match';
+      return t;
+    };
+
     // Escoger los retos según la configuración del Master o del backend sincronizado
     let retosElegidos = [];
     if (backendMatch && Array.isArray(backendMatch.retos) && backendMatch.retos.length > 0) {
-      retosElegidos = backendMatch.retos;
+      retosElegidos = backendMatch.retos.map(r => ({
+        ...r,
+        tipo: resolverTipo(r),
+        opciones_tokens: r.opciones_tokens || r.sugerencias || [],
+        sugerencias: r.opciones_tokens || r.sugerencias || [],
+        opciones_correccion: r.opciones_correccion || r.opciones_correcion || r.opciones || [],
+        opciones_correcion: r.opciones_correccion || r.opciones_correcion || r.opciones || []
+      }));
     } else {
       const techEstudiante = (estudiante?.tecnologia_actual || 'JavaScript').toLowerCase();
       const difActual = (difficulty || 'intermedio').toLowerCase();
-      const cantidad = difActual === 'novato' ? 4 : difActual === 'experto' ? 6 : 5;
-
-      const resolverTipo = (r) => {
-        const t = r.tipo;
-        if (t === 'refactor' || t === 'bug_hunter') return 'bug_hunter';
-        if (t === 'sorter' || t === 'code_sorter') return 'code_sorter';
-        if (t === 'fill-blank' || t === 'fill_code') return 'fill_code';
-        if (t === 'output' || t === 'output_predictor') return 'output_predictor';
-        if (t === 'typer' || t === 'code_typer') return 'code_typer';
-        if (t === 'memory' || t === 'memory_match') return 'memory_match';
-        return t;
-      };
+      // Cantidad exacta de retos según nivel: novato -> 3, intermedio -> 4, experto -> 5
+      const cantidad = (difActual === 'novato' || difActual === 'principiante') ? 3 : difActual === 'experto' ? 5 : 4;
 
       const modosOficiales = ['trivia', 'bug_hunter', 'code_sorter', 'fill_code', 'output_predictor', 'flashcard', 'code_typer', 'memory_match'];
       const modosShuffled = [...modosOficiales].sort(() => 0.5 - Math.random());
       const allPool = [...(RETOS_MULTIPLAYER.arcade || []), ...(RETOS_MULTIPLAYER.pragma || [])];
 
+      // Filtrado estricto por dificultad: novato JAMÁS recibe retos de nivel superior
+      const poolDificultad = allPool.filter(r => {
+        const rDif = (r.dificultad || 'intermedio').toLowerCase();
+        if (difActual === 'novato' || difActual === 'principiante') return rDif === 'novato';
+        if (difActual === 'experto') return rDif === 'experto';
+        return rDif === 'intermedio';
+      });
+
+      // Si es novato, garantizar que solo se usen retos del pool de novatos
+      const poolDisponible = (difActual === 'novato' || difActual === 'principiante')
+        ? poolDificultad
+        : (poolDificultad.length >= cantidad ? poolDificultad : allPool.filter(r => (r.dificultad || 'intermedio').toLowerCase() !== 'novato'));
+
       for (const modo of modosShuffled) {
         if (retosElegidos.length >= cantidad) break;
-        const coincidentes = allPool.filter(r => resolverTipo(r) === modo && (!r.lenguaje || r.lenguaje.toLowerCase().includes(techEstudiante) || r.lenguaje === 'General'));
-        const fallback = allPool.filter(r => resolverTipo(r) === modo);
+        const coincidentes = poolDisponible.filter(r => 
+          resolverTipo(r) === modo && 
+          (!r.lenguaje || r.lenguaje.toLowerCase().includes(techEstudiante) || r.lenguaje === 'General')
+        );
+        const fallback = poolDisponible.filter(r => resolverTipo(r) === modo);
         const poolUsar = coincidentes.length > 0 ? coincidentes : fallback;
         if (poolUsar.length > 0) {
           const elegido = poolUsar[Math.floor(Math.random() * poolUsar.length)];
           if (!retosElegidos.some(r => r.id === elegido.id)) {
-            retosElegidos.push(elegido);
+            retosElegidos.push({
+              ...elegido,
+              tipo: resolverTipo(elegido),
+              opciones_tokens: elegido.opciones_tokens || elegido.sugerencias || [],
+              sugerencias: elegido.opciones_tokens || elegido.sugerencias || [],
+              opciones_correccion: elegido.opciones_correccion || elegido.opciones_correcion || elegido.opciones || [],
+              opciones_correcion: elegido.opciones_correccion || elegido.opciones_correcion || elegido.opciones || []
+            });
           }
         }
       }
 
       if (retosElegidos.length < cantidad) {
-        const restantes = allPool.filter(r => !retosElegidos.some(e => e.id === r.id));
-        retosElegidos.push(...restantes.slice(0, cantidad - retosElegidos.length));
+        const restantes = poolDisponible.filter(r => !retosElegidos.some(e => e.id === r.id));
+        const adicionados = restantes.slice(0, cantidad - retosElegidos.length).map(r => ({
+          ...r,
+          tipo: resolverTipo(r),
+          opciones_tokens: r.opciones_tokens || r.sugerencias || [],
+          sugerencias: r.opciones_tokens || r.sugerencias || [],
+          opciones_correccion: r.opciones_correccion || r.opciones_correcion || r.opciones || [],
+          opciones_correcion: r.opciones_correccion || r.opciones_correcion || r.opciones || []
+        }));
+        retosElegidos.push(...adicionados);
       }
     }
 
@@ -1566,51 +1951,50 @@ function LobbyView({ estudiante, backendUrl, onUpdate, listaAmigos = [], partida
     if (slot.type === 'inviting') {
       if (slot.status === 'sending') {
         return (
-          <div key={`${team}-${slotIndex}`} className="lobby-player-slot active inviting border border-indigo-500/40 bg-slate-900/80 rounded-xl relative p-2.5 flex flex-col items-center justify-center shadow-md">
-            <div className="flex items-center gap-1.5 mb-1.5">
-              <div className="slot-spinner animate-spin w-3.5 h-3.5 border-2 border-indigo-400 border-t-transparent rounded-full"></div>
-              <span className="font-mono text-[10px] text-amber-400 font-semibold px-1.5 py-0.5 rounded bg-amber-500/10 border border-amber-500/25">
+          <div key={`${team}-${slotIndex}`} className="lobby-player-slot active inviting">
+            <div className="flex items-center gap-2 mb-1.5">
+              <div className="slot-spinner"></div>
+              <span className="slot-countdown-badge">
                 ⏱️ {slot.countdown || 12}s
               </span>
             </div>
             <div className="slot-info text-center mb-2">
-              <span className="slot-name text-white font-medium text-xs max-w-[120px] truncate block">{slot.name}</span>
-              <span className="slot-role text-[10px] text-slate-400 font-medium block">Esperando respuesta...</span>
+              <span className="slot-name">{slot.name}</span>
+              <span className="slot-role">Esperando respuesta...</span>
             </div>
-            <div className="flex gap-1">
-              <button 
-                className="px-2.5 py-1 bg-rose-500/10 hover:bg-rose-600 border border-rose-500/30 text-rose-300 hover:text-white text-[10px] font-medium rounded-md cursor-pointer transition active:scale-95" 
-                onClick={() => cancelInvitation(team, slotIndex)} 
-                title="Cancelar invitación activa"
-              >
-                Cancelar
-              </button>
-            </div>
+            <button 
+              type="button"
+              className="btn-slot-cancel" 
+              onClick={() => cancelInvitation(team, slotIndex)} 
+              title="Cancelar invitación activa"
+            >
+              Cancelar
+            </button>
           </div>
         );
       } else if (slot.status === 'accepted') {
         return (
-          <div key={`${team}-${slotIndex}`} className="lobby-player-slot active accepted border-emerald-500 bg-emerald-950/20">
-            <div className="slot-avatar text-emerald-400 text-lg">✔️</div>
+          <div key={`${team}-${slotIndex}`} className="lobby-player-slot active accepted">
+            <div className="slot-avatar text-emerald-400">✔️</div>
             <div className="slot-info">
-              <span className="slot-name text-emerald-400 font-bold text-xs">¡Aceptado!</span>
+              <span className="slot-name text-emerald-400">¡Aceptado!</span>
               <span className="slot-role text-emerald-400">{slot.name}</span>
             </div>
           </div>
         );
       } else if (slot.status === 'expired') {
         return (
-          <div key={`${team}-${slotIndex}`} className="lobby-player-slot active expired border-amber-500/50 bg-amber-950/20">
-            <div className="slot-avatar text-amber-400 text-base">⏱️</div>
+          <div key={`${team}-${slotIndex}`} className="lobby-player-slot active expired">
+            <div className="slot-avatar text-amber-400">⏱️</div>
             <div className="slot-info">
-              <span className="slot-name text-amber-400 font-bold text-[11px]">Tiempo Expirado</span>
-              <span className="slot-role text-slate-400 text-[8px]">Sin respuesta de {slot.name}</span>
+              <span className="slot-name text-amber-400">Tiempo Expirado</span>
+              <span className="slot-role">Sin respuesta de {slot.name}</span>
             </div>
           </div>
         );
       } else {
         return (
-          <div key={`${team}-${slotIndex}`} className="lobby-player-slot active rejected border-rose-500 bg-rose-950/20">
+          <div key={`${team}-${slotIndex}`} className="lobby-player-slot active rejected">
             <div className="slot-avatar text-rose-500">❌</div>
             <div className="slot-info">
               <span className="slot-name text-rose-500">Ocupado</span>
@@ -1752,57 +2136,96 @@ function LobbyView({ estudiante, backendUrl, onUpdate, listaAmigos = [], partida
         </div>
       )}
 
-      {/* MODAL / SECTOR DE INVITACIÓN DE AMIGOS (DISEÑO SLATE / INDIGO) */}
+      {/* MODAL DE INVITACIÓN DE AMIGOS — TACTICAL POPUP */}
       {showInviteModal && (
-        <div className="fixed inset-0 z-50 bg-slate-950/80 backdrop-blur-md flex items-center justify-center p-4 animate-fade-in">
-          <div className="bg-slate-900 border border-slate-800 rounded-2xl shadow-2xl shadow-black/60 max-w-md w-full overflow-hidden">
-            
+        <div 
+          className="invite-modal-overlay"
+          onClick={(e) => {
+            if (e.target === e.currentTarget) {
+              setShowInviteModal(false);
+              setFriendSearchQuery('');
+            }
+          }}
+        >
+          <div className="invite-modal-card">
             {/* Cabecera del Modal */}
-            <div className="px-6 py-4 border-b border-slate-800/80 flex items-center justify-between">
-              <div className="flex items-center gap-2.5">
-                <div className="w-8 h-8 rounded-lg bg-indigo-500/10 border border-indigo-500/20 flex items-center justify-center text-indigo-400">
-                  <Users size={16} />
+            <div className="invite-modal-header">
+              <div className="invite-modal-header-left">
+                <div className="invite-modal-icon-badge">
+                  <Users size={18} />
                 </div>
                 <div>
-                  <h3 className="text-white font-semibold text-sm">Invitar Amigo a la Partida</h3>
-                  <p className="text-[11px] text-slate-400">Selecciona un compañero para unirse a tu sala</p>
+                  <h3 className="invite-modal-title">Invitar Amigo a la Partida</h3>
+                  <p className="invite-modal-subtitle">Selecciona un compañero para unirse a tu sala</p>
                 </div>
               </div>
               <button 
+                type="button"
                 onClick={() => {
                   setShowInviteModal(false);
                   setFriendSearchQuery('');
                 }} 
-                className="text-slate-400 hover:text-white p-1.5 rounded-lg hover:bg-slate-800 transition cursor-pointer"
+                className="invite-modal-close-btn"
                 title="Cerrar ventana"
               >
-                <X size={16} />
+                <X size={18} />
               </button>
             </div>
 
             {/* Barra de Búsqueda */}
-            <div className="p-4 border-b border-slate-800/60 bg-slate-950/40">
-              <div className="relative flex items-center">
-                <Search size={14} className="absolute left-3 text-slate-400 pointer-events-none" />
+            <div className="invite-modal-search-box">
+              <div className="invite-modal-search-wrap">
+                <Search size={15} className="invite-modal-search-icon" />
                 <input 
                   type="text" 
                   placeholder="Buscar amigo por nombre o tecnología..." 
                   value={friendSearchQuery}
                   onChange={(e) => setFriendSearchQuery(e.target.value)}
-                  className="w-full pl-9 pr-3.5 py-2 rounded-xl bg-slate-900 border border-slate-700/60 text-white placeholder-slate-500 text-xs focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500 outline-none transition"
+                  className="invite-modal-search-input"
+                  autoFocus
                 />
               </div>
             </div>
 
             {/* Lista de Amigos en el Modal */}
-            <div className="p-4 flex flex-col gap-2 max-h-[320px] overflow-y-auto">
+            <div className="invite-modal-list">
               {listaAmigos.filter(amigo => 
                 amigo.nombre.toLowerCase().includes(friendSearchQuery.toLowerCase()) ||
                 (amigo.tecnologia_actual && amigo.tecnologia_actual.toLowerCase().includes(friendSearchQuery.toLowerCase()))
               ).length === 0 ? (
-                <div className="py-8 text-center text-slate-500 text-xs">
-                  <Users size={32} className="mx-auto mb-2 opacity-30 text-slate-400" />
-                  <p>No se encontraron amigos disponibles.</p>
+                <div className="invite-empty-state">
+                  <div className="invite-empty-icon">
+                    <Users size={24} />
+                  </div>
+                  <div>
+                    <h4 className="invite-empty-title">
+                      {friendSearchQuery.trim() ? 'Sin resultados para la búsqueda' : 'No se encontraron amigos disponibles'}
+                    </h4>
+                    <p className="invite-empty-desc">
+                      {friendSearchQuery.trim() 
+                        ? 'Verifica el nombre o tecnología ingresada para localizar a tu compañero.' 
+                        : 'Aún no tienes amigos vinculados en la red. Puedes invitar a un compañero de IA táctico para probar este slot.'}
+                    </p>
+                  </div>
+                  {!friendSearchQuery.trim() && (
+                    <button
+                      type="button"
+                      onClick={() => {
+                        const botName = `DEV_BOT_${inviteTarget.team === 'orange' ? 'O' : 'B'}${inviteTarget.index + 1}`;
+                        inviteFriend({
+                          id: `bot_${Date.now()}`,
+                          nombre: botName,
+                          tecnologia_actual: estudiante?.tecnologia_actual || 'JavaScript',
+                          isBot: true
+                        }, inviteTarget.team, inviteTarget.index);
+                        setFriendSearchQuery('');
+                      }}
+                      className="btn-invite-bot-quick"
+                    >
+                      <Bot size={15} />
+                      <span>Invitar Desarrollador Virtual / Bot</span>
+                    </button>
+                  )}
                 </div>
               ) : (
                 listaAmigos.filter(amigo => 
@@ -1815,32 +2238,26 @@ function LobbyView({ estudiante, backendUrl, onUpdate, listaAmigos = [], partida
                   const inicial = amigo.nombre ? amigo.nombre.charAt(0).toUpperCase() : 'E';
                   
                   return (
-                    <div 
-                      key={amigo.id} 
-                      className="flex items-center justify-between p-2.5 rounded-xl bg-slate-950/50 hover:bg-slate-800/40 border border-slate-800/60 hover:border-indigo-500/30 transition-all duration-150"
-                    >
-                      <div className="flex items-center gap-3">
-                        <div className="w-8 h-8 rounded-full bg-gradient-to-br from-indigo-500 to-violet-600 text-white font-semibold text-xs flex items-center justify-center shadow-sm">
+                    <div key={amigo.id} className="invite-friend-row">
+                      <div className="invite-friend-left">
+                        <div className="invite-friend-avatar">
                           {inicial}
                         </div>
-                        <div>
-                          <span className="text-white font-medium text-xs block">{amigo.nombre}</span>
-                          <span className="text-[10px] text-indigo-400 bg-indigo-500/10 border border-indigo-500/20 px-1.5 py-0.5 rounded font-medium inline-block mt-0.5">
+                        <div className="invite-friend-info">
+                          <span className="invite-friend-name">{amigo.nombre}</span>
+                          <span className="invite-friend-tech">
                             {amigo.tecnologia_actual || 'JavaScript'}
                           </span>
                         </div>
                       </div>
                       <button 
+                        type="button"
                         disabled={yaInvitado}
                         onClick={() => {
                           inviteFriend(amigo, inviteTarget.team, inviteTarget.index);
                           setFriendSearchQuery('');
                         }}
-                        className={`px-3.5 py-1.5 text-xs font-medium rounded-lg transition-all cursor-pointer ${
-                          yaInvitado 
-                            ? 'bg-slate-800 text-slate-500 border border-slate-700/50 cursor-not-allowed'
-                            : 'bg-indigo-600 hover:bg-indigo-500 text-white shadow-sm shadow-indigo-600/20'
-                        }`}
+                        className={`btn-invite-action ${yaInvitado ? 'invited' : 'ready'}`}
                       >
                         {yaInvitado ? 'Invitado' : 'Invitar'}
                       </button>
@@ -2033,7 +2450,7 @@ function LobbyView({ estudiante, backendUrl, onUpdate, listaAmigos = [], partida
                           {difficulty === 'novato' && <div className="mode-card-radio-dot" />}
                         </div>
                       </div>
-                      <span className="diff-retos-tag">4 Retos</span>
+                      <span className="diff-retos-tag">3 Retos</span>
                     </div>
                   </div>
 
@@ -2064,7 +2481,7 @@ function LobbyView({ estudiante, backendUrl, onUpdate, listaAmigos = [], partida
                           {difficulty === 'intermedio' && <div className="mode-card-radio-dot" />}
                         </div>
                       </div>
-                      <span className="diff-retos-tag">5 Retos</span>
+                      <span className="diff-retos-tag">4 Retos</span>
                     </div>
                   </div>
 
@@ -2095,7 +2512,7 @@ function LobbyView({ estudiante, backendUrl, onUpdate, listaAmigos = [], partida
                           {difficulty === 'experto' && <div className="mode-card-radio-dot" />}
                         </div>
                       </div>
-                      <span className="diff-retos-tag">6 Retos</span>
+                      <span className="diff-retos-tag">5 Retos</span>
                     </div>
                   </div>
 
@@ -2124,7 +2541,7 @@ function LobbyView({ estudiante, backendUrl, onUpdate, listaAmigos = [], partida
               <div className="flex items-center gap-3">
                 <span>
                   DIFICULTAD: <strong className={difficulty === 'novato' ? 'text-emerald-400' : difficulty === 'experto' ? 'text-rose-400' : 'text-indigo-300'}>
-                    {difficulty.toUpperCase()} ({difficulty === 'novato' ? '4 RETOS' : difficulty === 'experto' ? '6 RETOS' : '5 RETOS'})
+                    {difficulty.toUpperCase()} ({difficulty === 'novato' ? '3 RETOS' : difficulty === 'experto' ? '5 RETOS' : '4 RETOS'})
                   </strong>
                 </span>
                 <span className="text-slate-600">|</span>
@@ -2162,106 +2579,273 @@ function LobbyView({ estudiante, backendUrl, onUpdate, listaAmigos = [], partida
       {/* 3. BUSCANDO PARTIDA (MATCHMAKING) */}
       {searching && (
         <div className="arena-searching-layout">
-          <div className="arena-searching-top">
-            <div className="radar-tactical-container hud-panel-spec flex flex-col items-center justify-center p-6 bg-slate-900/60 border border-indigo-500/20 rounded-xl relative overflow-hidden">
-              <div className="relative flex items-center justify-center w-28 h-28">
-                <div className="absolute inset-0 rounded-full border border-indigo-500/30 animate-ping opacity-25"></div>
-                <div className="absolute inset-2 rounded-full border border-indigo-500/40 animate-pulse"></div>
-                <div className="w-16 h-16 rounded-full bg-indigo-500/10 border border-indigo-500/40 flex items-center justify-center">
-                  <Radio size={24} className="text-indigo-400 animate-pulse" />
-                </div>
-              </div>
-              <span className="text-[11px] text-indigo-300 font-mono mt-3 uppercase tracking-wider">Escaneando red de desarrolladores...</span>
+          {/* Cabecera Táctica del Matchmaking */}
+          <div className="searching-header-banner">
+            <div className="searching-status-pill">
+              <div className="searching-radar-dot"></div>
+              <span className="searching-status-text">ESCANEANDO RED DE DESARROLLADORES</span>
+              <span className="searching-timer-digit">
+                {Math.floor(searchTimer / 60).toString().padStart(2, '0')}:{(searchTimer % 60).toString().padStart(2, '0')}
+              </span>
             </div>
 
-            <div className="telemetry-logs-side hud-panel-spec font-mono text-xs text-indigo-300">
-              <p className="log-line opacity-90">[INFO] SINCRONIZANDO CONFIGURACIÓN DE RETOS...</p>
-              <p className="log-line opacity-75">[MODE] {challengeCategory.toUpperCase()} | DIFICULTAD: {difficulty.toUpperCase()}</p>
-              <p className="log-line text-amber-400 animate-pulse">[SCAN] BUSCANDO OPONENTES DE TAMAÑO {matchType}...</p>
-              <p className="log-line opacity-85">[SUCCESS] SERVIDORES LISTOS - CREANDO ENTORNO COGNITIVO COMPARTIDO</p>
+            <div className="searching-config-tags">
+              <div className="searching-tag tag-mode">
+                <span className="tag-label">MODO:</span>
+                <strong className="tag-val">{matchType.toUpperCase()}</strong>
+              </div>
+              <div className={`searching-tag tag-diff diff-${difficulty}`}>
+                <span className="tag-label">DIFICULTAD:</span>
+                <strong className="tag-val">{difficulty.toUpperCase()}</strong>
+              </div>
+              <div className="searching-tag tag-stack">
+                <span className="tag-label">STACK:</span>
+                <strong className="tag-val">{estudiante?.tecnologia_actual || 'JavaScript'}</strong>
+              </div>
             </div>
           </div>
 
-          <div className="searching-bottom-controls">
-            <div className="audio-waveforms">
-              <div className="wave-bar animate-wave-short"></div>
-              <div className="wave-bar animate-wave-tall"></div>
-              <span className="audio-label">EN COLA MULTIJUGADOR</span>
-              <div className="wave-bar animate-wave-medium"></div>
-              <div className="wave-bar animate-wave-short"></div>
+          {/* Grilla Principal: Versus Slots + Radar Cuántico y Consola */}
+          <div className="searching-stage-grid">
+            {/* Columna Izquierda: Tarjeta de Emparejamiento de Jugadores */}
+            <div className="searching-matchup-card">
+              <div className="matchup-card-header">
+                <span className="matchup-title">SALA DE SINCRONIZACIÓN</span>
+                <span className="matchup-server-badge">LOBBY ALPHA-7</span>
+              </div>
+
+              <div className="matchup-slots-container">
+                {/* Tu Slot (Equipo Naranja) */}
+                <div className="matchup-player-slot slot-self">
+                  <div className="slot-avatar-wrap">
+                    <span className="slot-avatar-icon">{estudiante?.avatar || '⚡'}</span>
+                    <span className="slot-ready-indicator">✓</span>
+                  </div>
+                  <div className="slot-info">
+                    <div className="slot-name-row">
+                      <span className="slot-player-name">{studentName}</span>
+                      <span className="slot-self-tag">(TÚ)</span>
+                    </div>
+                    <div className="slot-meta-row">
+                      <span className="slot-rank-badge">Rango {estudiante?.rango || 1}</span>
+                      <span className="slot-rp-badge">{estudiante?.rank_points || 70} RP</span>
+                    </div>
+                    <span className="slot-status-text status-connected">● CONECTADO Y EN LÍNEA</span>
+                  </div>
+                </div>
+
+                {/* Separador VS Táctico */}
+                <div className="matchup-vs-divider">
+                  <div className="vs-line"></div>
+                  <div className="vs-circle">
+                    <span>VS</span>
+                  </div>
+                  <div className="vs-line"></div>
+                </div>
+
+                {/* Slot Rival (Equipo Azul - Buscando) */}
+                <div className="matchup-player-slot slot-opponent slot-searching">
+                  <div className="slot-avatar-wrap slot-avatar-hologram">
+                    <span className="slot-avatar-icon">👤</span>
+                    <div className="slot-radar-sweep-mini"></div>
+                  </div>
+                  <div className="slot-info">
+                    <div className="slot-name-row">
+                      <span className="slot-player-name text-searching">Buscando Contendiente...</span>
+                    </div>
+                    <div className="slot-meta-row">
+                      <span className="slot-searching-badge">Rango ±100 RP</span>
+                      <span className="slot-searching-badge">Modo {matchType}</span>
+                    </div>
+                    <span className="slot-status-text status-searching animate-pulse">
+                      ⏳ ESCANEANDO RED REGIONAL...
+                    </span>
+                  </div>
+                </div>
+              </div>
+
+              {/* Barra de Progreso de Búsqueda Táctica */}
+              <div className="searching-progress-bar-wrap">
+                <div className="searching-progress-bar-fill"></div>
+              </div>
             </div>
 
-            <button className="btn-hud-cancel" onClick={cancelSearch}>CANCELAR</button>
+            {/* Columna Derecha: Radar Cuántico y Consola Telemetría */}
+            <div className="searching-telemetry-card">
+              <div className="radar-visual-zone">
+                <div className="tactical-radar-disc">
+                  <div className="radar-grid-rings"></div>
+                  <div className="radar-crosshairs"></div>
+                  <div className="radar-sweep-line"></div>
+                  <div className="radar-blip blip-1"></div>
+                  <div className="radar-blip blip-2"></div>
+                  <div className="radar-blip blip-3"></div>
+                  <div className="radar-center-core">
+                    <Radio size={20} className="radar-core-icon animate-pulse" />
+                  </div>
+                </div>
+                <div className="radar-telemetry-pills">
+                  <div className="radar-pill">
+                    <span className="pill-lbl">TICKRATE</span>
+                    <span className="pill-val">60 Hz</span>
+                  </div>
+                  <div className="radar-pill">
+                    <span className="pill-lbl">LATENCIA</span>
+                    <span className="pill-val val-ping">18 ms</span>
+                  </div>
+                  <div className="radar-pill">
+                    <span className="pill-lbl">SERVIDORES</span>
+                    <span className="pill-val val-server">ONLINE</span>
+                  </div>
+                </div>
+              </div>
+
+              {/* Consola de Sincronización */}
+              <div className="searching-console-box">
+                <div className="console-box-header">
+                  <div className="console-window-dots">
+                    <span className="dot-red"></span>
+                    <span className="dot-yellow"></span>
+                    <span className="dot-green"></span>
+                  </div>
+                  <span className="console-title">matchmaking_daemon.sh</span>
+                  <span className="console-status-badge">LIVE</span>
+                </div>
+                <div className="console-stream-lines">
+                  <div className="console-line line-info">
+                    <span className="console-time">[00:01]</span>
+                    <span className="console-tag tag-info">[INFO]</span>
+                    <span className="console-msg">Handshake WebSocket exitoso con Nodo Alpha-7</span>
+                  </div>
+                  <div className="console-line line-mode">
+                    <span className="console-time">[00:01]</span>
+                    <span className="console-tag tag-mode">[CONFIG]</span>
+                    <span className="console-msg">
+                      {challengeCategory === 'mixed' ? '8 MODOS ARCADE' : challengeCategory === 'pragma' ? 'CÓDIGO & LÓGICA' : 'RELÁMPAGO'} • DIFICULTAD: {difficulty.toUpperCase()}
+                    </span>
+                  </div>
+                  <div className="console-line line-scan">
+                    <span className="console-time">[00:0{searchTimer}]</span>
+                    <span className="console-tag tag-scan">[SCAN]</span>
+                    <span className="console-msg animate-pulse">
+                      Sondeando pool de emparejamiento para tamaño {matchType}...
+                    </span>
+                  </div>
+                  <div className="console-line line-status">
+                    <span className="console-time">[00:0{searchTimer}]</span>
+                    <span className="console-tag tag-net">[NET]</span>
+                    <span className="console-msg">
+                      {searchTimer >= 6 ? '⚠️ Cola solitaria detectada • Evaluando asistencia de Bots' : 'Sincronizando retos cognitivos y reloj maestro'}
+                    </span>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          {/* Barra de Control Inferior */}
+          <div className="searching-bottom-controls">
+            <div className="searching-audio-status">
+              <div className="soundwave-container">
+                <div className="sw-bar bar-1"></div>
+                <div className="sw-bar bar-2"></div>
+                <div className="sw-bar bar-3"></div>
+                <div className="sw-bar bar-4"></div>
+                <div className="sw-bar bar-5"></div>
+              </div>
+              <span className="audio-label-tactical">CANAL SEGURO MULTIJUGADOR • SALA ALPHA-7</span>
+            </div>
+
+            <button 
+              type="button"
+              className="btn-searching-cancel-tactical"
+              onClick={cancelSearch}
+            >
+              <X size={15} />
+              <span>CANCELAR BÚSQUEDA</span>
+            </button>
           </div>
         </div>
       )}
 
       {/* MODAL DE CONFIRMACIÓN PROCEDER VS BOTS */}
       {showBotPromptModal && (
-        <div className="fixed inset-0 z-50 bg-slate-950/85 backdrop-blur-md flex items-center justify-center p-4 animate-fade-in">
-          <div className="bg-slate-900 border border-indigo-500/40 rounded-2xl shadow-2xl shadow-black/80 max-w-lg w-full overflow-hidden relative">
-            <div className="absolute -top-12 -right-12 w-36 h-36 bg-indigo-500/10 rounded-full blur-2xl pointer-events-none" />
-            
-            <div className="px-6 py-5 border-b border-slate-800 flex items-center justify-between bg-slate-950/50">
-              <div className="flex items-center gap-3">
-                <div className="w-10 h-10 rounded-xl bg-indigo-500/20 border border-indigo-500/40 flex items-center justify-center text-indigo-400">
+        <div className="bot-prompt-modal-overlay">
+          <div className="bot-prompt-modal-card">
+            {/* Header del Modal */}
+            <div className="bot-modal-header">
+              <div className="bot-modal-header-left">
+                <div className="bot-modal-icon-badge">
                   <Bot size={22} className="animate-pulse" />
                 </div>
-                <div>
-                  <h3 className="text-white font-bold text-base font-mono flex items-center gap-2">
-                    ¿Proceder vs Bots?
-                    <span className="text-[10px] bg-amber-500/20 text-amber-400 border border-amber-500/40 px-2 py-0.5 rounded-full font-mono">
-                      SIN RIVALES HUMANOS
-                    </span>
-                  </h3>
-                  <p className="text-xs text-slate-400 font-mono">Matchmaking en espera de confirmación</p>
+                <div className="bot-modal-title-wrap">
+                  <div className="bot-modal-title-row">
+                    <h3 className="bot-modal-title">¿Proceder vs Bots?</h3>
+                    <span className="bot-modal-tag">SIN RIVALES HUMANOS</span>
+                  </div>
+                  <p className="bot-modal-sub">Matchmaking en espera de confirmación táctica</p>
                 </div>
               </div>
               <button 
+                type="button"
                 onClick={handleCancelFromBotModal}
-                className="text-slate-400 hover:text-white p-1.5 rounded-lg hover:bg-slate-800 transition cursor-pointer"
+                className="bot-modal-close-btn"
                 title="Cerrar búsqueda"
               >
                 <X size={18} />
               </button>
             </div>
 
-            <div className="p-6 space-y-4">
-              <div className="p-4 rounded-xl bg-slate-950/60 border border-slate-800/80 font-mono text-xs text-slate-300 space-y-2">
-                <div className="flex items-center gap-2 text-indigo-400 font-semibold">
-                  <Radio size={14} className="animate-ping" />
-                  <span>ESTADO DE COLA MULTIJUGADOR:</span>
+            {/* Contenido del Modal */}
+            <div className="bot-modal-body">
+              <div className="bot-info-card">
+                <div className="bot-info-header">
+                  <Radio size={14} className="animate-pulse" />
+                  <span>ESTADO DE COLA MULTIJUGADOR</span>
                 </div>
-                <p className="text-slate-400 leading-relaxed text-[11px]">
-                  No se encontraron rivales humanos en la cola de matchmaking en este momento. Puedes iniciar la partida inmediatamente contra <strong className="text-white">bots tácticos adaptativos</strong> o reanudar la búsqueda de jugadores reales.
+                <p className="bot-info-desc">
+                  No se encontraron desarrolladores humanos activos en la cola de matchmaking en este momento. Puedes iniciar la partida inmediatamente contra <strong className="text-white">bots tácticos adaptativos</strong> o continuar la búsqueda en red.
                 </p>
-                <div className="grid grid-cols-3 gap-2 pt-2 border-t border-slate-800/60 text-[10px] text-slate-400">
-                  <div>Modo: <strong className="text-indigo-300">{matchType}</strong></div>
-                  <div>Dificultad: <strong className="text-amber-300 uppercase">{difficulty}</strong></div>
-                  <div>Stack: <strong className="text-cyan-300">{estudiante?.tecnologia_actual || 'JavaScript'}</strong></div>
+                <div className="bot-match-specs-grid">
+                  <div className="bot-spec-item">
+                    <span className="spec-lbl">MODO</span>
+                    <strong className="spec-val val-indigo">{matchType}</strong>
+                  </div>
+                  <div className="bot-spec-item">
+                    <span className="spec-lbl">DIFICULTAD</span>
+                    <strong className="spec-val val-amber">{difficulty.toUpperCase()}</strong>
+                  </div>
+                  <div className="bot-spec-item">
+                    <span className="spec-lbl">STACK</span>
+                    <strong className="spec-val val-cyan">{estudiante?.tecnologia_actual || 'JavaScript'}</strong>
+                  </div>
                 </div>
               </div>
 
-              <div className="flex flex-col sm:flex-row gap-3 pt-2">
+              {/* Botones de Decisión */}
+              <div className="bot-modal-actions">
                 <button 
+                  type="button"
                   onClick={handlePlayVsBots}
-                  className="flex-1 flex items-center justify-center gap-2 px-4 py-3 bg-gradient-to-r from-indigo-600 to-violet-600 hover:from-indigo-500 hover:to-violet-500 text-white font-bold font-mono text-xs rounded-xl shadow-lg shadow-indigo-600/30 transition-all cursor-pointer active:scale-95"
+                  className="btn-bot-action btn-play-bots"
                 >
                   <Bot size={16} />
-                  <span>Sí, Jugar vs Bots</span>
+                  <span>SÍ, JUGAR VS BOTS</span>
                 </button>
                 <button 
+                  type="button"
                   onClick={handleResumeSearch}
-                  className="flex-1 flex items-center justify-center gap-2 px-4 py-3 bg-slate-800 hover:bg-slate-700 border border-slate-700 text-slate-200 font-semibold font-mono text-xs rounded-xl transition-all cursor-pointer active:scale-95"
+                  className="btn-bot-action btn-resume-search"
                 >
-                  <Search size={15} className="text-amber-400" />
-                  <span>No, Seguir Buscando</span>
+                  <Search size={15} />
+                  <span>NO, SEGUIR BUSCANDO</span>
                 </button>
               </div>
 
               <button 
+                type="button"
                 onClick={handleCancelFromBotModal}
-                className="w-full text-center text-[11px] font-mono text-slate-500 hover:text-rose-400 py-1 transition cursor-pointer"
+                className="btn-cancel-modal-link"
               >
                 Cancelar Búsqueda y Volver al Menú
               </button>
@@ -2274,21 +2858,21 @@ function LobbyView({ estudiante, backendUrl, onUpdate, listaAmigos = [], partida
       {activeMatch && (
         <div className="active-match-container animate-scale-in">
           {/* TOP COMBAT HUD MASTER */}
-          <div className="combat-hud-master mb-4 p-3.5 bg-slate-950/90 border border-slate-800 rounded-2xl shadow-xl backdrop-blur-md">
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-3 items-center">
+          <div className="combat-hud-master">
+            <div className="combat-hud-grid">
               {/* LADO IZQUIERDO: EQUIPO NARANJA */}
-              <div className="flex items-center gap-3">
-                <div className="w-9 h-9 rounded-xl bg-orange-500/15 border border-orange-500/30 flex items-center justify-center text-base">
+              <div className="hud-team-section">
+                <div className="hud-team-icon team-orange">
                   🛡️
                 </div>
-                <div className="flex-1 min-w-0">
-                  <div className="flex justify-between items-center text-[11px] font-mono mb-1">
-                    <span className="font-bold text-orange-400">EQ. NARANJA {activeMatch.players.some(p => p.team === 'orange' && p.isSelf) && '(TÚ)'}</span>
-                    <span className="text-white font-bold">{Math.round(activeMatch.players.filter(p => p.team === 'orange').reduce((acc, c) => acc + (c.isSelf ? activeMatch.userProgress : c.progress), 0) / Math.max(1, activeMatch.players.filter(p => p.team === 'orange').length))}%</span>
+                <div className="hud-team-info">
+                  <div className="hud-team-label-row">
+                    <span className="hud-team-name orange">EQ. NARANJA {activeMatch.players.some(p => p.team === 'orange' && p.isSelf) && '(TÚ)'}</span>
+                    <span className="hud-team-pct">{Math.round(activeMatch.players.filter(p => p.team === 'orange').reduce((acc, c) => acc + (c.isSelf ? activeMatch.userProgress : c.progress), 0) / Math.max(1, activeMatch.players.filter(p => p.team === 'orange').length))}%</span>
                   </div>
-                  <div className="w-full bg-slate-900 border border-slate-800 h-2 rounded-full overflow-hidden">
+                  <div className="hud-progress-track">
                     <div 
-                      className="h-full bg-gradient-to-r from-amber-500 to-orange-500 transition-all duration-300"
+                      className="hud-progress-fill orange"
                       style={{ width: `${Math.min(100, Math.round(activeMatch.players.filter(p => p.team === 'orange').reduce((acc, c) => acc + (c.isSelf ? activeMatch.userProgress : c.progress), 0) / Math.max(1, activeMatch.players.filter(p => p.team === 'orange').length)))}%` }}
                     />
                   </div>
@@ -2296,9 +2880,9 @@ function LobbyView({ estudiante, backendUrl, onUpdate, listaAmigos = [], partida
               </div>
 
               {/* CENTRO: STATUS DEL COMBATE & TICKER */}
-              <div className="flex flex-col items-center justify-center text-center px-2">
-                <div className="flex items-center gap-2">
-                  <span className="text-[10px] font-mono font-bold bg-indigo-500/15 text-indigo-300 border border-indigo-500/30 px-2.5 py-0.5 rounded-full uppercase">
+              <div className="hud-center-status">
+                <div className="hud-center-row">
+                  <span className="hud-reto-badge">
                     RETO {activeMatch.retoActualIndice + 1}/{activeMatch.retos.length} • {(() => {
                       const t = activeMatch.retos[activeMatch.retoActualIndice]?.tipo;
                       if (t === 'refactor' || t === 'bug_hunter') return 'BUG HUNTER';
@@ -2310,38 +2894,38 @@ function LobbyView({ estudiante, backendUrl, onUpdate, listaAmigos = [], partida
                       return (t || 'TRIVIA').toUpperCase();
                     })()}
                   </span>
-                  <div className={`font-mono text-xs font-bold px-2.5 py-0.5 rounded-full border ${activeMatch.timeLeft <= 15 ? 'bg-rose-500/20 text-rose-400 border-rose-500/40 animate-pulse' : 'bg-slate-900 text-amber-400 border-slate-800'}`}>
+                  <div className={`hud-timer-pill ${activeMatch.timeLeft <= 15 ? 'danger' : 'normal'}`}>
                     ⏱️ {Math.floor(activeMatch.timeLeft / 60).toString().padStart(2, '0')}:{(activeMatch.timeLeft % 60).toString().padStart(2, '0')}
                   </div>
                 </div>
                 {/* Combat feed ticker */}
-                <div className="combat-feed-ticker mt-1.5 h-5 overflow-hidden text-[10px] font-mono text-slate-400 max-w-[280px] truncate">
+                <div className="combat-feed-ticker">
                   {combatFeed.length > 0 ? (
-                    <span className="animate-fade-in flex items-center justify-center gap-1">
-                      <span className="text-amber-400">⚡</span>
+                    <span>
+                      <span className="feed-icon">⚡</span>
                       {combatFeed[0].text}
                     </span>
                   ) : (
-                    <span className="text-slate-500">Arena activa • Telemetría sincronizada</span>
+                    <span className="feed-default">Arena activa • Telemetría sincronizada</span>
                   )}
                 </div>
               </div>
 
               {/* LADO DERECHO: EQUIPO AZUL */}
-              <div className="flex items-center gap-3">
-                <div className="flex-1 min-w-0">
-                  <div className="flex justify-between items-center text-[11px] font-mono mb-1">
-                    <span className="text-white font-bold">{Math.round(activeMatch.players.filter(p => p.team === 'blue').reduce((acc, c) => acc + (c.isSelf ? activeMatch.userProgress : c.progress), 0) / Math.max(1, activeMatch.players.filter(p => p.team === 'blue').length))}%</span>
-                    <span className="font-bold text-indigo-400">EQ. AZUL {activeMatch.players.some(p => p.team === 'blue' && p.isSelf) && '(TÚ)'}</span>
+              <div className="hud-team-section">
+                <div className="hud-team-info">
+                  <div className="hud-team-label-row">
+                    <span className="hud-team-pct">{Math.round(activeMatch.players.filter(p => p.team === 'blue').reduce((acc, c) => acc + (c.isSelf ? activeMatch.userProgress : c.progress), 0) / Math.max(1, activeMatch.players.filter(p => p.team === 'blue').length))}%</span>
+                    <span className="hud-team-name blue">EQ. AZUL {activeMatch.players.some(p => p.team === 'blue' && p.isSelf) && '(TÚ)'}</span>
                   </div>
-                  <div className="w-full bg-slate-900 border border-slate-800 h-2 rounded-full overflow-hidden">
+                  <div className="hud-progress-track">
                     <div 
-                      className="h-full bg-gradient-to-r from-indigo-500 to-cyan-400 transition-all duration-300"
+                      className="hud-progress-fill blue"
                       style={{ width: `${Math.min(100, Math.round(activeMatch.players.filter(p => p.team === 'blue').reduce((acc, c) => acc + (c.isSelf ? activeMatch.userProgress : c.progress), 0) / Math.max(1, activeMatch.players.filter(p => p.team === 'blue').length)))}%` }}
                     />
                   </div>
                 </div>
-                <div className="w-9 h-9 rounded-xl bg-indigo-500/15 border border-indigo-500/30 flex items-center justify-center text-base">
+                <div className="hud-team-icon team-blue">
                   🔮
                 </div>
               </div>
@@ -2350,10 +2934,10 @@ function LobbyView({ estudiante, backendUrl, onUpdate, listaAmigos = [], partida
 
           <div className="active-match-grid">
             {/* LADO IZQUIERDO: EL ESPACIO DE RETO */}
-            <div className="challenge-workspace-panel hud-panel-spec bg-slate-950/80 p-5 relative rounded-2xl border border-slate-800">
-              <div className="flex justify-between items-center mb-4 border-b border-slate-800 pb-3">
+            <div className="challenge-workspace-panel">
+              <div className="workspace-header">
                 <div>
-                  <span className="text-[10px] text-amber-400 font-mono tracking-widest block uppercase">
+                  <span className="workspace-mode-label">
                     MODALIDAD ACTIVA: {(() => {
                       const t = activeMatch.retos[activeMatch.retoActualIndice]?.tipo;
                       if (t === 'refactor' || t === 'bug_hunter') return 'BUG HUNTER';
@@ -2365,12 +2949,12 @@ function LobbyView({ estudiante, backendUrl, onUpdate, listaAmigos = [], partida
                       return (t || 'TRIVIA').toUpperCase();
                     })()}
                   </span>
-                  <h3 className="text-base text-white font-bold font-mono">
+                  <h3 className="workspace-title">
                     {currentChallenge?.titulo || 'Reto en progreso'}
                   </h3>
                 </div>
-                <div className="flex items-center gap-2">
-                  <span className="text-xs font-mono text-slate-400 bg-slate-900 border border-slate-800 px-2 py-1 rounded">
+                <div>
+                  <span className="workspace-lang-badge">
                     {currentChallenge?.lenguaje || 'General'}
                   </span>
                 </div>
@@ -2378,23 +2962,23 @@ function LobbyView({ estudiante, backendUrl, onUpdate, listaAmigos = [], partida
 
             {/* 1. TRIVIA TÉCNICA */}
             {tipoActual === 'trivia' && (
-              <div className="trivia-interactive-game space-y-4">
-                <div className="p-4 rounded-xl bg-slate-900/80 border border-slate-800 shadow-inner">
-                  <p className="trivia-question text-sm text-slate-100 font-mono leading-relaxed">
+              <div className="game-section">
+                <div className="game-info-box">
+                  <p className="game-text">
                     {currentChallenge.pregunta}
                   </p>
                 </div>
-                <div className="trivia-options-grid grid grid-cols-1 sm:grid-cols-2 gap-3 mt-4">
+                <div className="trivia-options-grid">
                   {(currentChallenge.opciones || []).map((opcion, idx) => (
                     <button 
                       key={idx}
                       onClick={() => handleTriviaAnswer(idx)}
-                      className="trivia-option-card flex items-center gap-3 p-3.5 bg-slate-900/90 hover:bg-indigo-600/15 border border-slate-800 hover:border-indigo-500/50 rounded-xl transition-all duration-150 text-left cursor-pointer group active:scale-[0.98]"
+                      className="trivia-option-card"
                     >
-                      <span className="option-badge px-2.5 py-1 bg-slate-800 group-hover:bg-indigo-600 text-indigo-400 group-hover:text-white rounded-lg font-bold font-mono text-xs transition-colors">
+                      <span className="option-badge">
                         {String.fromCharCode(65 + idx)}
                       </span>
-                      <span className="option-text flex-1 text-xs font-mono text-slate-300 group-hover:text-white transition-colors">{opcion}</span>
+                      <span className="option-text">{opcion}</span>
                     </button>
                   ))}
                 </div>
@@ -2403,43 +2987,39 @@ function LobbyView({ estudiante, backendUrl, onUpdate, listaAmigos = [], partida
 
             {/* 2. BUG HUNTER */}
             {tipoActual === 'bug_hunter' && (
-              <div className="bug-hunter-interactive-workspace space-y-4">
-                <div className="bg-rose-950/20 border border-rose-500/30 p-3.5 rounded-xl flex items-start gap-2.5">
-                  <Bug size={18} className="text-rose-400 mt-0.5 shrink-0" />
+              <div className="game-section">
+                <div className="bug-objective-banner">
+                  <Bug size={18} className="bug-icon" />
                   <div>
-                    <span className="text-[10px] text-rose-400 font-mono font-bold block uppercase tracking-wider">OBJETIVO: AUDITAR Y PARCHEAR CÓDIGO</span>
-                    <p className="text-xs text-slate-300 font-mono mt-0.5 leading-relaxed">
+                    <span className="bug-objective-label">OBJETIVO: AUDITAR Y PARCHEAR CÓDIGO</span>
+                    <p className="bug-objective-desc">
                       {currentChallenge.descripcion}
                     </p>
                   </div>
                 </div>
 
-                <div className="code-inspection-window bg-slate-950 rounded-xl border border-slate-800 overflow-hidden shadow-xl">
-                  <div className="flex items-center justify-between px-4 py-2 bg-slate-900/80 border-b border-slate-800 text-[11px] font-mono text-slate-400">
-                    <div className="flex items-center gap-2">
-                      <span className="w-2.5 h-2.5 rounded-full bg-rose-500/80 inline-block"></span>
+                <div className="code-inspection-window">
+                  <div className="code-window-toolbar">
+                    <div className="toolbar-dots">
+                      <span className="toolbar-dot red"></span>
                       <span>auditoria.{currentChallenge.lenguaje === 'Python' ? 'py' : currentChallenge.lenguaje === 'SQL' ? 'sql' : 'js'}</span>
                     </div>
-                    <span className="text-[10px] text-amber-400 font-semibold">Toca la línea con bug para auditar</span>
+                    <span className="toolbar-hint">Toca la línea con bug para auditar</span>
                   </div>
 
-                  <div className="p-3 font-mono text-xs overflow-x-auto space-y-1">
+                  <div className="code-lines-container">
                     {(currentChallenge.codigo_con_bug || '').split('\n').map((linea, lineIdx) => {
                       const isSelected = selectedBugLine === lineIdx;
                       return (
                         <div 
                           key={lineIdx}
                           onClick={() => setSelectedBugLine(lineIdx)}
-                          className={`flex items-center gap-3 px-2.5 py-1 rounded cursor-pointer transition-all duration-150 ${
-                            isSelected 
-                              ? 'bg-rose-950/60 border-l-4 border-rose-500 text-rose-200 shadow-sm' 
-                              : 'hover:bg-slate-900/80 text-slate-300 border-l-4 border-transparent'
-                          }`}
+                          className={`code-line-row ${isSelected ? 'selected' : ''}`}
                         >
-                          <span className="select-none text-slate-600 text-[10px] w-6 text-right font-mono">{lineIdx + 1}</span>
-                          <code className="flex-1 whitespace-pre">{linea}</code>
+                          <span className="code-line-num">{lineIdx + 1}</span>
+                          <code className="code-line-content">{linea}</code>
                           {isSelected && (
-                            <span className="text-[9px] bg-rose-500/20 text-rose-300 px-1.5 py-0.5 rounded border border-rose-500/40 uppercase font-bold shrink-0">
+                            <span className="code-line-marker">
                               Línea Marcada
                             </span>
                           )}
@@ -2449,21 +3029,21 @@ function LobbyView({ estudiante, backendUrl, onUpdate, listaAmigos = [], partida
                   </div>
                 </div>
 
-                <div className="space-y-2 mt-4">
-                  <span className="text-[10px] font-mono text-emerald-400 font-bold tracking-wider block uppercase">
+                <div>
+                  <span className="patch-selection-label">
                     SELECCIONA EL PARCHE DE CORRECCIÓN APLICABLE:
                   </span>
-                  <div className="grid grid-cols-1 gap-2.5">
+                  <div className="patch-cards-grid">
                     {(currentChallenge.opciones_correccion || currentChallenge.opciones_correcion || currentChallenge.opciones || []).map((opcion, idx) => (
                       <button 
                         key={idx}
                         onClick={() => handleTriviaAnswer(idx)}
-                        className="flex items-start gap-3 p-3 bg-slate-900/80 hover:bg-emerald-500/10 border border-slate-800 hover:border-emerald-500/40 rounded-xl transition-all text-left text-xs font-mono text-slate-300 hover:text-white cursor-pointer group active:scale-[0.99]"
+                        className="patch-card"
                       >
-                        <span className="option-badge px-2.5 py-1 bg-slate-800 group-hover:bg-emerald-600 text-emerald-400 group-hover:text-white rounded-lg font-bold shrink-0 transition-colors">
+                        <span className="option-badge">
                           {String.fromCharCode(65 + idx)}
                         </span>
-                        <pre className="flex-1 whitespace-pre-wrap font-mono text-xs overflow-x-auto"><code>{opcion}</code></pre>
+                        <pre className="patch-code-block"><code>{opcion}</code></pre>
                       </button>
                     ))}
                   </div>
@@ -2473,19 +3053,19 @@ function LobbyView({ estudiante, backendUrl, onUpdate, listaAmigos = [], partida
 
             {/* 3. CODE SORTER */}
             {tipoActual === 'code_sorter' && (
-              <div className="sorter-interactive-game space-y-4">
-                <div className="flex justify-between items-center bg-slate-900/60 p-3 rounded-xl border border-slate-800 text-xs font-mono">
-                  <p className="text-slate-300">
-                    Reordena las líneas usando <strong className="text-cyan-400">arrastrar y soltar</strong> o <strong className="text-indigo-400">toca dos tarjetas</strong> para intercambiar:
+              <div className="game-section">
+                <div className="sorter-instructions">
+                  <p>
+                    Reordena las líneas usando <strong className="sorter-hint-strong-cyan">arrastrar y soltar</strong> o <strong className="sorter-hint-strong-indigo">toca dos tarjetas</strong> para intercambiar:
                   </p>
                   {selectedSorterIndex !== null && (
-                    <span className="text-[10px] px-2 py-0.5 bg-indigo-500/20 text-indigo-300 border border-indigo-500/40 rounded-full animate-pulse">
+                    <span className="sorter-selected-indicator">
                       Línea #{selectedSorterIndex + 1} seleccionada
                     </span>
                   )}
                 </div>
 
-                <div className="sorter-lines-container space-y-2">
+                <div className="sorter-lines-container">
                   {sorterLineas.map((linea, idx) => {
                     const isSelected = selectedSorterIndex === idx;
                     return (
@@ -2515,23 +3095,19 @@ function LobbyView({ estudiante, backendUrl, onUpdate, listaAmigos = [], partida
                             setSelectedSorterIndex(null);
                           }
                         }}
-                        className={`sorter-tactical-card flex items-center justify-between p-3 rounded-xl border transition-all duration-200 cursor-pointer select-none ${
-                          isSelected 
-                            ? 'bg-indigo-950/60 border-indigo-400 shadow-lg shadow-indigo-500/20 scale-[1.01]' 
-                            : 'bg-slate-900/90 border-slate-800/80 hover:border-cyan-500/40 hover:bg-slate-900'
-                        }`}
+                        className={`sorter-tactical-card ${isSelected ? 'card-active' : 'card-default'}`}
                       >
-                        <div className="flex items-center gap-3 flex-1 min-w-0">
-                          <div className="text-slate-500 hover:text-cyan-400 cursor-grab active:cursor-grabbing p-1">
+                        <div className="sorter-card-left">
+                          <div className="sorter-grip">
                             <GripVertical size={16} />
                           </div>
-                          <span className="text-[10px] font-mono font-bold px-1.5 py-0.5 bg-slate-800 text-cyan-400 rounded">
+                          <span className="sorter-line-num">
                             #{String(idx + 1).padStart(2, '0')}
                           </span>
-                          <code className="line-code font-mono text-xs text-slate-200 whitespace-pre overflow-x-auto flex-1">{linea}</code>
+                          <code className="sorter-code-text">{linea}</code>
                         </div>
 
-                        <div className="flex items-center gap-1 ml-2 shrink-0" onClick={(e) => e.stopPropagation()}>
+                        <div className="sorter-arrows" onClick={(e) => e.stopPropagation()}>
                           <button 
                             disabled={idx === 0}
                             onClick={() => {
@@ -2539,7 +3115,7 @@ function LobbyView({ estudiante, backendUrl, onUpdate, listaAmigos = [], partida
                               [next[idx], next[idx - 1]] = [next[idx - 1], next[idx]];
                               setSorterLineas(next);
                             }}
-                            className="p-1.5 rounded-lg bg-slate-800 hover:bg-slate-700 text-slate-300 hover:text-white disabled:opacity-20 transition cursor-pointer flex items-center justify-center"
+                            className="sorter-arrow-btn"
                             title="Mover arriba"
                           >
                             <ChevronUp size={14} />
@@ -2551,7 +3127,7 @@ function LobbyView({ estudiante, backendUrl, onUpdate, listaAmigos = [], partida
                               [next[idx], next[idx + 1]] = [next[idx + 1], next[idx]];
                               setSorterLineas(next);
                             }}
-                            className="p-1.5 rounded-lg bg-slate-800 hover:bg-slate-700 text-slate-300 hover:text-white disabled:opacity-20 transition cursor-pointer flex items-center justify-center"
+                            className="sorter-arrow-btn"
                             title="Mover abajo"
                           >
                             <ChevronDown size={14} />
@@ -2564,7 +3140,7 @@ function LobbyView({ estudiante, backendUrl, onUpdate, listaAmigos = [], partida
 
                 <button 
                   onClick={verificarSorter}
-                  className="w-full mt-4 py-3 bg-gradient-to-r from-cyan-600 to-blue-600 hover:from-cyan-500 hover:to-blue-500 text-white font-mono font-bold text-xs rounded-xl shadow-lg shadow-cyan-600/20 transition cursor-pointer active:scale-98 flex items-center justify-center gap-2"
+                  className="btn-verify-action cyan"
                 >
                   <CheckCircle2 size={16} />
                   <span>VERIFICAR SECUENCIA ALGORÍTMICA</span>
@@ -2574,19 +3150,19 @@ function LobbyView({ estudiante, backendUrl, onUpdate, listaAmigos = [], partida
 
             {/* 4. FILL THE CODE */}
             {tipoActual === 'fill_code' && (
-              <div className="fillblank-interactive-game space-y-4">
-                <div className="bg-slate-900/60 p-3 rounded-xl border border-slate-800 text-xs font-mono text-slate-300">
-                  Identifica y completa los fragmentos marcados con <strong className="text-cyan-400">___1___</strong>, <strong className="text-cyan-400">___2___</strong>:
+              <div className="game-section">
+                <div className="fill-instructions">
+                  Identifica y completa los fragmentos marcados con <strong className="sorter-hint-strong-cyan">___1___</strong>, <strong className="sorter-hint-strong-cyan">___2___</strong>:
                 </div>
 
-                <pre className="bg-slate-950 border border-slate-800 p-4 rounded-xl text-xs text-slate-200 font-mono overflow-x-auto shadow-inner leading-relaxed">
+                <pre className="fill-code-preview">
                   <code>{currentChallenge.codigo_con_huecos}</code>
                 </pre>
 
                 {(currentChallenge.opciones_tokens || currentChallenge.sugerencias) && (currentChallenge.opciones_tokens || currentChallenge.sugerencias).length > 0 && (
-                  <div className="space-y-1.5">
-                    <span className="text-[10px] font-mono text-slate-400 font-semibold block uppercase">BANCO DE TOKENS DISPONIBLES:</span>
-                    <div className="flex flex-wrap gap-2">
+                  <div className="fill-token-bank">
+                    <span className="fill-token-label">BANCO DE TOKENS DISPONIBLES:</span>
+                    <div className="fill-tokens-row">
                       {(currentChallenge.opciones_tokens || currentChallenge.sugerencias).map((token, tIdx) => (
                         <button
                           key={tIdx}
@@ -2597,7 +3173,7 @@ function LobbyView({ estudiante, backendUrl, onUpdate, listaAmigos = [], partida
                               setFillRespuestas(prev => ({ ...prev, [primerVacio]: token }));
                             }
                           }}
-                          className="px-2.5 py-1 bg-slate-900 hover:bg-cyan-500/20 border border-slate-800 hover:border-cyan-500/50 text-cyan-300 rounded-lg text-xs font-mono transition cursor-pointer"
+                          className="fill-token-btn"
                         >
                           + {token}
                         </button>
@@ -2606,13 +3182,13 @@ function LobbyView({ estudiante, backendUrl, onUpdate, listaAmigos = [], partida
                   </div>
                 )}
 
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 mt-2">
+                <div className="fill-inputs-grid">
                   {Object.keys(currentChallenge.respuestas || {}).map((key) => (
-                    <div key={key} className="flex flex-col gap-1.5">
-                      <label className="text-[10px] text-cyan-400 font-mono font-bold tracking-wider">HUECO [___{key}___]:</label>
+                    <div key={key} className="fill-input-group">
+                      <label className="fill-input-label">HUECO [___{key}___]:</label>
                       <input 
                         type="text"
-                        className="bg-slate-900 border border-slate-800 focus:border-cyan-500 text-xs text-white p-2.5 font-mono rounded-xl outline-none transition"
+                        className="fill-input-field"
                         value={fillRespuestas[key] || ''}
                         onChange={(e) => setFillRespuestas(prev => ({ ...prev, [key]: e.target.value }))}
                         placeholder={`Escribe token para hueco ${key}...`}
@@ -2623,7 +3199,7 @@ function LobbyView({ estudiante, backendUrl, onUpdate, listaAmigos = [], partida
 
                 <button 
                   onClick={verificarFillBlank}
-                  className="w-full mt-4 py-3 bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-500 hover:to-teal-500 text-white font-mono font-bold text-xs rounded-xl shadow-lg shadow-emerald-600/20 transition cursor-pointer active:scale-98 flex items-center justify-center gap-2"
+                  className="btn-verify-action emerald"
                 >
                   <CheckCircle2 size={16} />
                   <span>COMPILAR Y VALIDAR SINTAXIS</span>
@@ -2633,35 +3209,35 @@ function LobbyView({ estudiante, backendUrl, onUpdate, listaAmigos = [], partida
 
             {/* 5. OUTPUT PREDICTOR */}
             {tipoActual === 'output_predictor' && (
-              <div className="output-interactive-game space-y-4">
-                <div className="mock-terminal-window bg-slate-950 border border-slate-800 rounded-xl overflow-hidden shadow-xl">
-                  <div className="terminal-header flex items-center justify-between px-4 py-2 bg-slate-900/90 border-b border-slate-800">
-                    <div className="flex items-center gap-2">
-                      <span className="w-2.5 h-2.5 rounded-full bg-rose-500/80 inline-block"></span>
-                      <span className="w-2.5 h-2.5 rounded-full bg-amber-500/80 inline-block"></span>
-                      <span className="w-2.5 h-2.5 rounded-full bg-emerald-500/80 inline-block"></span>
-                      <span className="text-[10px] font-mono text-slate-400 ml-2">bash - node runner.js</span>
+              <div className="game-section">
+                <div className="mock-terminal-window">
+                  <div className="terminal-header">
+                    <div className="terminal-dots">
+                      <span className="toolbar-dot red"></span>
+                      <span className="toolbar-dot yellow"></span>
+                      <span className="toolbar-dot green"></span>
+                      <span className="terminal-file-name">bash - node runner.js</span>
                     </div>
-                    <span className="text-[10px] font-mono text-emerald-400">stdout</span>
+                    <span className="terminal-stdout-label">stdout</span>
                   </div>
-                  <pre className="p-4 text-xs text-emerald-400 font-mono overflow-x-auto leading-relaxed">
+                  <pre className="terminal-code-body">
                     <code>{currentChallenge.codigo}</code>
                   </pre>
                 </div>
 
-                <p className="text-xs text-slate-400 font-mono">¿Qué imprimirá exactamente en consola la ejecución de este código?</p>
+                <p className="output-question">¿Qué imprimirá exactamente en consola la ejecución de este código?</p>
 
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 mt-2">
+                <div className="output-options-grid">
                   {(currentChallenge.opciones || []).map((opcion, idx) => (
                     <button 
                       key={idx}
                       onClick={() => handleTriviaAnswer(idx)}
-                      className="flex items-center gap-3 p-3.5 bg-slate-900/90 hover:bg-emerald-500/10 border border-slate-800 hover:border-emerald-500/40 rounded-xl transition text-left text-xs font-mono text-slate-300 hover:text-white cursor-pointer group active:scale-[0.98]"
+                      className="output-option-card"
                     >
-                      <span className="px-2.5 py-1 bg-slate-800 group-hover:bg-emerald-600 text-emerald-400 group-hover:text-white rounded-lg font-bold font-mono text-xs transition-colors">
+                      <span className="option-badge">
                         {String.fromCharCode(65 + idx)}
                       </span>
-                      <span className="flex-1 font-mono">{opcion}</span>
+                      <span className="option-text">{opcion}</span>
                     </button>
                   ))}
                 </div>
@@ -2670,30 +3246,30 @@ function LobbyView({ estudiante, backendUrl, onUpdate, listaAmigos = [], partida
 
             {/* 6. FLASHCARD BATTLE */}
             {tipoActual === 'flashcard' && (
-              <div className="flashcard-interactive-game space-y-4">
-                <div className="flex justify-between items-center text-xs text-slate-400 font-mono bg-slate-900/60 px-4 py-2 rounded-xl border border-slate-800">
+              <div className="game-section">
+                <div className="flashcard-header-bar">
                   <span>DUELO FLASHCARD: {currentChallenge.titulo}</span>
-                  <span className="text-indigo-400 font-bold">Tarjeta {flashcardIdx + 1} de {currentChallenge.flashcards?.length || 1}</span>
+                  <span className="flashcard-counter">Tarjeta {flashcardIdx + 1} de {currentChallenge.flashcards?.length || 1}</span>
                 </div>
 
-                <div className="card-display p-6 sm:p-8 bg-gradient-to-br from-slate-900 to-slate-950 border border-slate-800 rounded-2xl min-h-[160px] flex items-center justify-center text-center shadow-2xl relative overflow-hidden">
-                  <div className="absolute top-0 right-0 w-32 h-32 bg-indigo-500/5 rounded-full blur-2xl pointer-events-none" />
-                  <p className="text-base text-slate-100 font-mono leading-relaxed max-w-lg">
+                <div className="flashcard-display">
+                  <div className="flashcard-glow" />
+                  <p className="flashcard-statement">
                     "{currentChallenge?.flashcards?.[flashcardIdx]?.afirmacion || currentChallenge?.afirmacion || ''}"
                   </p>
                 </div>
 
-                <div className="flex gap-4 pt-2">
+                <div className="flashcard-buttons">
                   <button 
                     onClick={() => responderFlashcard(true)}
-                    className="flex-1 py-4 bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-500 hover:to-teal-500 text-white font-mono font-bold text-sm rounded-xl shadow-lg shadow-emerald-600/30 transition cursor-pointer active:scale-95 flex items-center justify-center gap-2"
+                    className="btn-verdadero"
                   >
                     <CheckCircle2 size={18} />
                     <span>VERDADERO</span>
                   </button>
                   <button 
                     onClick={() => responderFlashcard(false)}
-                    className="flex-1 py-4 bg-gradient-to-r from-rose-600 to-red-600 hover:from-rose-500 hover:to-red-500 text-white font-mono font-bold text-sm rounded-xl shadow-lg shadow-rose-600/30 transition cursor-pointer active:scale-95 flex items-center justify-center gap-2"
+                    className="btn-falso"
                   >
                     <XCircle size={18} />
                     <span>FALSO</span>
@@ -2704,40 +3280,40 @@ function LobbyView({ estudiante, backendUrl, onUpdate, listaAmigos = [], partida
 
             {/* 7. CODE TYPER */}
             {tipoActual === 'code_typer' && (
-              <div className="typer-interactive-game space-y-4">
-                <div className="grid grid-cols-3 gap-2 text-center font-mono">
-                  <div className="p-2.5 rounded-xl bg-slate-900 border border-slate-800">
-                    <span className="text-[10px] text-slate-400 block uppercase">Velocidad</span>
-                    <span className="text-base font-bold text-cyan-400">{typerWpm || Math.round((typerInput.length / 5) / (Math.max(1, (Date.now() - (typerStartTime || Date.now())) / 60000)))} WPM</span>
+              <div className="game-section">
+                <div className="typer-metrics-grid">
+                  <div className="typer-metric-card">
+                    <span className="typer-metric-label">Velocidad</span>
+                    <span className="typer-metric-value speed">{typerWpm || Math.round((typerInput.length / 5) / (Math.max(1, (Date.now() - (typerStartTime || Date.now())) / 60000)))} WPM</span>
                   </div>
-                  <div className="p-2.5 rounded-xl bg-slate-900 border border-slate-800">
-                    <span className="text-[10px] text-slate-400 block uppercase">Precisión</span>
-                    <span className="text-base font-bold text-emerald-400">
+                  <div className="typer-metric-card">
+                    <span className="typer-metric-label">Precisión</span>
+                    <span className="typer-metric-value accuracy">
                       {typerAccuracy}%
                     </span>
                   </div>
-                  <div className="p-2.5 rounded-xl bg-slate-900 border border-slate-800">
-                    <span className="text-[10px] text-slate-400 block uppercase">Progreso</span>
-                    <span className="text-base font-bold text-indigo-400">{typerInput.length} / {(currentChallenge?.codigo || '').length}</span>
+                  <div className="typer-metric-card">
+                    <span className="typer-metric-label">Progreso</span>
+                    <span className="typer-metric-value progress">{typerInput.length} / {(currentChallenge?.codigo || '').length}</span>
                   </div>
                 </div>
 
-                <div className="bg-slate-950 p-4 border border-slate-800 rounded-xl font-mono text-sm leading-relaxed overflow-x-auto shadow-inner">
+                <div className="typer-code-display">
                   {(currentChallenge?.codigo || '').split('').map((char, cIdx) => {
                     const inputChar = typerInput[cIdx];
-                    let colorClass = 'text-slate-500';
+                    let charClass = 'typer-char-pending';
                     if (inputChar !== undefined) {
-                      colorClass = inputChar === char ? 'text-emerald-400 font-bold bg-emerald-950/30' : 'text-rose-400 font-bold underline bg-rose-950/50';
+                      charClass = inputChar === char ? 'typer-char-correct' : 'typer-char-wrong';
                     } else if (cIdx === typerInput.length) {
-                      colorClass = 'text-white bg-cyan-500/40 rounded-sm animate-pulse';
+                      charClass = 'typer-char-cursor';
                     }
-                    return <span key={cIdx} className={colorClass}>{char}</span>;
+                    return <span key={cIdx} className={charClass}>{char}</span>;
                   })}
                 </div>
 
                 <input 
                   type="text"
-                  className="w-full bg-slate-900 border border-slate-800 focus:border-cyan-500 text-sm text-white p-3.5 font-mono rounded-xl outline-none transition shadow-inner"
+                  className="typer-input-field"
                   value={typerInput}
                   onChange={(e) => {
                     const val = e.target.value;
@@ -2766,32 +3342,32 @@ function LobbyView({ estudiante, backendUrl, onUpdate, listaAmigos = [], partida
 
             {/* 8. MEMORY MATCH */}
             {tipoActual === 'memory_match' && (
-              <div className="memory-interactive-game space-y-4">
-                <div className="flex justify-between items-center text-xs text-slate-400 font-mono bg-slate-900/60 px-4 py-2 rounded-xl border border-slate-800">
+              <div className="game-section">
+                <div className="memory-header-bar">
                   <span>MATRIZ CONCEPTUAL</span>
-                  <div className="flex gap-4">
-                    <span>Movimientos: <strong className="text-white">{memoryMoves}</strong></span>
-                    <span>Parejas: <strong className="text-emerald-400">{memoryCards.filter(c => c.matched).length / 2} / {memoryCards.length / 2}</strong></span>
+                  <div className="memory-stats">
+                    <span>Movimientos: <strong className="memory-stat-value">{memoryMoves}</strong></span>
+                    <span>Parejas: <strong className="memory-stat-value pairs">{memoryCards.filter(c => c.matched).length / 2} / {memoryCards.length / 2}</strong></span>
                   </div>
                 </div>
 
-                <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
+                <div className="memory-grid">
                   {memoryCards.map((carta) => (
                     <button 
                       key={carta.id}
                       onClick={() => voltearCartaMemory(carta.id)}
-                      className={`memory-card h-[96px] p-3 rounded-xl font-mono text-xs flex items-center justify-center text-center transition-all duration-200 border cursor-pointer ${
+                      className={`memory-card ${
                         carta.matched 
-                          ? 'bg-emerald-950/40 border-emerald-500/50 text-emerald-300 shadow-lg shadow-emerald-500/10' 
+                          ? 'card-matched' 
                           : carta.flipped 
-                            ? 'bg-slate-900 border-cyan-400 text-cyan-300 shadow-lg shadow-cyan-500/15' 
-                            : 'bg-slate-950 border-slate-800/80 text-slate-500 hover:border-slate-700 hover:text-slate-300'
+                            ? 'card-flipped' 
+                            : 'card-hidden'
                       }`}
                     >
                       {carta.matched || carta.flipped ? (
-                        <span className="leading-snug">{carta.texto}</span>
+                        <span className="memory-card-text">{carta.texto}</span>
                       ) : (
-                        <span className="text-xl opacity-30">🧩</span>
+                        <span className="memory-card-hidden-icon">🧩</span>
                       )}
                     </button>
                   ))}
@@ -2801,24 +3377,24 @@ function LobbyView({ estudiante, backendUrl, onUpdate, listaAmigos = [], partida
 
             {/* RETOS COMPLEMENTARIOS ZEN / TINDER */}
             {(tipoActual === 'zen' || tipoActual === 'tinder') && (
-              <div className="code-interactive-game">
-                <p className="text-xs text-slate-400 mb-3 font-mono">
+              <div className="game-section">
+                <p className="game-text">
                   {currentChallenge.descripcion}
                 </p>
                 
                 <textarea
-                  className="code-textarea font-mono text-xs w-full h-[220px] bg-slate-900 border border-slate-800 text-emerald-400 p-3 mb-4 rounded-xl"
+                  className="code-textarea-game"
                   value={activeMatch.userCodigoInput}
                   onChange={(e) => setActiveMatch(prev => ({ ...prev, userCodigoInput: e.target.value }))}
                 />
 
-                <div className="flex justify-between items-center">
-                  <span className="text-[10px] text-amber-500 font-mono">
+                <div className="code-game-footer">
+                  <span className="code-game-hint">
                     {currentChallenge.guia}
                   </span>
                   <button 
                     onClick={handleCodeSubmit}
-                    className="hud-btn bg-emerald-600 hover:bg-emerald-500 text-white font-bold py-2 px-6 text-xs rounded-xl"
+                    className="btn-compile-submit"
                   >
                     COMPILAR Y ENVIAR CÓDIGO
                   </button>
@@ -2827,35 +3403,33 @@ function LobbyView({ estudiante, backendUrl, onUpdate, listaAmigos = [], partida
             )}
 
             {activeMatch.userFinished && (
-              <div className="finished-overlay absolute inset-0 bg-slate-950/90 flex flex-col items-center justify-center text-center p-6 z-10">
-                <Award size={48} className="text-[#00ffcc] animate-bounce mb-3" />
-                <h3 className="text-white font-mono font-bold text-lg">RETOS COMPLETADOS</h3>
-                <p className="text-xs text-slate-400 max-w-xs mt-1">
+              <div className="finished-overlay">
+                <Award size={48} className="finished-icon" />
+                <h3 className="finished-title">RETOS COMPLETADOS</h3>
+                <p className="finished-desc">
                   Has resuelto todos los desafíos de la simulación. Esperando a que los demás participantes finalicen sus respuestas...
                 </p>
-                <div className="spinner-hud mt-4 animate-spin w-6 h-6 border-2 border-t-indigo-500 border-slate-800 rounded-full" />
+                <div className="finished-spinner" />
               </div>
             )}
           </div>
 
           {/* LADO DERECHO: TELEMETRÍA Y CLASIFICACIONES EN TIEMPO REAL */}
-          <div className="match-squads-telemetry flex flex-col gap-4">
+          <div className="match-squads-telemetry">
             {/* 1. HUD DE CLASIFICACIONES EN TIEMPO REAL (LIVE LEADERBOARD) */}
-            <div className="hud-panel-spec p-4 bg-slate-950/90 border border-indigo-500/30 shadow-lg shadow-black/40 rounded-lg relative overflow-hidden">
-              <div className="flex justify-between items-center mb-3 pb-2 border-b border-indigo-500/20">
-                <div className="flex items-center gap-2">
-                  <Trophy size={16} className="text-amber-400 animate-bounce" />
-                  <span className="text-[11px] text-indigo-300 font-bold font-mono tracking-widest uppercase">
-                    CLASIFICACIÓN EN VIVO
-                  </span>
+            <div className="telemetry-panel">
+              <div className="telemetry-header">
+                <div className="telemetry-title">
+                  <Trophy size={16} className="text-amber-400" />
+                  <span>CLASIFICACIÓN EN VIVO</span>
                 </div>
-                <span className="text-[9px] font-mono text-emerald-400 px-2 py-0.5 rounded bg-emerald-500/10 border border-emerald-500/30 animate-pulse font-bold">
+                <span className="telemetry-live-badge">
                   ● EN TIEMPO REAL
                 </span>
               </div>
 
               {/* Ranking ordenado dinámicamente de todos los operadores */}
-              <div className="flex flex-col gap-2">
+              <div className="leaderboard-list">
                 {[...activeMatch.players]
                   .sort((a, b) => {
                     const scoreA = (a.progress * 10) - (a.errors * 15) - (a.time || 0);
@@ -2867,47 +3441,46 @@ function LobbyView({ estudiante, backendUrl, onUpdate, listaAmigos = [], partida
                     const rankBadge = rankIdx === 0 ? '🥇 1º' : rankIdx === 1 ? '🥈 2º' : rankIdx === 2 ? '🥉 3º' : `${rankIdx + 1}º`;
                     const isOrange = player.team === 'orange';
                     const teamColor = isOrange ? '#f97316' : '#818cf8';
-                    const teamBg = isOrange ? 'bg-orange-500/10 border-orange-500/30' : 'bg-indigo-500/10 border-indigo-500/30';
 
                     return (
                       <div 
                         key={player.id} 
-                        className={`flex items-center justify-between p-2 rounded-xl border transition-all duration-300 ${player.isSelf ? 'bg-indigo-600/15 border-indigo-500/50 shadow-md shadow-indigo-500/10' : 'bg-slate-900/60 border-slate-800'}`}
+                        className={`leaderboard-player-row ${player.isSelf ? 'is-self' : 'row-default'}`}
                       >
-                        <div className="flex items-center gap-2 flex-1 min-w-0">
-                          <span className={`text-[10px] font-bold px-1.5 py-0.5 rounded font-mono ${rankIdx === 0 ? 'bg-amber-500/20 text-amber-300 border border-amber-500/40' : 'bg-slate-800 text-slate-300'}`}>
+                        <div className="player-left-info">
+                          <span className={`player-rank-badge ${rankIdx === 0 ? 'rank-first' : 'rank-other'}`}>
                             {rankBadge}
                           </span>
-                          <span className="text-sm">{player.avatar}</span>
-                          <div className="flex flex-col min-w-0 flex-1">
-                            <div className="flex items-center gap-1.5">
-                              <span className="text-[11px] font-bold text-white truncate">
+                          <span className="player-avatar">{player.avatar}</span>
+                          <div className="player-info-col">
+                            <div className="player-name-row">
+                              <span className="player-name">
                                 {player.nombre}
                               </span>
-                              {player.isSelf && <span className="text-[8px] text-indigo-300 font-bold px-1 bg-indigo-500/10 rounded border border-indigo-500/30">TÚ</span>}
-                              <span className={`text-[8px] px-1 py-0.2 rounded border font-bold uppercase ${teamBg}`} style={{ color: teamColor }}>
+                              {player.isSelf && <span className="player-self-tag">TÚ</span>}
+                              <span className={`player-team-tag ${isOrange ? 'tag-orange' : 'tag-blue'}`}>
                                 {isOrange ? 'NARANJA' : 'AZUL'}
                               </span>
                             </div>
-                            <div className="flex items-center gap-2 text-[9px] text-slate-400 mt-0.5">
+                            <div className="player-stats-row">
                               <span>Progreso: <strong className="text-white">{player.progress}%</strong></span>
                               <span>•</span>
-                              <span className={player.errors > 0 ? 'text-rose-400 font-bold' : 'text-emerald-400'}>
+                              <span className={player.errors > 0 ? 'player-stat-errors' : 'player-stat-clean'}>
                                 {player.errors > 0 ? `${player.errors} err` : 'Limpio'}
                               </span>
                             </div>
                           </div>
                         </div>
 
-                        <div className="flex flex-col items-end gap-1 ml-2">
-                          <div className="w-16 bg-slate-800 h-1.5 rounded-full overflow-hidden">
+                        <div className="player-progress-mini">
+                          <div className="player-progress-mini-track">
                             <div 
-                              className="h-full transition-all duration-300"
+                              className="player-progress-mini-fill"
                               style={{ width: `${player.progress}%`, backgroundColor: teamColor }}
                             />
                           </div>
-                          <span className="text-[8px] font-mono text-slate-400">
-                            {player.finished ? <span className="text-emerald-400 font-bold">¡LISTO!</span> : `${player.progress}%`}
+                          <span className={`player-mini-status ${player.finished ? 'done' : ''}`}>
+                            {player.finished ? '¡LISTO!' : `${player.progress}%`}
                           </span>
                         </div>
                       </div>
@@ -2917,29 +3490,29 @@ function LobbyView({ estudiante, backendUrl, onUpdate, listaAmigos = [], partida
             </div>
 
             {/* EQUIPO NARANJA */}
-            <div className="hud-panel-spec p-4 bg-orange-500/5 border-orange-500/20 rounded-lg">
-              <span className="text-[10px] text-orange-400 font-bold font-mono block mb-3 tracking-widest">
+            <div className="team-telemetry-panel team-orange">
+              <span className="team-telemetry-label orange">
                 EQUIPO NARANJA {activeMatch.players.some(p => p.team === 'orange' && p.isSelf) ? '(TU EQUIPO)' : '(RIVALES)'}
               </span>
 
-              <div className="flex flex-col gap-3">
+              <div className="team-players-list">
                 {activeMatch.players.filter(p => p.team === 'orange').map(player => (
-                  <div key={player.id} className="player-progress-bar-spec font-mono">
-                    <div className="flex justify-between items-center text-[10px] mb-1">
-                      <span className="text-white font-bold flex items-center gap-1">
-                        {player.avatar} {player.nombre} {player.isSelf && <span className="text-[9px] text-indigo-300 font-bold">(Tú)</span>}
+                  <div key={player.id} className="player-progress-bar-spec">
+                    <div className="player-bar-header">
+                      <span className="player-bar-name">
+                        {player.avatar} {player.nombre} {player.isSelf && <span className="player-bar-self-tag">(Tú)</span>}
                       </span>
-                      <span className={player.errors > 0 ? 'text-rose-500' : 'text-slate-400'}>
+                      <span className={`player-bar-error-status ${player.errors > 0 ? 'has-errors' : 'clean'}`}>
                         {player.errors > 0 ? `⚠️ ${player.errors} err` : 'Limpio'}
                       </span>
                     </div>
-                    <div className="progress-track bg-slate-900 border border-slate-800 h-2.5 rounded-full overflow-hidden flex">
+                    <div className="progress-track">
                       <div 
-                        className="progress-fill bg-orange-500 h-full transition-all duration-300"
+                        className="progress-fill fill-orange"
                         style={{ width: `${player.progress}%` }}
                       />
                     </div>
-                    <div className="flex justify-between text-[8px] text-slate-500 mt-0.5">
+                    <div className="player-bar-footer">
                       <span>Progreso: {player.progress}%</span>
                       <span>{player.finished ? '¡TERMINÓ!' : 'Resolviendo...'}</span>
                     </div>
@@ -2949,29 +3522,29 @@ function LobbyView({ estudiante, backendUrl, onUpdate, listaAmigos = [], partida
             </div>
 
             {/* EQUIPO AZUL */}
-            <div className="hud-panel-spec p-4 bg-indigo-500/5 border-indigo-500/20 rounded-lg">
-              <span className="text-[10px] text-indigo-400 font-bold font-mono block mb-3 tracking-widest">
+            <div className="team-telemetry-panel team-blue">
+              <span className="team-telemetry-label blue">
                 EQUIPO AZUL {activeMatch.players.some(p => p.team === 'blue' && p.isSelf) ? '(TU EQUIPO)' : '(RIVALES)'}
               </span>
 
-              <div className="flex flex-col gap-3">
+              <div className="team-players-list">
                 {activeMatch.players.filter(p => p.team === 'blue').map(player => (
-                  <div key={player.id} className="player-progress-bar-spec font-mono">
-                    <div className="flex justify-between items-center text-[10px] mb-1">
-                      <span className="text-white font-bold flex items-center gap-1">
-                        {player.avatar} {player.nombre} {player.isSelf && <span className="text-[9px] text-indigo-300 font-bold">(Tú)</span>}
+                  <div key={player.id} className="player-progress-bar-spec">
+                    <div className="player-bar-header">
+                      <span className="player-bar-name">
+                        {player.avatar} {player.nombre} {player.isSelf && <span className="player-bar-self-tag">(Tú)</span>}
                       </span>
-                      <span className={player.errors > 0 ? 'text-rose-500' : 'text-slate-400'}>
+                      <span className={`player-bar-error-status ${player.errors > 0 ? 'has-errors' : 'clean'}`}>
                         {player.errors > 0 ? `⚠️ ${player.errors} err` : 'Limpio'}
                       </span>
                     </div>
-                    <div className="progress-track bg-slate-900 border border-slate-800 h-2.5 rounded-full overflow-hidden flex">
+                    <div className="progress-track">
                       <div 
-                        className="progress-fill bg-indigo-500 h-full transition-all duration-300"
+                        className="progress-fill fill-blue"
                         style={{ width: `${player.progress}%` }}
                       />
                     </div>
-                    <div className="flex justify-between text-[8px] text-slate-500 mt-0.5">
+                    <div className="player-bar-footer">
                       <span>Progreso: {player.progress}%</span>
                       <span>{player.finished ? '¡TERMINÓ!' : 'Resolviendo...'}</span>
                     </div>
@@ -2986,110 +3559,90 @@ function LobbyView({ estudiante, backendUrl, onUpdate, listaAmigos = [], partida
 
       {/* 5. TABLA ÉPICA DE RESULTADOS DE PARTIDA */}
       {battleResult && (
-        <div className="epic-battle-result-container p-6 sm:p-8 rounded-3xl bg-slate-950/95 border border-indigo-500/30 shadow-2xl shadow-black/90 max-w-4xl mx-auto my-6 relative overflow-hidden backdrop-blur-xl animate-fade-in">
+        <div className="epic-battle-result-container">
           {/* Ambient Glows */}
-          <div className={`absolute -top-32 -left-32 w-72 h-72 rounded-full blur-3xl pointer-events-none ${battleResult.victoria ? 'bg-emerald-500/20' : 'bg-rose-500/15'}`} />
-          <div className={`absolute -bottom-32 -right-32 w-72 h-72 rounded-full blur-3xl pointer-events-none ${battleResult.victoria ? 'bg-cyan-500/20' : 'bg-amber-500/15'}`} />
+          <div className={`result-ambient-glow result-glow-tl ${battleResult.victoria ? 'win' : 'lose'}`} />
+          <div className={`result-ambient-glow result-glow-br ${battleResult.victoria ? 'win' : 'lose'}`} />
 
           {/* Banner de Victoria o Derrota */}
-          <div className="text-center relative z-10 space-y-3 mb-8">
-            <div className="inline-flex items-center justify-center">
-              <div className={`w-20 h-20 rounded-2xl flex items-center justify-center shadow-xl relative ${
-                battleResult.victoria 
-                  ? 'bg-gradient-to-br from-emerald-500/20 to-cyan-500/20 border-2 border-emerald-400 text-emerald-300 shadow-emerald-500/20' 
-                  : 'bg-gradient-to-br from-amber-500/20 to-rose-500/20 border-2 border-amber-400 text-amber-300 shadow-amber-500/20'
-              }`}>
+          <div className="result-banner">
+            <div className="result-icon-container">
+              <div className={`result-icon-badge ${battleResult.victoria ? 'win' : 'lose'}`}>
                 {battleResult.victoria ? (
-                  <Trophy size={42} className="animate-bounce" />
+                  <Trophy size={42} />
                 ) : (
-                  <ShieldAlert size={42} className="animate-pulse" />
+                  <ShieldAlert size={42} />
                 )}
-                <div className={`absolute inset-0 rounded-2xl animate-ping opacity-25 pointer-events-none ${battleResult.victoria ? 'bg-emerald-400' : 'bg-amber-400'}`} />
+                <div className={`result-icon-ping ${battleResult.victoria ? 'win' : 'lose'}`} />
               </div>
             </div>
 
-            <div className="space-y-1">
-              <span className={`text-[11px] font-mono font-extrabold uppercase tracking-widest px-3 py-1 rounded-full border inline-block ${
-                battleResult.victoria 
-                  ? 'bg-emerald-500/10 border-emerald-500/40 text-emerald-400' 
-                  : 'bg-amber-500/10 border-amber-500/40 text-amber-400'
-              }`}>
+            <div>
+              <span className={`result-status-tag ${battleResult.victoria ? 'win' : 'lose'}`}>
                 {battleResult.victoria ? '✦ VICTORIA TÁCTICA DE LA ARENA ✦' : '🛡️ SIMULACIÓN FINALIZADA • RETO NO SUPERADO'}
               </span>
-              <h2 className={`text-2xl sm:text-3xl font-black font-mono tracking-tight ${
-                battleResult.victoria 
-                  ? 'text-transparent bg-clip-text bg-gradient-to-r from-emerald-400 via-teal-300 to-cyan-400' 
-                  : 'text-transparent bg-clip-text bg-gradient-to-r from-amber-300 via-orange-300 to-rose-400'
-              }`}>
+              <h2 className={`result-main-title ${battleResult.victoria ? 'win' : 'lose'}`}>
                 {battleResult.victoria ? '¡MISIÓN CONQUISTADA CON ÉXITO!' : 'DEFENSA INCOMPLETA'}
               </h2>
-              <p className="text-xs sm:text-sm font-mono text-slate-400 max-w-xl mx-auto leading-relaxed">
+              <p className="result-message">
                 {battleResult.mensaje}
               </p>
             </div>
 
             {/* Marcador Global de Equipos */}
-            <div className="flex items-center justify-center gap-3 pt-2">
-              <div className={`px-4 py-2 rounded-xl border font-mono text-xs flex items-center gap-2 ${
-                battleResult.orangeTeamScore >= battleResult.blueTeamScore 
-                  ? 'bg-orange-500/20 border-orange-500/50 text-orange-300 font-bold shadow-md shadow-orange-500/10' 
-                  : 'bg-slate-900/60 border-slate-800 text-slate-400'
-              }`}>
-                <span className="w-2 h-2 rounded-full bg-orange-400"></span>
+            <div className="result-team-scores">
+              <div className={`result-team-score-card ${battleResult.orangeTeamScore >= battleResult.blueTeamScore ? 'winner-orange' : 'loser'}`}>
+                <span className="team-dot orange"></span>
                 <span>EQ. NARANJA: <strong>{battleResult.orangeTeamScore} PTS</strong></span>
-                {battleResult.orangeTeamScore >= battleResult.blueTeamScore && <span className="text-[10px] text-amber-300 font-bold">🏆 GANA</span>}
+                {battleResult.orangeTeamScore >= battleResult.blueTeamScore && <span className="win-crown">🏆 GANA</span>}
               </div>
 
-              <span className="text-slate-600 font-bold text-xs">VS</span>
+              <span className="result-vs-divider">VS</span>
 
-              <div className={`px-4 py-2 rounded-xl border font-mono text-xs flex items-center gap-2 ${
-                battleResult.blueTeamScore >= battleResult.orangeTeamScore 
-                  ? 'bg-indigo-500/20 border-indigo-500/50 text-indigo-300 font-bold shadow-md shadow-indigo-500/10' 
-                  : 'bg-slate-900/60 border-slate-800 text-slate-400'
-              }`}>
-                <span className="w-2 h-2 rounded-full bg-indigo-400"></span>
+              <div className={`result-team-score-card ${battleResult.blueTeamScore >= battleResult.orangeTeamScore ? 'winner-blue' : 'loser'}`}>
+                <span className="team-dot blue"></span>
                 <span>EQ. AZUL: <strong>{battleResult.blueTeamScore} PTS</strong></span>
-                {battleResult.blueTeamScore >= battleResult.orangeTeamScore && <span className="text-[10px] text-indigo-300 font-bold">🏆 GANA</span>}
+                {battleResult.blueTeamScore >= battleResult.orangeTeamScore && <span className="win-crown">🏆 GANA</span>}
               </div>
             </div>
           </div>
 
           {/* 4 Tarjetas de Desglose de Recompensas */}
-          <div className="grid grid-cols-2 sm:grid-cols-4 gap-3.5 mb-8">
-            <div className="reward-stat-card p-4 rounded-2xl bg-slate-900/80 border border-indigo-500/30 text-center relative overflow-hidden group hover:border-indigo-500/60 transition-all">
-              <div className="flex justify-center mb-1.5 text-indigo-400">
+          <div className="rewards-grid">
+            <div className="reward-stat-card border-indigo">
+              <div className="reward-card-icon indigo">
                 <Trophy size={20} />
               </div>
-              <span className="text-xl sm:text-2xl font-black font-mono text-white block">+{battleResult.rankGanado}</span>
-              <span className="text-[10px] font-mono font-bold text-indigo-300 tracking-wider block uppercase">RANK POINTS</span>
-              <span className="text-[9px] text-slate-500 font-mono mt-0.5 block">Liga de Competidores</span>
+              <span className="reward-card-value white">+{battleResult.rankGanado}</span>
+              <span className="reward-card-label indigo">RANK POINTS</span>
+              <span className="reward-card-sub">Liga de Competidores</span>
             </div>
 
-            <div className="reward-stat-card p-4 rounded-2xl bg-slate-900/80 border border-emerald-500/30 text-center relative overflow-hidden group hover:border-emerald-500/60 transition-all">
-              <div className="flex justify-center mb-1.5 text-emerald-400">
+            <div className="reward-stat-card border-emerald">
+              <div className="reward-card-icon emerald">
                 <Zap size={20} />
               </div>
-              <span className="text-xl sm:text-2xl font-black font-mono text-emerald-300 block">+{battleResult.xpGanado || 20}</span>
-              <span className="text-[10px] font-mono font-bold text-emerald-400 tracking-wider block uppercase">EXP ACADÉMICA</span>
-              <span className="text-[9px] text-slate-500 font-mono mt-0.5 block">Nivel del Desarrollador</span>
+              <span className="reward-card-value emerald">+{battleResult.xpGanado || 20}</span>
+              <span className="reward-card-label emerald">EXP ACADÉMICA</span>
+              <span className="reward-card-sub">Nivel del Desarrollador</span>
             </div>
 
-            <div className="reward-stat-card p-4 rounded-2xl bg-slate-900/80 border border-amber-500/30 text-center relative overflow-hidden group hover:border-amber-500/60 transition-all">
-              <div className="flex justify-center mb-1.5 text-amber-400">
+            <div className="reward-stat-card border-amber">
+              <div className="reward-card-icon amber">
                 <Flame size={20} />
               </div>
-              <span className="text-xl sm:text-2xl font-black font-mono text-amber-300 block">+{battleResult.shardsGanado}</span>
-              <span className="text-[10px] font-mono font-bold text-amber-400 tracking-wider block uppercase">SILICON SHARDS</span>
-              <span className="text-[9px] text-slate-500 font-mono mt-0.5 block">Tienda y Forja Santuario</span>
+              <span className="reward-card-value amber">+{battleResult.shardsGanado}</span>
+              <span className="reward-card-label amber">SILICON SHARDS</span>
+              <span className="reward-card-sub">Tienda y Forja Santuario</span>
             </div>
 
-            <div className="reward-stat-card p-4 rounded-2xl bg-slate-900/80 border border-cyan-500/30 text-center relative overflow-hidden group hover:border-cyan-500/60 transition-all">
-              <div className="flex justify-center mb-1.5 text-cyan-400">
+            <div className="reward-stat-card border-cyan">
+              <div className="reward-card-icon cyan">
                 <Sparkles size={20} />
               </div>
-              <span className="text-xl sm:text-2xl font-black font-mono text-cyan-300 block">+{battleResult.esenciaGanada || 0}</span>
-              <span className="text-[10px] font-mono font-bold text-cyan-400 tracking-wider block uppercase">ESENCIA TEC.</span>
-              <span className="text-[9px] text-slate-500 font-mono mt-0.5 block">{battleResult.techNombre || 'JavaScript'}</span>
+              <span className="reward-card-value cyan">+{battleResult.esenciaGanada || 0}</span>
+              <span className="reward-card-label cyan">ESENCIA TEC.</span>
+              <span className="reward-card-sub">{battleResult.techNombre || 'JavaScript'}</span>
             </div>
           </div>
 
@@ -3103,39 +3656,39 @@ function LobbyView({ estudiante, backendUrl, onUpdate, listaAmigos = [], partida
             const fastSolver = selfPlayer && (selfPlayer.time || 60) <= 45;
 
             return (
-              <div className="mb-8 p-4 rounded-2xl bg-slate-900/60 border border-slate-800/80">
-                <div className="flex items-center gap-2 mb-3">
-                  <Award size={16} className="text-amber-400" />
-                  <span className="text-[11px] font-mono font-bold text-slate-300 uppercase tracking-wider">
+              <div className="medals-panel">
+                <div className="medals-header">
+                  <Award size={16} className="icon" />
+                  <span className="medals-title">
                     DISTINCIONES Y MEDALLAS DE COMBATE
                   </span>
                 </div>
-                <div className="flex flex-wrap gap-2.5">
+                <div className="medals-list">
                   {isMvp && (
-                    <div className="combat-medal-badge px-3 py-1.5 rounded-xl bg-amber-500/15 border border-amber-500/40 text-amber-300 flex items-center gap-2 text-xs font-mono font-bold shadow-sm shadow-amber-500/10">
+                    <div className="combat-medal-badge medal-mvp">
                       <span>👑</span>
                       <span>MVP de la Arena</span>
                     </div>
                   )}
                   {zeroErrors && (
-                    <div className="combat-medal-badge px-3 py-1.5 rounded-xl bg-emerald-500/15 border border-emerald-500/40 text-emerald-300 flex items-center gap-2 text-xs font-mono font-bold shadow-sm shadow-emerald-500/10">
+                    <div className="combat-medal-badge medal-precision">
                       <ShieldCheck size={14} />
                       <span>Precisión Quirúrgica (0 Errores)</span>
                     </div>
                   )}
                   {fullProgress && (
-                    <div className="combat-medal-badge px-3 py-1.5 rounded-xl bg-cyan-500/15 border border-cyan-500/40 text-cyan-300 flex items-center gap-2 text-xs font-mono font-bold shadow-sm shadow-cyan-500/10">
+                    <div className="combat-medal-badge medal-complete">
                       <Target size={14} />
                       <span>100% Retos Conquistados</span>
                     </div>
                   )}
                   {fastSolver && (
-                    <div className="combat-medal-badge px-3 py-1.5 rounded-xl bg-violet-500/15 border border-violet-500/40 text-violet-300 flex items-center gap-2 text-xs font-mono font-bold shadow-sm shadow-violet-500/10">
+                    <div className="combat-medal-badge medal-speed">
                       <Zap size={14} />
                       <span>Velocista del Código (&lt;45s)</span>
                     </div>
                   )}
-                  <div className="combat-medal-badge px-3 py-1.5 rounded-xl bg-slate-800/60 border border-slate-700/60 text-slate-400 flex items-center gap-2 text-xs font-mono">
+                  <div className="combat-medal-badge medal-default">
                     <span>⚔️</span>
                     <span>8 Minijuegos Sincronizados</span>
                   </div>
@@ -3145,18 +3698,18 @@ function LobbyView({ estudiante, backendUrl, onUpdate, listaAmigos = [], partida
           })()}
 
           {/* TABLA DETALLADA DE POSICIONES */}
-          <div className="detailed-scoreboard-hud text-left space-y-3">
-            <div className="flex items-center justify-between pb-2 border-b border-slate-800">
-              <span className="text-xs text-indigo-300 font-mono font-bold tracking-wider uppercase flex items-center gap-2">
+          <div className="detailed-scoreboard-hud">
+            <div className="scoreboard-header">
+              <span className="scoreboard-title">
                 <Trophy size={14} className="text-amber-400" />
                 CLASIFICACIÓN FINAL Y TELEMETRÍA DE OPERADORES
               </span>
-              <span className="text-[10px] text-slate-400 font-mono">
+              <span className="scoreboard-count">
                 {battleResult.scoreDetalle.length} Participantes
               </span>
             </div>
 
-            <div className="scoreboard-grid flex flex-col gap-2">
+            <div className="scoreboard-grid">
               {battleResult.scoreDetalle.map((player, idx) => {
                 const rankBadge = idx === 0 ? '🥇 1º' : idx === 1 ? '🥈 2º' : idx === 2 ? '🥉 3º' : `${idx + 1}º`;
                 const isOrange = player.team === 'orange';
@@ -3164,76 +3717,56 @@ function LobbyView({ estudiante, backendUrl, onUpdate, listaAmigos = [], partida
                 return (
                   <div 
                     key={player.id} 
-                    className={`flex flex-col sm:flex-row items-start sm:items-center justify-between p-3.5 rounded-xl border transition-all duration-200 gap-3 ${
-                      player.isSelf 
-                        ? 'bg-indigo-600/15 border-indigo-500/60 shadow-lg shadow-indigo-500/10' 
-                        : isOrange
-                        ? 'bg-slate-900/70 border-orange-500/20'
-                        : 'bg-slate-900/70 border-indigo-500/20'
-                    }`}
+                    className={`scoreboard-player-card ${player.isSelf ? 'is-self' : isOrange ? 'team-orange' : 'team-blue'}`}
                   >
-                    <div className="flex items-center gap-3 flex-1 min-w-0">
-                      <span className={`text-xs font-mono font-black px-2 py-1 rounded-lg ${
-                        idx === 0 
-                          ? 'bg-amber-500/20 text-amber-300 border border-amber-500/50 shadow-sm' 
-                          : idx === 1
-                          ? 'bg-slate-300/20 text-slate-200 border border-slate-400/40'
-                          : idx === 2
-                          ? 'bg-amber-700/20 text-amber-400 border border-amber-700/40'
-                          : 'bg-slate-800 text-slate-400'
-                      }`}>
+                    <div className="scoreboard-player-left">
+                      <span className={`scoreboard-rank ${idx === 0 ? 'gold' : idx === 1 ? 'silver' : idx === 2 ? 'bronze' : 'rank-default'}`}>
                         {rankBadge}
                       </span>
 
-                      <span className="text-xl select-none">{player.avatar}</span>
+                      <span className="scoreboard-avatar">{player.avatar}</span>
 
-                      <div className="min-w-0">
-                        <div className="flex items-center gap-2">
-                          <span className="text-xs sm:text-sm font-bold text-white font-mono truncate">
-                            {player.nombre}
-                          </span>
+                      <div className="scoreboard-player-info">
+                        <div className="scoreboard-name">
+                          <span>{player.nombre}</span>
                           {player.isSelf && (
-                            <span className="text-[9px] bg-indigo-500/30 text-indigo-300 border border-indigo-400/50 px-1.5 py-0.5 rounded font-mono font-bold">
+                            <span className="scoreboard-self-tag">
                               TÚ
                             </span>
                           )}
                         </div>
-                        <div className="flex items-center gap-2 mt-0.5">
-                          <span className={`text-[9px] font-mono font-bold px-1.5 py-0.2 rounded border ${
-                            isOrange 
-                              ? 'bg-orange-500/15 border-orange-500/40 text-orange-400' 
-                              : 'bg-indigo-500/15 border-indigo-500/40 text-indigo-400'
-                          }`}>
+                        <div className="scoreboard-team-meta">
+                          <span className={`scoreboard-team-tag ${isOrange ? 'orange' : 'blue'}`}>
                             {isOrange ? 'EQ. NARANJA' : 'EQ. AZUL'}
                           </span>
-                          <span className="text-[10px] text-slate-400 font-mono">
+                          <span className="scoreboard-tech">
                             {player.tech || 'Dev'}
                           </span>
                         </div>
                       </div>
                     </div>
 
-                    <div className="flex items-center gap-4 sm:gap-6 self-end sm:self-center font-mono text-xs">
-                      <div className="text-right">
-                        <span className="text-[10px] text-slate-500 block">PROGRESO</span>
-                        <span className="text-xs font-bold text-cyan-300">⚡ {player.progress}%</span>
+                    <div className="scoreboard-player-stats">
+                      <div className="stat-col">
+                        <span className="stat-col-label">PROGRESO</span>
+                        <span className="stat-col-value cyan">⚡ {player.progress}%</span>
                       </div>
 
-                      <div className="text-right">
-                        <span className="text-[10px] text-slate-500 block">PRECISIÓN</span>
-                        <span className={`text-xs font-bold ${player.errors === 0 ? 'text-emerald-400' : 'text-rose-400'}`}>
+                      <div className="stat-col">
+                        <span className="stat-col-label">PRECISIÓN</span>
+                        <span className={`stat-col-value ${player.errors === 0 ? 'clean' : 'has-errors'}`}>
                           {player.errors === 0 ? '✓ Limpio' : `⚠️ ${player.errors} err`}
                         </span>
                       </div>
 
-                      <div className="text-right">
-                        <span className="text-[10px] text-slate-500 block">TIEMPO</span>
-                        <span className="text-xs text-slate-300">⏱️ {player.time ? `${player.time}s` : '--'}</span>
+                      <div className="stat-col">
+                        <span className="stat-col-label">TIEMPO</span>
+                        <span className="stat-col-value neutral">⏱️ {player.time ? `${player.time}s` : '--'}</span>
                       </div>
 
-                      <div className="text-right pl-2 border-l border-slate-800">
-                        <span className="text-[10px] text-amber-400 block font-bold">PUNTAJE</span>
-                        <span className="text-sm font-extrabold text-amber-300">{player.score} pts</span>
+                      <div className="stat-col score-col">
+                        <span className="stat-col-label amber">PUNTAJE</span>
+                        <span className="stat-col-value score">{player.score} pts</span>
                       </div>
                     </div>
                   </div>
@@ -3243,9 +3776,9 @@ function LobbyView({ estudiante, backendUrl, onUpdate, listaAmigos = [], partida
           </div>
 
           {/* Botones de Acción */}
-          <div className="flex flex-col sm:flex-row gap-3 pt-8 justify-center items-center">
+          <div className="result-actions">
             <button 
-              className="w-full sm:w-auto px-6 py-3 rounded-xl bg-slate-900 hover:bg-slate-800 border border-slate-800 text-slate-300 hover:text-white font-mono font-bold text-xs transition cursor-pointer flex items-center justify-center gap-2"
+              className="btn-result-secondary"
               onClick={() => setBattleResult(null)}
             >
               <span>🏠</span>
@@ -3253,7 +3786,7 @@ function LobbyView({ estudiante, backendUrl, onUpdate, listaAmigos = [], partida
             </button>
 
             <button 
-              className="w-full sm:w-auto px-8 py-3 rounded-xl bg-gradient-to-r from-indigo-600 to-violet-600 hover:from-indigo-500 hover:to-violet-500 text-white font-mono font-black text-xs transition shadow-lg shadow-indigo-600/30 flex items-center justify-center gap-2 cursor-pointer active:scale-95"
+              className="btn-result-primary"
               onClick={() => {
                 setBattleResult(null);
                 confirmAndSearch();
@@ -3827,6 +4360,7 @@ function ZenView({ estudiante, backendUrl, onUpdate }) {
   const [audioBars, setAudioBars] = useState([10, 18, 14, 22, 12]);
   
   const audioRef = useRef(null);
+  const playPromiseRef = useRef(null);
   const synthCtxRef = useRef(null);
   const synthOscsRef = useRef([]);
   const analyserRef = useRef(null);
@@ -3908,10 +4442,35 @@ function ZenView({ estudiante, backendUrl, onUpdate }) {
     setAudioBars([6, 8, 6, 10, 6]);
   };
 
+  const safePauseAudio = () => {
+    if (audioRef.current) {
+      if (playPromiseRef.current) {
+        playPromiseRef.current
+          .then(() => {
+            if (audioRef.current) {
+              audioRef.current.pause();
+            }
+          })
+          .catch(() => {
+            // Ignorar aborts causados por pausas inmediatas
+          })
+          .finally(() => {
+            playPromiseRef.current = null;
+          });
+      } else {
+        try {
+          audioRef.current.pause();
+        } catch (e) {
+          // Ignorar excepciones síncronas
+        }
+      }
+    }
+  };
+
   useEffect(() => {
     return () => {
       detenerSynthAmbient();
-      if (audioRef.current) audioRef.current.pause();
+      safePauseAudio();
     };
   }, []);
 
@@ -3919,8 +4478,8 @@ function ZenView({ estudiante, backendUrl, onUpdate }) {
     if (isPlaying) {
       if (useSynthAudio) {
         detenerSynthAmbient();
-      } else if (audioRef.current) {
-        audioRef.current.pause();
+      } else {
+        safePauseAudio();
       }
       setIsPlaying(false);
     } else {
@@ -3928,18 +4487,30 @@ function ZenView({ estudiante, backendUrl, onUpdate }) {
         iniciarSynthAmbient();
         setIsPlaying(true);
       } else {
-        if (!audioRef.current && typeof LOFI_TRACKS !== 'undefined') {
+        if (!audioRef.current && typeof LOFI_TRACKS !== 'undefined' && LOFI_TRACKS.length > 0) {
           audioRef.current = new Audio(LOFI_TRACKS[trackIndex].url);
           audioRef.current.loop = true;
         }
         if (audioRef.current) {
-          audioRef.current.play()
-            .then(() => setIsPlaying(true))
-            .catch(() => {
-              setUseSynthAudio(true);
-              iniciarSynthAmbient();
-              setIsPlaying(true);
-            });
+          const promise = audioRef.current.play();
+          playPromiseRef.current = promise;
+          if (promise !== undefined && typeof promise.then === 'function') {
+            promise
+              .then(() => {
+                setIsPlaying(true);
+              })
+              .catch((err) => {
+                if (err && err.name !== 'AbortError') {
+                  console.warn('Audio play fallback a sintetizador:', err);
+                  setUseSynthAudio(true);
+                  iniciarSynthAmbient();
+                  setIsPlaying(true);
+                }
+              })
+              .finally(() => {
+                playPromiseRef.current = null;
+              });
+          }
         } else {
           setUseSynthAudio(true);
           iniciarSynthAmbient();
@@ -4086,8 +4657,15 @@ function ZenView({ estudiante, backendUrl, onUpdate }) {
                 type="button"
                 className="zen-btn-mode"
                 onClick={() => {
-                  if (isPlaying) togglePlay();
-                  setUseSynthAudio(!useSynthAudio);
+                  if (isPlaying) {
+                    if (useSynthAudio) {
+                      detenerSynthAmbient();
+                    } else {
+                      safePauseAudio();
+                    }
+                    setIsPlaying(false);
+                  }
+                  setUseSynthAudio(prev => !prev);
                 }}
                 title="Alternar entre sintetizador 432Hz y señal lo-fi"
               >
@@ -6690,36 +7268,39 @@ function DefenseView({ estudiante, backendUrl, onUpdate }) {
   return (
     <div className="defense-panel glass-panel spec-defense-layout">
       {!gameStarted ? (
-        <div className="start-screen-spec p-6 max-w-3xl mx-auto flex flex-col items-center text-center">
+        <div className="defense-start-briefing">
           {/* Header del Centro de Mando */}
-          <div className="flex items-center justify-center gap-3 mb-2">
-            <span className="text-2xl">⌨️</span>
-            <h2 className="text-xl text-white font-mono font-black tracking-wider">
-              SYNTAX DEFENSE: MECANET TÁCTICO CIBERNÉTICO
+          <div className="defense-header-zone">
+            <div className="defense-header-pill">
+              <span className="defense-header-icon">⌨️</span>
+              <span className="defense-header-tag">PROTOCOLO MECANET v2.0</span>
+            </div>
+            <h2 className="defense-main-title">
+              SYNTAX DEFENSE: MECANET TÁCTICO
             </h2>
-            <span className="text-[10px] text-cyan-300 bg-cyan-950/80 border border-cyan-500/40 px-2.5 py-0.5 rounded font-mono font-bold">
-              MODO MECANET
-            </span>
+            <p className="defense-briefing-desc">
+              Mecanografía defensiva cibernética en tiempo real. Escribe las sentencias de código para neutralizar las anomalías antes de que alcancen el cortafuegos.
+            </p>
+            <div className="defense-mecanot-rule-box">
+              <span className="rule-box-badge">REGLA MECANET</span>
+              <span className="rule-box-text">Las amenazas que impacten la barrera dañarán el cortafuegos y <strong>se re-encolarán como reintentos</strong> hasta que las mecanografíes sin fallar.</span>
+            </div>
           </div>
-          <p className="text-xs text-slate-300 font-mono mb-6 max-w-xl leading-relaxed">
-            Escribe a toda velocidad las palabras clave de código que descienden para desintegrarlas con el cañón láser fotónico. <strong className="text-amber-300">Regla Mecanet:</strong> Las palabras que impacten la barrera dañarán el cortafuegos y <strong className="text-rose-400">se re-encolarán como reintentos</strong> hasta que las mecanografíes sin fallar.
-          </p>
 
           {/* Matriz de las 5 Oleadas Tácticas */}
           <div className="defense-waves-grid">
             {MECANET_WAVES.map(w => (
               <div key={w.oleada} className="wave-card-spec">
-                <div>
-                  <span className="text-[10px] font-bold text-cyan-400 block mb-1">
-                    FASE 0{w.oleada}
-                  </span>
-                  <h5 className="text-[11px] font-semibold text-slate-200 line-clamp-2 leading-snug">
-                    {w.titulo.replace(`Oleada ${w.oleada}: `, '')}
-                  </h5>
+                <div className="wave-card-header">
+                  <span className="wave-phase-badge">FASE 0{w.oleada}</span>
+                  <span className="wave-topic-icon">{w.oleada === 1 ? '⚛️' : w.oleada === 2 ? '⚡' : w.oleada === 3 ? '⏳' : w.oleada === 4 ? '📦' : '🛡️'}</span>
                 </div>
-                <div className="text-[9.5px] text-slate-400 mt-2 pt-1 border-t border-slate-800/60 flex items-center justify-between">
-                  <span>{w.words.length} Palabras</span>
-                  <span className="text-emerald-400 font-mono">100% Precisión</span>
+                <h5 className="wave-card-title">
+                  {w.titulo.replace(`Oleada ${w.oleada}: `, '')}
+                </h5>
+                <div className="wave-card-meta">
+                  <span className="wave-meta-words">📝 {w.words.length} Sentencias</span>
+                  <span className="wave-meta-acc">🎯 100% Precisión</span>
                 </div>
               </div>
             ))}
@@ -6727,17 +7308,26 @@ function DefenseView({ estudiante, backendUrl, onUpdate }) {
 
           {/* Telemetría de Operaciones y Carga */}
           <div className="defense-telemetry-grid">
-            <div className="p-3 rounded-xl bg-slate-950/90 border border-slate-800 text-center">
-              <span className="text-slate-500 block text-[10px]">RÉCORD HISTÓRICO:</span>
-              <span className="text-amber-400 font-bold text-sm">{highScore.toLocaleString()} PTS</span>
+            <div className="defense-stat-chip">
+              <span className="stat-chip-icon">🏆</span>
+              <div className="stat-chip-info">
+                <span className="stat-chip-label">RÉCORD HISTÓRICO</span>
+                <span className="stat-chip-val val-gold">{highScore.toLocaleString()} PTS</span>
+              </div>
             </div>
-            <div className="p-3 rounded-xl bg-slate-950/90 border border-slate-800 text-center">
-              <span className="text-slate-500 block text-[10px]">RUNAS ACTIVAS:</span>
-              <span className="text-emerald-400 font-bold text-sm">{activePerks.length} Perks</span>
+            <div className="defense-stat-chip">
+              <span className="stat-chip-icon">🔮</span>
+              <div className="stat-chip-info">
+                <span className="stat-chip-label">RUNAS ACTIVAS</span>
+                <span className="stat-chip-val val-emerald">{activePerks.length} Perks</span>
+              </div>
             </div>
-            <div className="p-3 rounded-xl bg-slate-950/90 border border-slate-800 text-center col-span-2 sm:col-span-1">
-              <span className="text-slate-500 block text-[10px]">ESCUDOS TÁCTICOS:</span>
-              <span className="text-cyan-400 font-bold text-sm">{initialLives} Núcleos</span>
+            <div className="defense-stat-chip">
+              <span className="stat-chip-icon">🛡️</span>
+              <div className="stat-chip-info">
+                <span className="stat-chip-label">ESCUDOS TÁCTICOS</span>
+                <span className="stat-chip-val val-cyan">{initialLives} Núcleos</span>
+              </div>
             </div>
           </div>
 
@@ -6747,59 +7337,53 @@ function DefenseView({ estudiante, backendUrl, onUpdate }) {
             className="defense-btn-launch"
             onClick={startGame}
           >
-            <span>⚡</span>
+            <span className="launch-icon">⚡</span>
             <span>INICIAR DESAFÍO DE MECANOGRAFÍA DEFENSIVA</span>
           </button>
         </div>
       ) : (
-        <div className="arcade-grid-arena relative overflow-hidden rounded-2xl border border-slate-800 bg-slate-950 shadow-2xl">
+        <div className="arcade-grid-arena">
           {/* Header del HUD */}
-          <div className="hud-header-stats p-3 bg-slate-900/95 border-b border-slate-800 flex justify-between items-center text-xs font-mono">
-            <div className="flex items-center gap-4">
-              <div>
-                <span className="text-slate-500 text-[10px] block">PUNTAJE</span>
-                <span className="text-indigo-300 font-bold text-sm">{score.toLocaleString()}</span>
+          <div className="hud-header-stats">
+            <div className="hud-stats-group">
+              <div className="defense-hud-card">
+                <span className="hud-card-lbl">PUNTAJE</span>
+                <span className="hud-card-val val-score">{score.toLocaleString()}</span>
               </div>
-              <div className="hidden sm:block">
-                <span className="text-slate-500 text-[10px] block">WPM</span>
-                <span className="text-cyan-400 font-bold">{currentWpm}</span>
+              <div className="defense-hud-card">
+                <span className="hud-card-lbl">WPM</span>
+                <span className="hud-card-val val-wpm">{currentWpm}</span>
               </div>
-              <div className="hidden sm:block">
-                <span className="text-slate-500 text-[10px] block">PRECISIÓN</span>
-                <span className="text-emerald-400 font-bold">{currentAcc}%</span>
+              <div className="defense-hud-card">
+                <span className="hud-card-lbl">PRECISIÓN</span>
+                <span className="hud-card-val val-acc">{currentAcc}%</span>
               </div>
             </div>
 
             {/* Barra de Integridad del Firewall (0 - 100%) */}
-            <div className="flex flex-col items-center flex-1 max-w-sm mx-4">
-              <div className="flex justify-between w-full text-[10.5px] mb-1">
-                <span className="text-slate-400 font-semibold">BARRERA FIREWALL</span>
-                <span className={`font-bold ${firewallHp > 50 ? 'text-emerald-400' : firewallHp > 20 ? 'text-amber-400' : 'text-rose-400'}`}>
+            <div className="defense-firewall-module">
+              <div className="firewall-module-header">
+                <span className="firewall-label">🛡️ BARRERA FIREWALL</span>
+                <span className={`firewall-status ${firewallHp > 50 ? 'hp-high' : firewallHp > 20 ? 'hp-mid' : 'hp-crit'}`}>
                   {firewallHp}%
                 </span>
               </div>
-              <div className="w-full h-2.5 bg-slate-900 rounded-full overflow-hidden border border-slate-800 p-0.5">
+              <div className="firewall-track">
                 <div 
-                  className={`h-full rounded-full transition-all duration-200 ${
-                    firewallHp > 50 
-                      ? 'bg-gradient-to-r from-emerald-500 to-teal-400 shadow-[0_0_8px_rgba(16,185,129,0.5)]' 
-                      : firewallHp > 20 
-                      ? 'bg-gradient-to-r from-amber-500 to-orange-400 shadow-[0_0_8px_rgba(245,158,11,0.5)]' 
-                      : 'bg-gradient-to-r from-rose-600 to-red-500 shadow-[0_0_8px_rgba(244,63,94,0.5)]'
-                  }`}
+                  className={`firewall-fill ${firewallHp > 50 ? 'hp-high' : firewallHp > 20 ? 'hp-mid' : 'hp-crit'}`}
                   style={{ width: `${firewallHp}%` }}
                 />
               </div>
             </div>
 
-            <div className="flex items-center gap-4 text-right">
-              <div>
-                <span className="text-slate-500 text-[10px] block">FASE</span>
-                <span className="text-cyan-400 font-bold text-sm">{currentWave} / 5</span>
+            <div className="hud-stats-group-right">
+              <div className="defense-hud-card">
+                <span className="hud-card-lbl">FASE</span>
+                <span className="hud-card-val val-wave">{currentWave} / 5</span>
               </div>
-              <div className="tactical-shields flex gap-1.5 items-center">
+              <div className="tactical-shields">
                 {Array.from({ length: initialLives }).map((_, i) => (
-                  <span key={i} className={`shield-node text-base transition-opacity ${i < lives ? 'opacity-100' : 'opacity-20'}`}>
+                  <span key={i} className={`shield-node ${i < lives ? 'shield-on' : 'shield-off'}`}>
                     🛡️
                   </span>
                 ))}
@@ -6985,15 +7569,15 @@ function DefenseView({ estudiante, backendUrl, onUpdate }) {
           </div>
 
           {/* Barra de Entrada Táctica Mecanet */}
-          <div className="mecanet-tactical-bottom-bar p-3 bg-slate-900/95 border-t border-slate-800 flex items-center justify-between gap-4">
-            <div className="flex items-center gap-3 flex-1 max-w-xl">
-              <span className="text-xl text-cyan-400">⌨️</span>
-              <div className={`mecanet-input-wrapper flex-1 ${inputErrorAnim ? 'input-shake-error' : ''}`}>
+          <div className="mecanet-tactical-bottom-bar">
+            <div className="mecanet-input-zone">
+              <span className="mecanet-kb-icon">⌨️</span>
+              <div className={`mecanet-input-wrapper ${inputErrorAnim ? 'input-shake-error' : ''}`}>
                 <input
                   ref={typingInputRef}
                   type="text"
-                  className="mecanet-type-field w-full px-4 py-2.5 rounded-xl font-mono text-sm font-bold bg-slate-950 border border-slate-700 text-cyan-300 placeholder-slate-500 outline-none focus:border-cyan-400 focus:shadow-[0_0_15px_rgba(34,211,238,0.4)] transition-all"
-                  placeholder="Escribe la palabra de código... [Esc cancela objetivo · Espacio activa EMP]"
+                  className="mecanet-type-field"
+                  placeholder="Escribe la sentencia de código aquí... [Esc cancela · Espacio detona EMP]"
                   value={typedInput}
                   onChange={handleTypingChange}
                   onKeyDown={(e) => {
@@ -7014,40 +7598,36 @@ function DefenseView({ estudiante, backendUrl, onUpdate }) {
               {typedInput && (
                 <button
                   type="button"
-                  className="text-xs font-mono text-slate-400 hover:text-white px-2 py-1 bg-slate-800 rounded border border-slate-700 cursor-pointer"
+                  className="mecanet-clear-pill"
                   onClick={() => { setTypedInput(''); setTargetWordId(null); }}
                   title="Limpiar entrada actual (o presiona Escape)"
                 >
-                  Esc
+                  ESC ✕
                 </button>
               )}
             </div>
 
-            <div className="flex items-center gap-4 text-xs font-mono">
-              <div className="text-slate-400 hidden md:block">
-                <span>PENDIENTES: <strong className="text-cyan-400">{wordsRemainingTotal}</strong></span>
+            <div className="mecanet-actions-zone">
+              <div className="mecanet-meta-badge">
+                <span>PENDIENTES: <strong className="meta-highlight">{wordsRemainingTotal}</strong></span>
                 {retriesInWave > 0 && (
-                  <span className="ml-2 text-amber-400 font-bold">(⚠️ {retriesInWave} reintentos)</span>
+                  <span className="meta-retries">(⚠️ {retriesInWave} reintentos)</span>
                 )}
               </div>
 
-              <div className="text-slate-400 hidden sm:block">
-                <span>COMBO: <strong className="text-amber-400 font-bold">x{combo}</strong></span>
+              <div className="mecanet-meta-badge">
+                <span>COMBO: <strong className="meta-combo">x{combo}</strong></span>
               </div>
 
               <button 
-                type="button"
-                className={`h-10 px-4 rounded-xl text-xs font-mono font-black transition-all flex items-center gap-2 cursor-pointer ${
-                  power === 100 
-                    ? 'bg-gradient-to-r from-indigo-600 to-purple-600 hover:from-indigo-500 hover:to-purple-500 text-white shadow-lg shadow-indigo-600/40 animate-pulse border border-indigo-400' 
-                    : 'bg-slate-800/60 text-slate-500 border border-slate-800 cursor-not-allowed opacity-50'
-                }`}
+                type="button" 
+                className={`mecanet-emp-button ${power === 100 ? 'emp-active' : 'emp-charging'}`}
                 onClick={detonarFirewallBlast}
                 disabled={power < 100}
-                title={power === 100 ? 'Detonar pulso electromagnético destructor' : 'Acumula aciertos para recargar EMP'}
+                title={power === 100 ? '¡Detonar pulso electromagnético destructor!' : `EMP cargando: ${power}%`}
               >
                 <span>💥</span>
-                <span>EMP {power === 100 ? '(LISTO)' : `(${power}%)`}</span>
+                <span>EMP {power === 100 ? 'LISTO (ESPACIO)' : `${power}%`}</span>
               </button>
             </div>
           </div>
@@ -7636,15 +8216,14 @@ function DungeonView({ estudiante, backendUrl, onUpdate }) {
 
   // Renderizador de badge de tipo de dato
   const renderTypeBadge = (col) => {
-    let colorClass = "bg-slate-800 text-slate-300 border-slate-700";
-    if (col.badge === 'int') colorClass = "bg-cyan-950/60 text-cyan-300 border-cyan-500/40";
-    if (col.badge === 'str') colorClass = "bg-emerald-950/60 text-emerald-300 border-emerald-500/40";
-    if (col.badge === 'bool') colorClass = "bg-purple-950/60 text-purple-300 border-purple-500/40";
-    if (col.badge === 'num') colorClass = "bg-amber-950/60 text-amber-300 border-amber-500/40";
-    if (col.badge === 'date') colorClass = "bg-rose-950/60 text-rose-300 border-rose-500/40";
+    let typeClass = "sql-type-int";
+    if (col.badge === 'str') typeClass = "sql-type-str";
+    if (col.badge === 'bool') typeClass = "sql-type-bool";
+    if (col.badge === 'num') typeClass = "sql-type-num";
+    if (col.badge === 'date') typeClass = "sql-type-date";
 
     return (
-      <span className={`text-[10px] font-mono px-2 py-0.5 rounded border font-semibold ${colorClass}`}>
+      <span className={`sql-type-badge ${typeClass}`}>
         {col.type}
       </span>
     );
@@ -7797,50 +8376,50 @@ function DungeonView({ estudiante, backendUrl, onUpdate }) {
             </div>
 
             {/* Brújula / D-pad Táctico Compacto */}
-            <div className="dungeon-compass-container mt-3 p-2.5 rounded-xl bg-slate-950/90 border border-slate-800 shadow-md">
-              <div className="compass-header flex justify-between items-center mb-2 text-[10.5px] font-mono text-slate-400 pb-1 border-b border-slate-800/80">
-                <span className="font-semibold text-slate-300">D-PAD DE NAVEGACIÓN</span>
-                <span className="text-cyan-400 font-bold">ACTIVO</span>
+            <div className="dungeon-compass-container">
+              <div className="compass-header">
+                <span className="compass-title-text">🧭 D-PAD DE NAVEGACIÓN [W/A/S/D]</span>
+                <span className="compass-status-badge">ACTIVO</span>
               </div>
-              <div className="compass-cross-layout flex flex-col items-center gap-1.5">
+              <div className="compass-cross-layout">
                 <button
                   type="button"
-                  className="btn-compass btn-compass-n w-28 h-8 rounded-lg font-mono text-xs font-bold transition flex items-center justify-center gap-1 cursor-pointer disabled:opacity-30 disabled:cursor-not-allowed"
+                  className="btn-compass btn-compass-n"
                   onClick={() => mover('norte')}
                   disabled={posY === 0}
-                  title="Mover al Norte"
+                  title="Mover al Norte (W)"
                 >
                   ▲ NORTE
                 </button>
-                <div className="compass-mid-row flex items-center justify-center gap-1.5 w-full">
+                <div className="compass-mid-row">
                   <button
                     type="button"
-                    className="btn-compass btn-compass-w flex-1 h-8 rounded-lg font-mono text-xs font-bold transition flex items-center justify-center gap-1 cursor-pointer disabled:opacity-30 disabled:cursor-not-allowed"
+                    className="btn-compass btn-compass-w"
                     onClick={() => mover('oeste')}
                     disabled={posX === 0}
-                    title="Mover al Oeste"
+                    title="Mover al Oeste (A)"
                   >
                     ◀ OESTE
                   </button>
-                  <div className="compass-radar-core px-2.5 h-8 rounded-lg flex items-center justify-center font-mono text-xs font-black bg-slate-950 border border-cyan-500/40 text-cyan-400 shadow-[inset_0_0_8px_rgba(6,182,212,0.3)]">
+                  <div className="compass-radar-core">
                     [{posX},{posY}]
                   </div>
                   <button
                     type="button"
-                    className="btn-compass btn-compass-e flex-1 h-8 rounded-lg font-mono text-xs font-bold transition flex items-center justify-center gap-1 cursor-pointer disabled:opacity-30 disabled:cursor-not-allowed"
+                    className="btn-compass btn-compass-e"
                     onClick={() => mover('este')}
                     disabled={posX === 2}
-                    title="Mover al Este"
+                    title="Mover al Este (D)"
                   >
                     ESTE ▶
                   </button>
                 </div>
                 <button
                   type="button"
-                  className="btn-compass btn-compass-s w-28 h-8 rounded-lg font-mono text-xs font-bold transition flex items-center justify-center gap-1 cursor-pointer disabled:opacity-30 disabled:cursor-not-allowed"
+                  className="btn-compass btn-compass-s"
                   onClick={() => mover('sur')}
                   disabled={posY === 2}
-                  title="Mover al Sur"
+                  title="Mover al Sur (S)"
                 >
                   ▼ SUR
                 </button>
@@ -7926,21 +8505,21 @@ function DungeonView({ estudiante, backendUrl, onUpdate }) {
             </div>
 
             {/* Columnas en Tarjetas Compactas */}
-            <div className="schema-columns-vertical-grid grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-2 mb-2">
+            <div className="schema-columns-vertical-grid">
               {currentRoom.columns.map((col, idx) => (
-                <div key={idx} className="column-spec-card p-2 rounded-lg bg-slate-900/90 border border-slate-800 hover:border-cyan-500/50 transition-all flex flex-col justify-between shadow-sm">
-                  <div className="flex items-center justify-between gap-1 mb-1">
-                    <span className="col-name font-mono text-xs font-bold text-slate-100 flex items-center gap-1">
-                      <span className="text-cyan-400">#</span>
+                <div key={idx} className="column-spec-card">
+                  <div className="column-spec-header">
+                    <span className="col-name">
+                      <span className="col-hash">#</span>
                       {col.name}
                     </span>
-                    <div className="flex items-center gap-1">
+                    <div className="column-badges-row">
                       {renderTypeBadge(col)}
-                      {col.isPk && <span className="text-[9px] font-mono font-bold text-amber-400 bg-amber-950/90 border border-amber-500/50 px-1.5 py-0.5 rounded shadow-sm" title="Primary Key">PK</span>}
-                      {col.isFk && <span className="text-[9px] font-mono font-bold text-indigo-400 bg-indigo-950/90 border border-indigo-500/50 px-1.5 py-0.5 rounded shadow-sm" title="Foreign Key">FK</span>}
+                      {col.isPk && <span className="sql-pk-badge" title="Primary Key">PK</span>}
+                      {col.isFk && <span className="sql-fk-badge" title="Foreign Key">FK</span>}
                     </div>
                   </div>
-                  <p className="text-[10px] font-mono text-slate-400 leading-tight">
+                  <p className="column-desc">
                     {col.desc}
                   </p>
                 </div>
@@ -7989,8 +8568,8 @@ function DungeonView({ estudiante, backendUrl, onUpdate }) {
           {currentRoom.id !== 'nucleo' ? (
             <div className="dungeon-console-section mb-4">
               {/* Barra de Snippets Rápidos */}
-              <div className="sql-snippets-strip mb-2.5 flex items-center flex-wrap gap-2 p-2.5 rounded-xl bg-slate-950/90 border border-slate-800 shadow-sm">
-                <span className="text-xs font-mono font-bold text-slate-300 mr-1 flex items-center gap-1">
+              <div className="sql-snippets-strip">
+                <span className="sql-snippets-title">
                   <span>⚡</span>
                   <span>SNIPPETS:</span>
                 </span>
@@ -8008,7 +8587,7 @@ function DungeonView({ estudiante, backendUrl, onUpdate }) {
                   <button
                     key={sIdx}
                     type="button"
-                    className="btn-snippet-pill font-mono text-xs px-2.5 py-1 rounded-lg border border-slate-700 bg-slate-900 text-slate-200 hover:border-cyan-400 hover:bg-cyan-950/40 transition-all cursor-pointer font-semibold shadow-sm"
+                    className="btn-snippet-pill"
                     onClick={() => insertarSnippet(snippet)}
                     title={`Insertar '${snippet}' en el editor`}
                   >

@@ -149,17 +149,27 @@ router.post('/api/generar-tarea', async (req, res) => {
 
     const userPrompt = `Genera la guía conceptual avanzada y la tarea detallada para el Tema ${temaIndice}: "${temaActual}" en la tecnología ${tecnologia} adaptado al nivel de dificultad: "${nivelReal}".`;
 
-    console.log(`Generando tema: ${temaActual} para ${tecnologia} (${nivelReal}) usando Llama 70B...`);
+    console.log(`Generando tema: ${temaActual} para ${tecnologia} (${nivelReal}) usando IA...`);
     const chatCompletion = await ejecutarGroqConReintentos(
       [
         { role: 'system', content: systemPrompt },
         { role: 'user', content: userPrompt }
       ],
-      'llama-3.3-70b-versatile',
+      'openai/gpt-oss-120b',
       { type: 'json_object' }
     );
 
     const data = parsearJSONGroq(chatCompletion.choices[0].message.content);
+
+    // Sanitizar y blindar estructuras para generación segura de Word y BD
+    data.conceptos_clave = Array.isArray(data.conceptos_clave) ? data.conceptos_clave.map(c => ({
+      termino: String(c.termino || 'Concepto'),
+      explicacion: String(c.explicacion || ''),
+      ejemplo: String(c.ejemplo || '// Sin código provisto')
+    })) : [];
+    data.buenas_practicas = Array.isArray(data.buenas_practicas) ? data.buenas_practicas.map(String) : [];
+    data.retos_experto = Array.isArray(data.retos_experto) ? data.retos_experto.map(String) : [];
+    data.rubrica_evaluacion = Array.isArray(data.rubrica_evaluacion) ? data.rubrica_evaluacion : [];
 
     // Crear el archivo .docx con el orden estricto solicitado por el usuario
     const doc = new docx.Document({
@@ -590,8 +600,8 @@ router.post('/api/generar-tarea', async (req, res) => {
       estado: 'Pendiente'
     });
   } catch (error) {
-    console.error(error);
-    res.status(500).json({ error: 'Error al generar la tarea' });
+    console.error('Error detallado en generar-tarea:', error);
+    res.status(500).json({ error: error.message || 'Error al generar la tarea' });
   }
 });
 
@@ -665,17 +675,27 @@ router.post('/api/regenerar-tarea', async (req, res) => {
 
     const userPrompt = `Genera la guía conceptual avanzada y la tarea detallada para el Tema ${temaIndice}: "${temaActual}" en la tecnología ${tecnologia} adaptado al nivel de dificultad: "${nivelReal}".`;
 
-    console.log(`Regenerando tema: ${temaActual} para ${tecnologia} (${nivelReal}) usando Llama 70B...`);
+    console.log(`Regenerando tema: ${temaActual} para ${tecnologia} (${nivelReal}) usando IA...`);
     const chatCompletion = await ejecutarGroqConReintentos(
       [
         { role: 'system', content: systemPrompt },
         { role: 'user', content: userPrompt }
       ],
-      'llama-3.3-70b-versatile',
+      'openai/gpt-oss-120b',
       { type: 'json_object' }
     );
 
     const data = parsearJSONGroq(chatCompletion.choices[0].message.content);
+
+    // Sanitizar y blindar estructuras
+    data.conceptos_clave = Array.isArray(data.conceptos_clave) ? data.conceptos_clave.map(c => ({
+      termino: String(c.termino || 'Concepto'),
+      explicacion: String(c.explicacion || ''),
+      ejemplo: String(c.ejemplo || '// Sin código provisto')
+    })) : [];
+    data.buenas_practicas = Array.isArray(data.buenas_practicas) ? data.buenas_practicas.map(String) : [];
+    data.retos_experto = Array.isArray(data.retos_experto) ? data.retos_experto.map(String) : [];
+    data.rubrica_evaluacion = Array.isArray(data.rubrica_evaluacion) ? data.rubrica_evaluacion : [];
 
     // Generar el documento Word (.docx) con maquetación premium completa al regenerar
     const doc = new docx.Document({
@@ -1178,7 +1198,7 @@ router.post('/api/evaluar-entrega', async (req, res) => {
         { role: 'system', content: evalSystemPrompt },
         { role: 'user', content: userPrompt }
       ],
-      'llama-3.3-70b-versatile',
+      'openai/gpt-oss-120b',
       { type: 'json_object' }
     );
 

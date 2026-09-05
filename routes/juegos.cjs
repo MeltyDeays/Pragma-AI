@@ -32,7 +32,7 @@ router.get('/api/gamificacion/trivia', async (req,res)=>{
     const ci=getCachedGameItem(ck); if(ci) return res.json(ci);
     const np=obtenerNivelParaReto(b.nivel);
     const sp=`Genera trivia de opción múltiple en ${b.tecnologia} para "${np}". Vacíos: ${JSON.stringify(b.perfil.vacios_de_conocimiento||[])}. En progreso: ${JSON.stringify(b.perfil.conceptos_en_progreso||[])}. EXCLUSIVAMENTE ${b.tecnologia}. JSON: {"pregunta":"...","opciones":["...","...","...","..."],"respuesta_correcta":0,"explicacion":"..."}`;
-    const cc=await ejecutarGroqConReintentos([{role:'system',content:sp}],'llama-3.3-70b-versatile',{type:'json_object'});
+    const cc=await ejecutarGroqConReintentos([{role:'system',content:sp}],'openai/gpt-oss-120b',{type:'json_object'});
     const d=parsearJSONGroq(cc.choices[0].message.content);
     addCachedGameItem(ck,d); res.json(d);
   } catch(e){console.error(e);res.status(500).json({error:'Error trivia'});}
@@ -48,7 +48,7 @@ router.get('/api/gamificacion/refactor', async (req,res)=>{
     const ci=getCachedGameItem(ck); if(ci) return res.json(ci);
     const np=obtenerNivelParaReto(b.nivel);
     const sp=`Genera reto de depuración (Bug Hunter) en ${b.tecnologia} para "${np}". Errores frecuentes: ${JSON.stringify(b.perfil.errores_frecuentes||[])}. EXCLUSIVAMENTE ${b.tecnologia}. JSON: {"descripcion":"...","codigo_con_bug":"...","opciones":["...","...","..."],"opcion_correcta":1,"explicacion":"..."}`;
-    const cc=await ejecutarGroqConReintentos([{role:'system',content:sp}],'llama-3.3-70b-versatile',{type:'json_object'});
+    const cc=await ejecutarGroqConReintentos([{role:'system',content:sp}],'openai/gpt-oss-120b',{type:'json_object'});
     const d=parsearJSONGroq(cc.choices[0].message.content);
     addCachedGameItem(ck,d); res.json(d);
   } catch(e){console.error(e);res.status(500).json({error:'Error refactor'});}
@@ -64,7 +64,7 @@ router.get('/api/gamificacion/sorter', async (req,res)=>{
     const ci=getCachedGameItem(ck); if(ci) return res.json(ci);
     const np=obtenerNivelParaReto(b.nivel);
     const sp=`Genera Parson's Puzzle en ${b.tecnologia} para "${np}". 5-8 líneas. EXCLUSIVAMENTE ${b.tecnologia}. JSON: {"descripcion":"...","lineas_ordenadas":["..."],"explicacion":"..."}`;
-    const cc=await ejecutarGroqConReintentos([{role:'system',content:sp}],'llama-3.3-70b-versatile',{type:'json_object'});
+    const cc=await ejecutarGroqConReintentos([{role:'system',content:sp}],'openai/gpt-oss-120b',{type:'json_object'});
     const d=parsearJSONGroq(cc.choices[0].message.content);
     addCachedGameItem(ck,d); res.json(d);
   } catch(e){console.error(e);res.status(500).json({error:'Error sorter'});}
@@ -97,7 +97,7 @@ router.get('/api/gamificacion/fill-blank', async (req,res)=>{
     const ci=getCachedGameItem(ck); if(ci) return res.json(ci);
     const np=obtenerNivelParaReto(b.nivel);
     const sp=`Genera reto Fill-in-the-Blank en ${b.tecnologia} para "${np}". 6-10 líneas, 2-4 huecos. En progreso: ${JSON.stringify(b.perfil.conceptos_en_progreso||[])}. JSON: {"descripcion":"...","codigo_con_huecos":"...","respuestas":{"1":"...","2":"..."},"explicacion":"..."}`;
-    const cc=await ejecutarGroqConReintentos([{role:'system',content:sp}],'llama-3.3-70b-versatile',{type:'json_object'});
+    const cc=await ejecutarGroqConReintentos([{role:'system',content:sp}],'openai/gpt-oss-120b',{type:'json_object'});
     const d=parsearJSONGroq(cc.choices[0].message.content);
     addCachedGameItem(ck,d); res.json(d);
   } catch(e){console.error(e);res.status(500).json({error:'Error fill-blank'});}
@@ -113,7 +113,7 @@ router.get('/api/gamificacion/output', async (req,res)=>{
     const ci=getCachedGameItem(ck); if(ci) return res.json(ci);
     const np=obtenerNivelParaReto(b.nivel);
     const sp=`Genera Output Predictor en ${b.tecnologia} para "${np}". Vacíos: ${JSON.stringify(b.perfil.vacios_de_conocimiento||[])}. JSON: {"codigo":"...","opciones":["...","...","...","..."],"respuesta_correcta":2,"explicacion":"..."}`;
-    const cc=await ejecutarGroqConReintentos([{role:'system',content:sp}],'llama-3.3-70b-versatile',{type:'json_object'});
+    const cc=await ejecutarGroqConReintentos([{role:'system',content:sp}],'openai/gpt-oss-120b',{type:'json_object'});
     const d=parsearJSONGroq(cc.choices[0].message.content);
     addCachedGameItem(ck,d); res.json(d);
   } catch(e){console.error(e);res.status(500).json({error:'Error output'});}
@@ -129,7 +129,7 @@ router.get('/api/gamificacion/flashcard', async (req,res)=>{
     const ci=getCachedGameItem(ck); if(ci) return res.json(ci);
     const np=obtenerNivelParaReto(b.nivel);
     const sp=`Genera 5 flashcards V/F en ${b.tecnologia} para "${np}". Dominados: ${JSON.stringify(b.perfil.conceptos_dominados||[])}. En progreso: ${JSON.stringify(b.perfil.conceptos_en_progreso||[])}. JSON: {"flashcards":[{"afirmacion":"...","es_verdadero":true,"explicacion":"..."}]}`;
-    const cc=await ejecutarGroqConReintentos([{role:'system',content:sp}],'llama-3.3-70b-versatile',{type:'json_object'});
+    const cc=await ejecutarGroqConReintentos([{role:'system',content:sp}],'openai/gpt-oss-120b',{type:'json_object'});
     const d=parsearJSONGroq(cc.choices[0].message.content);
     addCachedGameItem(ck,d); res.json(d);
   } catch(e){console.error(e);res.status(500).json({error:'Error flashcard'});}
@@ -143,7 +143,7 @@ router.get('/api/gamificacion/typer', async (req,res)=>{
     const e=r.rows[0]; const nivel=e.nivel_actual||'Novato'; const tec=e.tecnologia_actual||'JavaScript';
     const ck=`typer:${tec}:${nivel}`; const ci=getCachedGameItem(ck); if(ci) return res.json(ci);
     const sp=`Genera línea de código (max 80 chars) en ${tec} para "${obtenerNivelParaReto(nivel)}". JSON: {"codigo":"...","descripcion":"..."}`;
-    const cc=await ejecutarGroqConReintentos([{role:'system',content:sp}],'llama-3.3-70b-versatile',{type:'json_object'});
+    const cc=await ejecutarGroqConReintentos([{role:'system',content:sp}],'openai/gpt-oss-120b',{type:'json_object'});
     const d=parsearJSONGroq(cc.choices[0].message.content);
     addCachedGameItem(ck,d); res.json(d);
   } catch(e){console.error(e);res.status(500).json({error:'Error typer'});}
@@ -158,7 +158,7 @@ router.get('/api/gamificacion/memory', async (req,res)=>{
     const ck=`memory:${tec}:${nivel}`; let rawData=getCachedGameItem(ck);
     if(!rawData){
       const sp=`Genera 4 parejas concepto-definición en ${tec} para "${obtenerNivelParaReto(nivel)}". JSON: {"parejas":[{"matchingId":1,"concepto":"...","definicion":"..."}]}`;
-      const cc=await ejecutarGroqConReintentos([{role:'system',content:sp}],'llama-3.3-70b-versatile',{type:'json_object'});
+      const cc=await ejecutarGroqConReintentos([{role:'system',content:sp}],'openai/gpt-oss-120b',{type:'json_object'});
       rawData=parsearJSONGroq(cc.choices[0].message.content);
       addCachedGameItem(ck,rawData);
     }
