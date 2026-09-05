@@ -6163,33 +6163,78 @@ function DefenseView({ estudiante, backendUrl, onUpdate }) {
   const MECANET_WAVES = [
     {
       oleada: 1,
-      titulo: "Oleada 1: Variables & Flujo de Control",
-      subtitulo: "Palabras clave esenciales de JavaScript",
-      words: ["const", "let", "function", "return", "while", "break", "import", "export"]
+      titulo: "Oleada 1: Variables, Declaraciones & Expresiones",
+      subtitulo: "Sentencias fundamentales de JavaScript y TypeScript",
+      words: [
+        "const [data, setData] = useState(null);",
+        "const token = localStorage.getItem('token');",
+        "let total = items.reduce((a, b) => a + b, 0);",
+        "export default function initApp() {",
+        "const isValid = Boolean(user && user.id);",
+        "const numbers = Array.from({ length: 10 });",
+        "const clone = { ...originalState };",
+        "const timeoutId = setTimeout(callback, 1000);"
+      ]
     },
     {
       oleada: 2,
-      titulo: "Oleada 2: Métodos de Arreglo & Datos",
-      subtitulo: "Transformación y filtrado de colecciones",
-      words: ["filter", "reduce", "map", "forEach", "length", "push", "slice", "splice"]
+      titulo: "Oleada 2: Métodos de Arreglos & Manipulación",
+      subtitulo: "Transformación funcional y filtrado de datos",
+      words: [
+        "items.filter(item => item.active === true);",
+        "users.map(user => user.email.toLowerCase());",
+        "const found = list.find(el => el.id === targetId);",
+        "Object.keys(payload).forEach(key => check(key));",
+        "const cloned = JSON.parse(JSON.stringify(state));",
+        "const unique = Array.from(new Set(rawList));",
+        "return entries.sort((a, b) => b.score - a.score);",
+        "array.splice(targetIndex, 1, newElement);"
+      ]
     },
     {
       oleada: 3,
-      titulo: "Oleada 3: Promesas & Asincronía",
-      subtitulo: "Concurrencia, estados y event loop",
-      words: ["async", "await", "Promise", "resolve", "reject", "catch", "finally", "fetch"]
+      titulo: "Oleada 3: Promesas, Asincronía & Red",
+      subtitulo: "Concurrencia, llamadas HTTP y manejo de errores",
+      words: [
+        "const res = await fetch('/api/v1/auth/login');",
+        "const [posts, users] = await Promise.all([p, u]);",
+        "try { await save(); } catch (err) { log(err); }",
+        "return new Promise((resolve, reject) => resolve());",
+        "axios.post('/api/checkout', { items, total });",
+        "const data = await response.json();",
+        "const stream = await navigator.mediaDevices();",
+        "await sleep(ms => setTimeout(ms, 500));"
+      ]
     },
     {
       oleada: 4,
-      titulo: "Oleada 4: Clases & POO",
-      subtitulo: "Herencia, constructores y prototipos",
-      words: ["class", "constructor", "extends", "super", "static", "prototype", "this", "yield"]
+      titulo: "Oleada 4: POO, Tipado Estricto & Arquitectura",
+      subtitulo: "Clases, interfaces y tipado seguro",
+      words: [
+        "class DataManager extends EventEmitter {",
+        "constructor(cfg = {}) { super(); this.cfg = cfg; }",
+        "static getInstance() { return this.instance; }",
+        "const sanitize = (str: string): string => str.trim();",
+        "type UserRole = 'admin' | 'editor' | 'guest';",
+        "interface ApiResponse<T> { data: T; status: number; }",
+        "private async initializeConnection(): Promise<void> {",
+        "readonly config: Record<string, unknown> = {};"
+      ]
     },
     {
       oleada: 5,
-      titulo: "Oleada 5: Seguridad Crítica & Excepciones",
-      subtitulo: "Validación estricta y blindaje defensivo",
-      words: ["try", "throw", "Error", "sanitize", "bcrypt", "typeof", "strict", "instanceof"]
+      titulo: "Oleada 5: Seguridad, Consultas SQL & Blindaje",
+      subtitulo: "Protección contra vulnerabilidades e inyecciones",
+      words: [
+        "SELECT id, name FROM users WHERE active = true;",
+        "UPDATE accounts SET balance = balance - 100;",
+        "const hash = await bcrypt.hash(password, 10);",
+        "if (!jwt || jwt.isExpired()) throw new Error();",
+        "addEventListener('error', (e) => reportCrash(e));",
+        "document.querySelector('#root').innerHTML = '';",
+        "ALTER TABLE sessions ADD CONSTRAINT fk_user;",
+        "window.crypto.getRandomValues(new Uint8Array(16));"
+      ]
     }
   ];
 
@@ -6235,7 +6280,7 @@ function DefenseView({ estudiante, backendUrl, onUpdate }) {
     }
   }, [gameStarted, gameOver, victory]);
 
-  // Iniciar oleada cargando la cola de palabras
+  // Iniciar oleada cargando la cola de sentencias Mecanet
   const startWave = (waveIdx) => {
     const waveData = MECANET_WAVES[waveIdx - 1];
     if (!waveData) return;
@@ -6246,10 +6291,10 @@ function DefenseView({ estudiante, backendUrl, onUpdate }) {
       retryCount: 0
     }));
 
-    // Desplegar las 3 primeras palabras en carriles diferenciados
+    // Desplegar las 2 primeras sentencias con velocidad calmada para dar tiempo a tipear
     const initialActive = [];
-    const lanes = [18, 45, 72];
-    const initialCount = Math.min(3, wordQueue.length);
+    const lanes = [10, 38];
+    const initialCount = Math.min(2, wordQueue.length);
     for (let i = 0; i < initialCount; i++) {
       const item = wordQueue.shift();
       initialActive.push({
@@ -6258,8 +6303,8 @@ function DefenseView({ estudiante, backendUrl, onUpdate }) {
         isRetry: item.isRetry,
         retryCount: item.retryCount,
         x: lanes[i % lanes.length],
-        y: 6 + (i * 9),
-        speed: 1.0 + (waveIdx * 0.16)
+        y: 4 + (i * 12),
+        speed: 0.28 + (waveIdx * 0.05)
       });
     }
 
@@ -6316,9 +6361,9 @@ function DefenseView({ estudiante, backendUrl, onUpdate }) {
     setActiveWords(prev => {
       const remaining = prev.filter(w => w.id !== word.id);
 
-      if (remaining.length < 3 && pendingWordsRef.current.length > 0) {
+      if (remaining.length < 2 && pendingWordsRef.current.length > 0) {
         const nextItem = pendingWordsRef.current.shift();
-        const randomLane = Math.floor(Math.random() * 62) + 16;
+        const randomLane = Math.random() > 0.5 ? 8 : 36;
         remaining.push({
           id: `m_spawn_${Date.now()}_${Math.random()}`,
           text: nextItem.text,
@@ -6326,7 +6371,7 @@ function DefenseView({ estudiante, backendUrl, onUpdate }) {
           retryCount: nextItem.retryCount,
           x: randomLane,
           y: 2,
-          speed: 1.0 + (currentWave * 0.16)
+          speed: 0.28 + (currentWave * 0.05)
         });
         setWavePendingWords([...pendingWordsRef.current]);
       }
@@ -6427,7 +6472,7 @@ function DefenseView({ estudiante, backendUrl, onUpdate }) {
     setTargetWordId(null);
 
     const nextActive = [];
-    const count = Math.min(3, pendingWordsRef.current.length);
+    const count = Math.min(2, pendingWordsRef.current.length);
     for (let i = 0; i < count; i++) {
       const nextItem = pendingWordsRef.current.shift();
       nextActive.push({
@@ -6435,9 +6480,9 @@ function DefenseView({ estudiante, backendUrl, onUpdate }) {
         text: nextItem.text,
         isRetry: nextItem.isRetry,
         retryCount: nextItem.retryCount,
-        x: Math.floor(Math.random() * 62) + 16,
+        x: i === 0 ? 8 : 36,
         y: 2,
-        speed: 1.0 + (currentWave * 0.16)
+        speed: 0.28 + (currentWave * 0.05)
       });
     }
 
@@ -6527,7 +6572,7 @@ function DefenseView({ estudiante, backendUrl, onUpdate }) {
         let targetLost = false;
 
         prev.forEach(word => {
-          const nextY = word.y + (word.speed || 1.35);
+          const nextY = word.y + (word.speed || 0.35);
           if (nextY >= 88) {
             barrierBreach = true;
             if (targetWordId === word.id) {
@@ -6570,10 +6615,10 @@ function DefenseView({ estudiante, backendUrl, onUpdate }) {
           pendingWordsRef.current.push(...wordsToRequeue);
         }
 
-        // Reponer palabras activas desde la cola si hay espacio (< 3)
-        while (remainingActive.length < 3 && pendingWordsRef.current.length > 0) {
+        // Reponer palabras activas desde la cola si hay espacio (< 2)
+        while (remainingActive.length < 2 && pendingWordsRef.current.length > 0) {
           const nextItem = pendingWordsRef.current.shift();
-          const randomLane = Math.floor(Math.random() * 62) + 16;
+          const randomLane = Math.random() > 0.5 ? 8 : 36;
           remainingActive.push({
             id: `m_spawn_${Date.now()}_${Math.random()}`,
             text: nextItem.text,
@@ -6581,7 +6626,7 @@ function DefenseView({ estudiante, backendUrl, onUpdate }) {
             retryCount: nextItem.retryCount,
             x: randomLane,
             y: 2,
-            speed: 1.0 + (currentWave * 0.16)
+            speed: 0.28 + (currentWave * 0.05)
           });
         }
 
@@ -7334,7 +7379,7 @@ function DungeonView({ estudiante, backendUrl, onUpdate }) {
   const [feedback, setFeedback] = useState(null);
   const [queryResultData, setQueryResultData] = useState(null);
   const [pedagogicalChecks, setPedagogicalChecks] = useState([]);
-  const [showMockPreview, setShowMockPreview] = useState(true);
+  const [showMockPreview, setShowMockPreview] = useState(false);
   const [showHintCard, setShowHintCard] = useState(false);
   const [tacticalToast, setTacticalToast] = useState(null);
 
@@ -7837,12 +7882,37 @@ function DungeonView({ estudiante, backendUrl, onUpdate }) {
             </div>
           </div>
 
-          {/* Pilar 1: Esquema Relacional Estructurado en Tarjetas Verticales */}
-          <div className="schema-tactical-panel mb-4 p-3.5 rounded-xl border border-slate-800 bg-slate-950/90 shadow-md">
-            <div className="schema-panel-header flex justify-between items-center mb-3">
+          {/* Tarjeta Destacada de Misión: ¿Qué debes consultar? (Visible de inmediato al inicio) */}
+          {currentRoom.id !== 'nucleo' && (
+            <div className="dungeon-mission-card p-3.5 rounded-xl bg-gradient-to-r from-indigo-950/90 via-slate-900 to-slate-950 border border-indigo-500/40 shadow-lg mb-3">
+              <div className="flex items-center justify-between mb-1.5">
+                <div className="flex items-center gap-2">
+                  <span className="text-base">🎯</span>
+                  <h4 className="text-xs font-mono font-black text-indigo-200 tracking-wider uppercase">
+                    OBJETIVO DE LA COMPUERTA
+                  </h4>
+                </div>
+                <span className="text-[10px] font-mono px-2 py-0.5 rounded-full bg-cyan-950/80 border border-cyan-500/40 text-cyan-300 font-bold">
+                  {currentRoom.name}
+                </span>
+              </div>
+              <p className="text-xs font-mono font-bold text-slate-100 leading-relaxed mb-2">
+                {currentRoom.objective}
+              </p>
+              <div className="flex items-center gap-2 text-[10.5px] font-mono text-slate-400 pt-1.5 border-t border-slate-800/80 flex-wrap">
+                <span>Tabla: <strong className="text-emerald-400">{currentRoom.name}</strong></span>
+                <span>·</span>
+                <span className="text-amber-300/90">Escribe la consulta abajo en el editor y pulsa Ejecutar</span>
+              </div>
+            </div>
+          )}
+
+          {/* Pilar 1: Esquema Relacional Estructurado y Compacto */}
+          <div className="schema-tactical-panel mb-3 p-3 rounded-xl border border-slate-800 bg-slate-950/90 shadow-md">
+            <div className="schema-panel-header flex justify-between items-center mb-2.5">
               <div className="flex items-center gap-2">
-                <span className="text-cyan-400 font-mono text-xs font-bold">📊 TABLA RELACIONAL:</span>
-                <code className="text-emerald-300 font-mono text-xs font-bold bg-slate-900 px-2.5 py-0.5 rounded-lg border border-slate-800">
+                <span className="text-cyan-400 font-mono text-xs font-bold">📊 ESQUEMA:</span>
+                <code className="text-emerald-300 font-mono text-xs font-bold bg-slate-900 px-2 py-0.5 rounded border border-slate-800">
                   {currentRoom.name}
                 </code>
               </div>
@@ -7851,15 +7921,15 @@ function DungeonView({ estudiante, backendUrl, onUpdate }) {
                 className="btn-toggle-sample text-xs font-mono text-indigo-300 hover:text-cyan-300 underline cursor-pointer"
                 onClick={() => setShowMockPreview(!showMockPreview)}
               >
-                {showMockPreview ? '👁️ Ocultar Preview de Datos' : '👁️ Ver Preview de Registros'}
+                {showMockPreview ? '👁️ Ocultar Preview de Registros' : `👁️ Ver Preview de Registros (${currentRoom.mockSample?.length || 4} filas)`}
               </button>
             </div>
 
-            {/* Columnas en Tarjetas Verticales Estructuradas */}
-            <div className="schema-columns-vertical-grid grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-2.5 mb-3">
+            {/* Columnas en Tarjetas Compactas */}
+            <div className="schema-columns-vertical-grid grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-2 mb-2">
               {currentRoom.columns.map((col, idx) => (
-                <div key={idx} className="column-spec-card p-2.5 rounded-xl bg-slate-900/90 border border-slate-800 hover:border-cyan-500/50 transition-all flex flex-col justify-between shadow-sm">
-                  <div className="flex items-center justify-between gap-1.5 mb-1.5">
+                <div key={idx} className="column-spec-card p-2 rounded-lg bg-slate-900/90 border border-slate-800 hover:border-cyan-500/50 transition-all flex flex-col justify-between shadow-sm">
+                  <div className="flex items-center justify-between gap-1 mb-1">
                     <span className="col-name font-mono text-xs font-bold text-slate-100 flex items-center gap-1">
                       <span className="text-cyan-400">#</span>
                       {col.name}
@@ -7870,7 +7940,7 @@ function DungeonView({ estudiante, backendUrl, onUpdate }) {
                       {col.isFk && <span className="text-[9px] font-mono font-bold text-indigo-400 bg-indigo-950/90 border border-indigo-500/50 px-1.5 py-0.5 rounded shadow-sm" title="Foreign Key">FK</span>}
                     </div>
                   </div>
-                  <p className="text-[10.5px] font-mono text-slate-400 leading-snug">
+                  <p className="text-[10px] font-mono text-slate-400 leading-tight">
                     {col.desc}
                   </p>
                 </div>
@@ -7879,16 +7949,16 @@ function DungeonView({ estudiante, backendUrl, onUpdate }) {
 
             {/* Preview de Registros de Muestra (DataGrip/Supabase Modern Table) */}
             {showMockPreview && currentRoom.mockSample && currentRoom.mockSample.length > 0 && (
-              <div className="mock-preview-table-container mt-3">
+              <div className="mock-preview-table-container mt-2.5 pt-2 border-t border-slate-800">
                 <div className="mock-preview-header text-[11px] font-mono text-slate-400 mb-1.5 flex items-center gap-1.5">
                   <span>📋 Registros de muestra en '{currentRoom.name}' ({currentRoom.mockSample.length} filas):</span>
                 </div>
-                <div className="overflow-x-auto rounded-xl border border-slate-800 bg-slate-950 shadow-inner">
+                <div className="overflow-x-auto rounded-xl border border-slate-800 bg-slate-950 shadow-inner max-h-[220px]">
                   <table className="dungeon-sample-table">
                     <thead>
-                      <tr className="border-b border-slate-800 bg-slate-900/95">
+                      <tr className="border-b border-slate-800 bg-slate-900/95 sticky top-0">
                         {Object.keys(currentRoom.mockSample[0]).map((key, i) => (
-                          <th key={i} className="py-2.5 px-3 text-left text-cyan-400 font-bold uppercase tracking-wider">{key}</th>
+                          <th key={i} className="py-2 px-3 text-left text-cyan-400 font-bold uppercase tracking-wider text-xs">{key}</th>
                         ))}
                       </tr>
                     </thead>
@@ -7896,7 +7966,7 @@ function DungeonView({ estudiante, backendUrl, onUpdate }) {
                       {currentRoom.mockSample.map((row, rIdx) => (
                         <tr key={rIdx} className={`border-b border-slate-800/40 hover:bg-slate-900/50 transition-colors ${rIdx % 2 === 0 ? 'bg-slate-950' : 'bg-slate-900/30'}`}>
                           {Object.values(row).map((val, cIdx) => (
-                            <td key={cIdx} className="py-2 px-3 text-slate-300">
+                            <td key={cIdx} className="py-1.5 px-3 text-slate-300 text-xs">
                               {typeof val === 'boolean' ? (
                                 <span className={`px-2 py-0.5 rounded text-[10px] font-bold border ${val ? 'bg-emerald-950/70 border-emerald-500/40 text-emerald-300' : 'bg-rose-950/70 border-rose-500/40 text-rose-300'}`}>
                                   {String(val).toUpperCase()}
@@ -7914,33 +7984,6 @@ function DungeonView({ estudiante, backendUrl, onUpdate }) {
               </div>
             )}
           </div>
-
-          {/* Tarjeta Destacada de Misión: ¿Qué debes consultar? */}
-          {currentRoom.id !== 'nucleo' && (
-            <div className="dungeon-mission-card p-4 rounded-xl bg-gradient-to-r from-indigo-950/80 via-slate-900 to-slate-950 border border-indigo-500/40 shadow-lg mb-4">
-              <div className="flex items-center justify-between mb-2">
-                <div className="flex items-center gap-2">
-                  <span className="text-xl">🎯</span>
-                  <h4 className="text-xs font-mono font-black text-indigo-200 tracking-wider uppercase">
-                    ¿QUÉ DEBES CONSULTAR EN ESTA COMPUERTA?
-                  </h4>
-                </div>
-                <span className="text-[10px] font-mono px-2.5 py-0.5 rounded-full bg-cyan-950/80 border border-cyan-500/40 text-cyan-300 font-bold">
-                  OBJETIVO SQL
-                </span>
-              </div>
-              <p className="text-sm font-mono font-bold text-slate-100 leading-snug mb-2.5">
-                {currentRoom.objective}
-              </p>
-              <div className="flex items-center gap-3 text-[11px] font-mono text-slate-400 pt-2 border-t border-slate-800/80 flex-wrap">
-                <span>Tabla destino: <strong className="text-emerald-400 font-bold">{currentRoom.name}</strong></span>
-                <span>·</span>
-                <span>Comando: <strong className="text-cyan-300">DQL (Data Query Language)</strong></span>
-                <span>·</span>
-                <span className="text-amber-300/90">Escribe la consulta abajo y ejecuta</span>
-              </div>
-            </div>
-          )}
 
           {/* Pilar 3: Consola DataGrip / Supabase, Snippets y Visor */}
           {currentRoom.id !== 'nucleo' ? (
