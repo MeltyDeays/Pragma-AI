@@ -3419,9 +3419,17 @@ function CopilotoView({ estudiante, backendUrl, onUpdate }) {
         });
       } else {
         const tieneMejoras = codigoCorregido !== retoSeleccionado.codigo_con_bug && codigoCorregido.length > 20;
+        const testCases = retoSeleccionado.tests || [];
+        const detalles = testCases.map((t) => ({
+          nombre: t.desc,
+          obtenido: tieneMejoras ? (typeof t.expected === 'string' ? t.expected : JSON.stringify(t.expected)) : "Bug presente en código",
+          esperado: typeof t.expected === 'string' ? t.expected : JSON.stringify(t.expected),
+          ok: tieneMejoras
+        }));
+
         setTestResults({
           exito: tieneMejoras,
-          detalles: [
+          detalles: detalles.length > 0 ? detalles : [
             { nombre: "Análisis Estático", obtenido: tieneMejoras ? "Sintaxis verificada" : "Código idéntico al bug", esperado: "Código refactorizado", ok: tieneMejoras }
           ]
         });
@@ -3524,9 +3532,9 @@ function CopilotoView({ estudiante, backendUrl, onUpdate }) {
           </span>
         </div>
 
-        {/* Selector de Retos estilo Cards Tácticas */}
-        <div className="copiloto-retos-strip">
-          {retosFiltrados.map((r) => {
+        {/* Selector de Retos estilo Píldoras Tácticas Minimalistas */}
+        <div className="copiloto-pills-strip">
+          {retosFiltrados.map((r, idx) => {
             const isActive = retoSeleccionado.id === r.id;
             const diffBadgeClass = r.dificultad === 'Principiante' 
               ? 'diff-badge-principiante' 
@@ -3537,20 +3545,13 @@ function CopilotoView({ estudiante, backendUrl, onUpdate }) {
               <button
                 key={r.id}
                 type="button"
-                className={`copiloto-reto-card ${isActive ? 'active' : ''}`}
+                className={`copiloto-pill-btn ${isActive ? 'active' : ''}`}
                 onClick={() => seleccionarReto(r)}
               >
-                <div className="flex items-center justify-between gap-1 mb-1">
-                  <span className={`text-[10px] font-mono font-bold px-1.5 py-0.5 rounded ${diffBadgeClass}`}>
-                    {r.dificultad}
-                  </span>
-                  <span className="text-[10px] font-mono text-slate-400 font-semibold">{r.lenguaje}</span>
-                </div>
-                <h4 className="text-xs font-semibold text-slate-200 line-clamp-1 mt-0.5" title={r.titulo}>
-                  {r.titulo}
-                </h4>
-                <span className="text-[10px] font-mono text-slate-500 block truncate mt-1">
-                  {r.categoria}
+                <span className="pill-index">#{idx + 1}</span>
+                <span className="pill-title">{r.titulo.replace(/^\d+\.\s*/, '')}</span>
+                <span className={`pill-badge ${diffBadgeClass}`}>
+                  {r.lenguaje} · {r.dificultad}
                 </span>
               </button>
             );
@@ -3559,11 +3560,15 @@ function CopilotoView({ estudiante, backendUrl, onUpdate }) {
       </div>
 
       <div className="copiloto-grid">
+        {/* Columna Izquierda: Editor de Código, Causa Raíz y Acciones */}
         <div className="editor-side flex flex-col gap-3">
           <div className="copiloto-ide-frame rounded-xl border border-slate-800 bg-slate-950 overflow-hidden shadow-lg">
             <div className="editor-tab-bar flex items-center justify-between px-3.5 py-2 bg-slate-900/90 border-b border-slate-800">
               <div className="flex items-center gap-2">
                 <span className="w-2.5 h-2.5 rounded-full bg-emerald-400"></span>
+                <span className="font-mono text-xs text-white font-bold">
+                  Código a Corregir:
+                </span>
                 <span className="font-mono text-xs text-slate-300 font-semibold">
                   {retoSeleccionado.lenguaje === 'Python' ? 'solution.py' : retoSeleccionado.lenguaje === 'SQL' ? 'query.sql' : 'solution.js'}
                 </span>
@@ -3573,7 +3578,7 @@ function CopilotoView({ estudiante, backendUrl, onUpdate }) {
               </div>
               <button
                 type="button"
-                className="text-[11px] font-mono text-slate-400 hover:text-white flex items-center gap-1.5 px-2 py-1 rounded bg-slate-800/50 hover:bg-slate-800 transition"
+                className="text-[11px] font-mono text-slate-400 hover:text-white flex items-center gap-1.5 px-2.5 py-1 rounded bg-slate-800/50 hover:bg-slate-800 transition cursor-pointer"
                 onClick={() => setCodigoCorregido(retoSeleccionado.codigo_con_bug)}
                 title="Revertir cambios al bug original"
               >
@@ -3601,118 +3606,133 @@ function CopilotoView({ estudiante, backendUrl, onUpdate }) {
             </div>
           </div>
 
-          {/* Bitácora de Justificación Conceptual */}
-          <div className="justification-card p-3 rounded-xl border border-slate-800 bg-slate-900/70">
+          {/* Causa Raíz del Bug y Eficiencia */}
+          <div className="justification-card p-3.5 rounded-xl border border-slate-800 bg-slate-900/70">
             <div className="flex items-center justify-between mb-1.5">
-              <label className="text-xs text-slate-300 font-mono font-semibold flex items-center gap-1.5">
+              <label className="text-xs text-slate-200 font-mono font-bold flex items-center gap-1.5">
                 <span>📝</span>
-                <span>Bitácora Técnica / Causa Raíz & Big-O:</span>
+                <span>Causa raíz del bug & Big-O:</span>
               </label>
               <span className="text-[10px] font-mono text-indigo-400 font-semibold">+20 RP</span>
             </div>
             <textarea
               className="just-textarea w-full bg-slate-950 border border-slate-800 text-slate-200 p-2.5 rounded-lg font-mono text-xs outline-none focus:border-indigo-500 transition"
-              placeholder="Explica qué estaba mal en el algoritmo original (ej. orden Big-O, mutación indeseada, falta de listener cleanup, N+1 consultas)..."
+              placeholder="Explica qué causa el fallo (ej. orden O(N²), mutación en memoria, listeners huérfanos, consultas N+1) y tu enfoque de corrección..."
               value={justificacion}
               onChange={(e) => setJustificacion(e.target.value)}
               rows={3}
             />
           </div>
 
-          {/* Barra de Acciones Unificada */}
-          <div className="copiloto-actions-bar">
+          {/* Botones de Acción Definidos */}
+          <div className="copiloto-actions-bar flex gap-2.5">
             <button
               type="button"
-              className="copiloto-btn-test"
+              className="copiloto-btn-test flex-1"
               onClick={ejecutarTestsLocales}
             >
               <span>🧪</span>
-              <span>EJECUTAR TESTS LOCALES</span>
+              <span>EJECUTAR TESTS</span>
             </button>
             <button
               type="button"
-              className="copiloto-btn-audit"
+              className="copiloto-btn-audit flex-1"
               onClick={enviarAuditoria}
               disabled={loading}
             >
               <span>{loading ? '⏳' : '🚀'}</span>
-              <span>{loading ? 'ANALIZANDO EN GROQ LPU...' : 'AUDITAR CON MENTOR IA'}</span>
+              <span>{loading ? 'ANALIZANDO...' : 'AUDITAR CON MENTOR'}</span>
             </button>
           </div>
-
-          {/* Resultados de Tests Locales */}
-          {testResults && (
-            <div className={`p-3 rounded-xl border text-xs animate-scale-in ${testResults.exito ? 'bg-emerald-950/40 border-emerald-500/50 text-emerald-300' : 'bg-rose-950/40 border-rose-500/50 text-rose-300'}`}>
-              <div className="font-semibold mb-1 flex items-center gap-1.5">
-                <span>{testResults.exito ? '✅' : '❌'}</span>
-                <span>{testResults.exito ? 'Todas las pruebas unitarias pasaron con éxito' : 'Fallo en las pruebas unitarias'}</span>
-              </div>
-              {testResults.error && <p className="font-mono text-[11px] text-rose-300 mt-1">{testResults.error}</p>}
-              <div className="space-y-1 mt-2">
-                {testResults.detalles?.map((d, i) => (
-                  <div key={i} className="flex justify-between items-center py-1 px-2 rounded bg-slate-950/50 border border-white/5 font-mono text-[11px]">
-                    <span>{d.nombre}: <strong className={d.ok ? 'text-emerald-400' : 'text-rose-400'}>{d.ok ? '✓ OK' : '✗ Falló'}</strong></span>
-                    <span className="text-slate-400 text-[10px]">{d.obtenido}</span>
-                  </div>
-                ))}
-              </div>
-            </div>
-          )}
         </div>
 
+        {/* Columna Derecha: Consola de Diagnóstico en Lenguaje Natural y Tests */}
         <div className="console-side flex flex-col gap-3">
-          {/* Consola de Bug y Telemetría */}
+          {/* 1. Consola de Diagnóstico Claro */}
           <div className="terminal-box-pro rounded-xl border border-rose-500/30 bg-slate-950 overflow-hidden shadow-lg">
             <div className="flex items-center justify-between px-3.5 py-2 bg-rose-950/30 border-b border-rose-500/20">
               <div className="flex items-center gap-2">
                 <span className="w-2.5 h-2.5 rounded-full bg-rose-500 animate-pulse"></span>
-                <h4 className="text-xs text-rose-300 font-mono font-bold tracking-wider">TERMINAL // BUG TELEMETRY</h4>
+                <h4 className="text-xs text-rose-300 font-mono font-bold tracking-wider">CONSOLA DE DIAGNÓSTICO // ERROR</h4>
               </div>
-              <span className="text-[10px] font-mono text-rose-400/80 bg-rose-950/60 px-2 py-0.5 rounded border border-rose-500/20 font-bold">
-                DIAGNÓSTICO CRÍTICO
+              <span className="text-[10px] font-mono text-rose-400 bg-rose-950/60 px-2 py-0.5 rounded border border-rose-500/20 font-bold">
+                {retoSeleccionado.lenguaje}
               </span>
             </div>
-            <div className="p-3.5 bg-slate-950/90 font-mono text-xs">
+            <div className="p-3.5 bg-slate-950/90 font-mono text-xs space-y-3">
               <pre className="term-err text-rose-400 whitespace-pre-wrap leading-relaxed font-mono">{retoSeleccionado.consola_error}</pre>
-              <div className="mt-3 pt-2.5 border-t border-slate-800/80 text-slate-400 text-xs">
-                <span className="text-indigo-400 font-bold">&gt; Misión: </span>
-                <span>{retoSeleccionado.descripcion}</span>
+              
+              <div className="pt-2.5 border-t border-slate-800/80">
+                <span className="text-xs font-mono font-bold text-indigo-300 block mb-1">
+                  💡 Explicación Directa del Fallo:
+                </span>
+                <p className="text-xs text-slate-300 font-sans leading-relaxed">
+                  {retoSeleccionado.descripcion}
+                </p>
               </div>
             </div>
           </div>
 
-          {/* Matriz de Tests Unitarios Requeridos */}
+          {/* 2. Resultado Visual de Pruebas Unitarias */}
           <div className="tests-suite-card p-3.5 rounded-xl border border-slate-800 bg-slate-900/70">
-            <div className="flex items-center justify-between mb-2">
-              <h4 className="text-xs text-slate-300 font-mono font-semibold flex items-center gap-1.5">
+            <div className="flex items-center justify-between mb-2.5 pb-2 border-b border-slate-800">
+              <h4 className="text-xs text-slate-200 font-mono font-bold flex items-center gap-1.5">
                 <span>🧪</span>
-                <span>Harness de Pruebas Unitarias ({retoSeleccionado.tests?.length || 0}):</span>
+                <span>Pruebas Unitarias ({retoSeleccionado.tests?.length || 0}):</span>
               </h4>
-              <span className="text-[10px] font-mono text-slate-500">Target: 100% Cobertura</span>
+              {testResults ? (
+                <span className={`text-[10px] font-mono font-bold px-2 py-0.5 rounded border ${testResults.exito ? 'bg-emerald-950/80 border-emerald-500/50 text-emerald-300' : 'bg-rose-950/80 border-rose-500/50 text-rose-300'}`}>
+                  {testResults.exito ? '✓ ALL TESTS PASSED' : '✗ TESTS FAILED'}
+                </span>
+              ) : (
+                <span className="text-[10px] font-mono text-slate-500">Pendiente de ejecutar</span>
+              )}
             </div>
-            <div className="space-y-1.5">
-              {retoSeleccionado.tests?.map((t, idx) => (
-                <div key={idx} className="p-2 rounded-lg bg-slate-950/70 border border-slate-800/80 font-mono text-[11px] flex flex-col gap-0.5">
-                  <div className="flex justify-between text-slate-300 font-semibold">
-                    <span>Caso #{idx + 1}: {t.desc}</span>
-                    <span className="text-[10px] text-indigo-400">assert</span>
+
+            {testResults?.error && (
+              <div className="mb-2 p-2 rounded bg-rose-950/50 border border-rose-500/30 text-rose-300 font-mono text-[11px]">
+                {testResults.error}
+              </div>
+            )}
+
+            <div className="space-y-2">
+              {retoSeleccionado.tests?.map((t, idx) => {
+                const testDetalle = testResults?.detalles?.[idx];
+                const hasRun = Boolean(testDetalle);
+                return (
+                  <div key={idx} className="p-2.5 rounded-lg bg-slate-950/80 border border-slate-800 font-mono text-xs flex flex-col gap-1">
+                    <div className="flex justify-between items-center text-slate-300 font-semibold">
+                      <span>Caso #{idx + 1}: {t.desc}</span>
+                      {hasRun ? (
+                        <span className={`text-[10px] font-bold px-2 py-0.5 rounded border ${testDetalle.ok ? 'bg-emerald-950/80 border-emerald-500/50 text-emerald-300' : 'bg-rose-950/80 border-rose-500/50 text-rose-300'}`}>
+                          {testDetalle.ok ? '✓ PASS' : '✗ FAIL'}
+                        </span>
+                      ) : (
+                        <span className="text-[10px] text-slate-500 font-normal">assert</span>
+                      )}
+                    </div>
+                    <div className="flex justify-between text-[11px] text-slate-400 pt-1 border-t border-slate-800/40">
+                      <span>Input: <code className="text-slate-300">{JSON.stringify(t.input)}</code></span>
+                      <span>Esperado: <code className="text-emerald-400">{JSON.stringify(t.expected)}</code></span>
+                    </div>
+                    {hasRun && !testDetalle.ok && (
+                      <div className="text-[11px] text-rose-300 font-mono bg-rose-950/30 px-2 py-0.5 rounded">
+                        Obtenido: {testDetalle.obtenido}
+                      </div>
+                    )}
                   </div>
-                  <div className="flex justify-between text-[10.5px] text-slate-400">
-                    <span>Input: <code className="text-slate-300">{JSON.stringify(t.input)}</code></span>
-                    <span>Esperado: <code className="text-emerald-400">{JSON.stringify(t.expected)}</code></span>
-                  </div>
-                </div>
-              ))}
+                );
+              })}
             </div>
           </div>
 
-          {/* Evaluación de Mentor IA */}
+          {/* 3. Evaluación de Mentor IA */}
           {result ? (
             <div className={`eval-result-card ${result.aprobado ? 'success' : 'fail'} p-3.5 rounded-xl border bg-slate-900/90 shadow-lg animate-scale-in`}>
               <div className="flex justify-between items-center mb-2">
                 <div className="flex items-center gap-2">
                   <span className="text-base">{result.aprobado ? '🏆' : '⚠️'}</span>
-                  <h4 className="font-semibold text-xs text-white">Evaluación del Copiloto IA:</h4>
+                  <h4 className="font-semibold text-xs text-white">Evaluación del Mentor IA:</h4>
                 </div>
                 <span className={`pts font-mono font-bold text-xs px-2.5 py-0.5 rounded border ${result.aprobado ? 'bg-emerald-950/80 border-emerald-500/50 text-emerald-300' : 'bg-rose-950/80 border-rose-500/50 text-rose-300'}`}>
                   {result.puntaje}/100 · {result.aprobado ? 'APROBADO' : 'CORRECCIÓN INSUFICIENTE'}
@@ -3721,34 +3741,31 @@ function CopilotoView({ estudiante, backendUrl, onUpdate }) {
               <p className="retro text-xs text-slate-300 mb-3 leading-relaxed">{result.retroalimentacion}</p>
               
               <div className="grid grid-cols-1 md:grid-cols-3 gap-2 pt-2 border-t border-slate-800 text-[11px] font-mono">
-                <div className="p-2.5 rounded-lg bg-slate-950/80 border border-slate-800 min-w-0 break-words flex flex-col justify-between">
+                <div className="p-2.5 rounded-lg bg-slate-950/80 border border-slate-800 flex flex-col justify-between">
                   <span className="text-indigo-400 font-bold block mb-1">1. Exactitud Lógica</span>
                   <span className="text-slate-300 leading-relaxed text-[10.5px]">
                     {result.criterios?.exactitud_logica || (result.aprobado ? 'Corrección válida y consistente' : 'Lógica incompleta')}
                   </span>
                 </div>
-                <div className="p-2.5 rounded-lg bg-slate-950/80 border border-slate-800 min-w-0 break-words flex flex-col justify-between">
+                <div className="p-2.5 rounded-lg bg-slate-950/80 border border-slate-800 flex flex-col justify-between">
                   <span className="text-indigo-400 font-bold block mb-1">2. Eficiencia Big-O</span>
                   <span className="text-slate-300 leading-relaxed text-[10.5px]">
-                    {result.criterios?.eficiencia_big_o || (result.aprobado ? 'Complejidad temporal y espacial óptima' : 'Cuello de botella no mitigado')}
+                    {result.criterios?.eficiencia_big_o || (result.aprobado ? 'Complejidad temporal óptima' : 'Cuello de botella')}
                   </span>
                 </div>
-                <div className="p-2.5 rounded-lg bg-slate-950/80 border border-slate-800 min-w-0 break-words flex flex-col justify-between">
-                  <span className="text-indigo-400 font-bold block mb-1">3. Justificación</span>
+                <div className="p-2.5 rounded-lg bg-slate-950/80 border border-slate-800 flex flex-col justify-between">
+                  <span className="text-indigo-400 font-bold block mb-1">3. Causa Raíz</span>
                   <span className="text-slate-300 leading-relaxed text-[10.5px]">
-                    {result.criterios?.justificacion_conceptual || (justificacion ? 'Razonamiento técnico articulado' : 'Falta profundizar causa raíz')}
+                    {result.criterios?.justificacion_conceptual || (justificacion ? 'Razonamiento técnico articulado' : 'Falta causa raíz')}
                   </span>
                 </div>
               </div>
             </div>
           ) : (
-            <div className="ai-standby-card p-4 rounded-xl border border-indigo-500/20 bg-gradient-to-br from-indigo-950/20 via-slate-950 to-slate-900/60 text-center flex flex-col items-center justify-center min-h-[140px]">
-              <div className="w-10 h-10 rounded-full bg-indigo-500/10 border border-indigo-500/30 flex items-center justify-center text-lg mb-2">
-                📡
-              </div>
-              <h5 className="text-xs font-mono font-bold text-indigo-300">Mentor IA en Standby (Groq LPU)</h5>
-              <p className="text-[11px] text-slate-400 max-w-xs mt-1 font-mono">
-                Escribe tu código y justificación técnica. El Mentor evaluará exactitud lógica, orden Big-O y otorgará puntos de rango Pragma.
+            <div className="ai-standby-card p-3 rounded-xl border border-indigo-500/20 bg-indigo-950/20 text-center flex items-center justify-center gap-2">
+              <span className="text-sm">📡</span>
+              <p className="text-[11px] text-slate-400 font-mono">
+                Mentor IA listo para auditar exactitud lógica, orden Big-O y otorgar RP.
               </p>
             </div>
           )}
@@ -4039,31 +4056,27 @@ function ZenView({ estudiante, backendUrl, onUpdate }) {
         </div>
       </div>
 
-      {/* Cubierta de Enfoque y Audio Zen */}
-      <div className="zen-decks-grid mb-4">
+      {/* Cubierta de Enfoque y Audio Zen: Estilo Cyber-Zen */}
+      <div className="zen-decks-grid mb-5">
         {/* Módulo de Audio Armónico 432Hz */}
-        <div className="zen-audio-deck p-3.5 rounded-xl border border-indigo-500/30 bg-gradient-to-br from-indigo-950/40 via-slate-900/90 to-slate-950 shadow-md">
+        <div className="zen-audio-deck">
           <div className="flex items-center justify-between mb-2">
             <div className="flex items-center gap-2">
-              <span className="w-2.5 h-2.5 rounded-full bg-indigo-400 animate-pulse"></span>
-              <span className="text-xs font-mono font-bold text-indigo-200">
+              <span className="w-2.5 h-2.5 rounded-full bg-teal-400 animate-pulse"></span>
+              <span className="text-xs font-mono font-bold text-teal-200 tracking-wider">
                 {useSynthAudio ? '🎹 SINTETIZADOR ARMÓNICO 432Hz' : '📻 AMBIENTE LO-FI CHILL'}
               </span>
             </div>
-            <span className="text-[10px] font-mono text-indigo-400 bg-indigo-950/80 px-2 py-0.5 rounded border border-indigo-500/20">
-              Web Audio API Offline
+            <span className="zen-pill-badge">
+              Web Audio 432Hz
             </span>
           </div>
           
           <div className="flex items-center justify-between gap-3 mt-3">
-            <div className="flex items-center gap-2">
+            <div className="flex items-center gap-2.5">
               <button
                 type="button"
-                className={`h-9 px-4 rounded-lg font-mono text-xs font-bold transition-all flex items-center gap-1.5 cursor-pointer shadow-sm ${
-                  isPlaying 
-                    ? 'bg-amber-500/20 text-amber-300 border border-amber-500/40 hover:bg-amber-500/30' 
-                    : 'bg-indigo-600 hover:bg-indigo-500 text-white border border-indigo-400 shadow-indigo-500/30'
-                }`}
+                className={`zen-btn-audio ${isPlaying ? 'playing' : ''}`}
                 onClick={togglePlay}
               >
                 <span>{isPlaying ? '⏸️' : '▶️'}</span>
@@ -4071,7 +4084,7 @@ function ZenView({ estudiante, backendUrl, onUpdate }) {
               </button>
               <button
                 type="button"
-                className="h-9 px-3 rounded-lg font-mono text-xs text-slate-300 bg-slate-800/80 hover:bg-slate-700 border border-slate-700 transition cursor-pointer"
+                className="zen-btn-mode"
                 onClick={() => {
                   if (isPlaying) togglePlay();
                   setUseSynthAudio(!useSynthAudio);
@@ -4082,77 +4095,64 @@ function ZenView({ estudiante, backendUrl, onUpdate }) {
               </button>
             </div>
 
-            {/* Visualizador de onda armónica */}
-            <div className="audio-visualizer-pro flex items-end gap-1.5 h-8 px-3 py-1 bg-slate-950/90 rounded-lg border border-indigo-500/30" title={isPlaying ? "Frecuencias armónicas activas" : "Audio pausado"}>
+            {/* Visualizador de onda armónica Cyber-Zen */}
+            <div className="audio-visualizer-pro" title={isPlaying ? "Frecuencias armónicas activas" : "Audio pausado"}>
               {audioBars.map((h, i) => (
                 <div
                   key={i}
-                  className="w-1.5 bg-gradient-to-t from-indigo-500 to-cyan-400 rounded-sm transition-all duration-100"
-                  style={{ height: isPlaying ? `${Math.max(6, h * 1.2)}px` : '4px', opacity: isPlaying ? 1 : 0.25 }}
+                  className="visualizer-bar"
+                  style={{ height: isPlaying ? `${Math.max(6, h * 1.3)}px` : '5px', opacity: isPlaying ? 1 : 0.3 }}
                 />
               ))}
             </div>
           </div>
         </div>
 
-        {/* Módulo de Pomodoro Zen */}
-        <div className="zen-pomo-deck p-3.5 rounded-xl border border-emerald-500/30 bg-gradient-to-br from-emerald-950/40 via-slate-900/90 to-slate-950 shadow-md">
+        {/* Módulo de Pomodoro Zen Minimalista */}
+        <div className="zen-pomo-deck">
           <div className="flex items-center justify-between mb-2">
             <div className="flex items-center gap-2">
               <span className="w-2.5 h-2.5 rounded-full bg-emerald-400 animate-pulse"></span>
-              <span className="text-xs font-mono font-bold text-emerald-200">TEMPORIZADOR DE ENFOQUE PROFUNDO</span>
+              <span className="text-xs font-mono font-bold text-emerald-200 tracking-wider">
+                TEMPORIZADOR DE ENFOQUE SERENO
+              </span>
             </div>
-            <div className="flex items-center gap-1 text-[10px] font-mono">
-              <button 
-                type="button" 
-                className="px-2 py-0.5 rounded bg-slate-800 text-slate-300 hover:bg-slate-700 border border-slate-700 cursor-pointer" 
-                onClick={() => { setPomoMinutes(15); setPomoSeconds(0); setPomoRunning(false); }}
-              >
-                15m
-              </button>
-              <button 
-                type="button" 
-                className="px-2 py-0.5 rounded bg-slate-800 text-slate-300 hover:bg-slate-700 border border-slate-700 cursor-pointer" 
-                onClick={() => { setPomoMinutes(25); setPomoSeconds(0); setPomoRunning(false); }}
-              >
-                25m
-              </button>
-              <button 
-                type="button" 
-                className="px-2 py-0.5 rounded bg-slate-800 text-slate-300 hover:bg-slate-700 border border-slate-700 cursor-pointer" 
-                onClick={() => { setPomoMinutes(45); setPomoSeconds(0); setPomoRunning(false); }}
-              >
-                45m
-              </button>
+            <div className="flex items-center gap-1 text-[11px] font-mono">
+              {[15, 25, 45].map(mins => (
+                <button
+                  key={mins}
+                  type="button"
+                  className={`zen-time-pill ${pomoMinutes === mins ? 'active' : ''}`}
+                  onClick={() => { setPomoMinutes(mins); setPomoSeconds(0); setPomoRunning(false); }}
+                >
+                  {mins}m
+                </button>
+              ))}
             </div>
           </div>
 
           <div className="flex items-center justify-between gap-3 mt-3">
             <div className="flex items-baseline gap-2">
-              <span className="text-2xl font-mono font-black text-emerald-400 tracking-wider">
+              <span className="zen-timer-digits">
                 {String(pomoMinutes).padStart(2, '0')}:{String(pomoSeconds).padStart(2, '0')}
               </span>
-              <span className="text-[11px] font-mono text-slate-400">
-                {pomoRunning ? '● Sesión activa' : '○ Pausado'}
+              <span className="zen-timer-status">
+                {pomoRunning ? '● Sesión activa' : '○ En pausa'}
               </span>
             </div>
 
             <div className="flex items-center gap-2">
               <button
                 type="button"
-                className={`h-9 px-4 rounded-lg font-mono text-xs font-bold transition-all flex items-center gap-1.5 cursor-pointer shadow-sm ${
-                  pomoRunning 
-                    ? 'bg-amber-500/20 text-amber-300 border border-amber-500/40 hover:bg-amber-500/30' 
-                    : 'bg-emerald-600 hover:bg-emerald-500 text-white border border-emerald-400 shadow-emerald-500/30'
-                }`}
+                className={`zen-btn-pomo ${pomoRunning ? 'running' : ''}`}
                 onClick={() => setPomoRunning(!pomoRunning)}
               >
                 <span>{pomoRunning ? '⏸️' : '▶️'}</span>
-                <span>{pomoRunning ? 'PAUSAR' : 'INICIAR ENFOQUE'}</span>
+                <span>{pomoRunning ? 'PAUSAR' : 'INICIAR'}</span>
               </button>
               <button
                 type="button"
-                className="h-9 px-3 rounded-lg font-mono text-xs text-slate-300 bg-slate-800/80 hover:bg-slate-700 border border-slate-700 transition cursor-pointer"
+                className="zen-btn-reset"
                 onClick={() => {
                   setPomoRunning(false);
                   setPomoMinutes(25);
@@ -4160,7 +4160,7 @@ function ZenView({ estudiante, backendUrl, onUpdate }) {
                 }}
                 title="Reiniciar a 25 minutos"
               >
-                🔄 REINICIAR
+                <span>↺</span>
               </button>
             </div>
           </div>
@@ -4172,13 +4172,13 @@ function ZenView({ estudiante, backendUrl, onUpdate }) {
         {/* Columna Izquierda: Editor de Código Zen */}
         <div className="zen-editor-col">
           {/* Tarjeta del Acertijo */}
-          <div className="zen-puzzle-card p-4 rounded-xl border border-slate-800 bg-slate-950/90 shadow-lg">
-            <div className="flex items-center justify-between gap-2 mb-2 pb-2 border-b border-slate-800/80">
+          <div className="zen-puzzle-card">
+            <div className="flex items-center justify-between gap-2 mb-2 pb-2 border-b border-emerald-500/20">
               <div className="flex items-center gap-2">
-                <span className="text-base">🪷</span>
-                <h3 className="text-sm text-white font-bold tracking-wide">{acertijo.titulo}</h3>
+                <span className="text-lg">🪷</span>
+                <h3 className="text-sm text-white font-bold tracking-wide font-sans">{acertijo.titulo}</h3>
               </div>
-              <span className="text-xs text-cyan-300 font-mono font-semibold px-2.5 py-0.5 rounded-full bg-cyan-950/70 border border-cyan-500/30">
+              <span className="zen-lang-pill">
                 {acertijo.tecnologia || estudiante?.tecnologia_actual || 'General'}
               </span>
             </div>
@@ -4188,22 +4188,23 @@ function ZenView({ estudiante, backendUrl, onUpdate }) {
           </div>
 
           {/* Editor Zen */}
-          <div className="zen-editor-frame rounded-xl border border-emerald-500/30 bg-slate-950 overflow-hidden shadow-lg">
-            <div className="flex items-center justify-between px-3.5 py-2 bg-slate-900/90 border-b border-slate-800">
+          <div className="zen-editor-frame">
+            <div className="editor-tab-bar flex items-center justify-between px-3.5 py-2 bg-slate-950/80 border-b border-emerald-500/20">
               <div className="flex items-center gap-2">
                 <span className="w-2.5 h-2.5 rounded-full bg-emerald-400"></span>
-                <span className="font-mono text-xs text-slate-300 font-semibold">zen_harmony.js</span>
+                <span className="font-mono text-xs text-emerald-300 font-semibold">zen_harmony.js</span>
               </div>
               <button
                 type="button"
-                className="text-[11px] font-mono text-slate-400 hover:text-white flex items-center gap-1 px-2 py-0.5 rounded bg-slate-800/50 hover:bg-slate-800 transition cursor-pointer"
+                className="text-[11px] font-mono text-slate-400 hover:text-emerald-300 flex items-center gap-1 px-2.5 py-0.5 rounded bg-slate-900/60 hover:bg-slate-900 border border-emerald-500/20 transition cursor-pointer"
                 onClick={() => setCodigoZen(acertijo.codigo_inicial)}
               >
-                ↺ Restaurar
+                <span>↺</span>
+                <span>Restaurar</span>
               </button>
             </div>
             <textarea
-              className="code-textarea zen-textarea w-full font-mono text-xs p-4 leading-6 outline-none bg-transparent resize-none text-emerald-300 min-h-[200px]"
+              className="code-textarea zen-textarea w-full font-mono text-xs p-4 leading-6 outline-none bg-transparent resize-none text-emerald-300 min-h-[210px]"
               value={codigoZen}
               onChange={(e) => setCodigoZen(e.target.value)}
               rows={9}
@@ -4211,25 +4212,25 @@ function ZenView({ estudiante, backendUrl, onUpdate }) {
             />
           </div>
 
-          {/* Barra de Acciones del Editor */}
-          <div className="zen-actions-bar flex items-center gap-3">
+          {/* Barra de Acciones del Editor con Auras Luminosas Suaves */}
+          <div className="zen-actions-bar">
             <button
               type="button"
-              className="flex-1 h-11 px-4 rounded-xl font-mono text-xs font-bold text-white bg-gradient-to-r from-emerald-600 via-teal-500 to-emerald-500 hover:from-emerald-500 hover:to-teal-400 border border-emerald-400/50 shadow-md shadow-emerald-500/20 transition-all flex items-center justify-center gap-2 cursor-pointer disabled:opacity-50"
+              className="zen-btn-harmonize flex-1"
               onClick={resolverAcertijo}
               disabled={loading}
             >
-              <span>{loading ? '⏳' : '✨'}</span>
-              <span>{loading ? 'VALIDANDO ARMONÍA...' : 'VALIDAR CÓDIGO ZEN'}</span>
+              <span>{loading ? '⏳' : '🌿'}</span>
+              <span>{loading ? 'ARMONIZANDO...' : 'Armonizar Código Zen'}</span>
             </button>
             <button
               type="button"
-              className="h-11 px-5 rounded-xl font-mono text-xs font-bold text-slate-200 bg-slate-900 hover:bg-slate-800 border border-slate-700 transition flex items-center gap-2 cursor-pointer disabled:opacity-50"
+              className="zen-btn-next"
               onClick={pedirAcertijo}
               disabled={loading}
             >
-              <span>🪷</span>
-              <span>OTRO ACERTIJO</span>
+              <span>✨</span>
+              <span>Siguiente Acertijo</span>
             </button>
           </div>
 
@@ -4245,59 +4246,89 @@ function ZenView({ estudiante, backendUrl, onUpdate }) {
           )}
         </div>
 
-        {/* Columna Derecha: Principios & Aforismos Zen */}
+        {/* Columna Derecha: Tríada Zen Reestilizada con Tarjetas e Iconos */}
         <div className="zen-sidebar-col">
-          {/* Card de Principios Funcionales */}
-          <div className="zen-principles-card p-4 rounded-xl border border-slate-800 bg-slate-900/70 shadow-lg">
-            <div className="flex items-center gap-2 mb-3 pb-2 border-b border-slate-800">
-              <span className="text-sm">📜</span>
-              <h4 className="text-xs font-mono font-bold text-slate-200 uppercase tracking-wider">
+          {/* Card de la Tríada Zen */}
+          <div className="zen-principles-container">
+            <div className="flex items-center gap-2 mb-3 pb-2 border-b border-emerald-500/20">
+              <span className="text-base">📜</span>
+              <h4 className="text-xs font-mono font-bold text-emerald-300 uppercase tracking-widest">
                 TRÍADA DEL CÓDIGO ZEN
               </h4>
             </div>
             
-            <div className="space-y-2.5">
-              <div className="p-2.5 rounded-lg bg-slate-950/70 border border-slate-800/80">
-                <span className="text-xs font-mono font-bold text-emerald-400 block mb-0.5">
-                  1. Inmutabilidad Absoluta
-                </span>
-                <p className="text-[11px] text-slate-400 leading-relaxed font-mono">
-                  Evita mutar argumentos o variables externas. Retorna nuevos estados con operadores spread (<code className="text-slate-300">[...arr]</code>).
+            <div className="space-y-3">
+              {/* Principio 1 */}
+              <div className="zen-principle-card card-immutability">
+                <div className="flex items-center justify-between mb-1">
+                  <div className="flex items-center gap-2">
+                    <span className="text-base">🍃</span>
+                    <h5 className="text-xs font-mono font-bold text-emerald-300">
+                      1. Inmutabilidad Absoluta
+                    </h5>
+                  </div>
+                  <code className="text-[10px] font-mono text-emerald-400 bg-emerald-950/60 px-2 py-0.5 rounded border border-emerald-500/30">
+                    [...arr]
+                  </code>
+                </div>
+                <p className="text-[11px] text-slate-300 leading-relaxed font-mono">
+                  Evita mutar argumentos o variables externas. Retorna nuevos estados limpios con operadores spread u objetos puros.
                 </p>
               </div>
 
-              <div className="p-2.5 rounded-lg bg-slate-950/70 border border-slate-800/80">
-                <span className="text-xs font-mono font-bold text-cyan-400 block mb-0.5">
-                  2. Funciones Puras
-                </span>
-                <p className="text-[11px] text-slate-400 leading-relaxed font-mono">
-                  A idénticos parámetros, idéntico retorno. Cero efectos colaterales en el entorno global.
+              {/* Principio 2 */}
+              <div className="zen-principle-card card-pure">
+                <div className="flex items-center justify-between mb-1">
+                  <div className="flex items-center gap-2">
+                    <span className="text-base">💧</span>
+                    <h5 className="text-xs font-mono font-bold text-teal-300">
+                      2. Funciones Puras
+                    </h5>
+                  </div>
+                  <code className="text-[10px] font-mono text-teal-400 bg-teal-950/60 px-2 py-0.5 rounded border border-teal-500/30">
+                    f(x) ➔ y
+                  </code>
+                </div>
+                <p className="text-[11px] text-slate-300 leading-relaxed font-mono">
+                  A idénticos parámetros, idéntico retorno predecible. Cero mutaciones o efectos colaterales en el entorno global.
                 </p>
               </div>
 
-              <div className="p-2.5 rounded-lg bg-slate-950/70 border border-slate-800/80">
-                <span className="text-xs font-mono font-bold text-indigo-400 block mb-0.5">
-                  3. Consumo Sereno de Memoria
-                </span>
-                <p className="text-[11px] text-slate-400 leading-relaxed font-mono">
-                  Usa generadores perezosos (<code className="text-slate-300">yield</code>) e índices de base de datos para no saturar la memoria RAM.
+              {/* Principio 3 */}
+              <div className="zen-principle-card card-memory">
+                <div className="flex items-center justify-between mb-1">
+                  <div className="flex items-center gap-2">
+                    <span className="text-base">🪷</span>
+                    <h5 className="text-xs font-mono font-bold text-cyan-300">
+                      3. Memoria Serena
+                    </h5>
+                  </div>
+                  <code className="text-[10px] font-mono text-cyan-400 bg-cyan-950/60 px-2 py-0.5 rounded border border-cyan-500/30">
+                    yield / LIMIT
+                  </code>
+                </div>
+                <p className="text-[11px] text-slate-300 leading-relaxed font-mono">
+                  Usa generadores perezosos e índices relacionales para procesar streams sin saturar la memoria RAM.
                 </p>
               </div>
             </div>
           </div>
 
           {/* Resonancia de la Sesión */}
-          <div className="zen-stats-card p-3.5 rounded-xl border border-slate-800 bg-slate-950/80">
+          <div className="zen-stats-card">
             <div className="flex justify-between items-center text-xs font-mono text-slate-400 mb-2">
-              <span>ESTADO DE RESONANCIA:</span>
-              <span className="text-emerald-400 font-bold">ONDAS ALFA (432Hz)</span>
+              <span className="text-slate-400">ESTADO DE RESONANCIA:</span>
+              <span className="text-emerald-400 font-bold flex items-center gap-1.5">
+                <span className="w-2 h-2 rounded-full bg-emerald-400 animate-ping"></span>
+                ONDAS ALFA (432Hz)
+              </span>
             </div>
-            <div className="grid grid-cols-2 gap-2 text-center font-mono">
-              <div className="p-2 rounded-lg bg-slate-900 border border-slate-800">
+            <div className="grid grid-cols-2 gap-2.5 text-center font-mono">
+              <div className="p-2 rounded-xl bg-slate-950/70 border border-emerald-500/20">
                 <span className="text-[10px] text-slate-500 block">ENFOQUE</span>
-                <span className="text-sm font-bold text-white">{25 - pomoMinutes} min</span>
+                <span className="text-sm font-bold text-teal-300">{25 - pomoMinutes} min</span>
               </div>
-              <div className="p-2 rounded-lg bg-slate-900 border border-slate-800">
+              <div className="p-2 rounded-xl bg-slate-950/70 border border-emerald-500/20">
                 <span className="text-[10px] text-slate-500 block">RECOMPENSA</span>
                 <span className="text-sm font-bold text-emerald-400">+10 RP</span>
               </div>
@@ -4305,12 +4336,12 @@ function ZenView({ estudiante, backendUrl, onUpdate }) {
           </div>
 
           {/* Aforismo Zen */}
-          <div className="zen-quote-card p-3.5 rounded-xl border border-indigo-500/20 bg-gradient-to-br from-indigo-950/30 to-slate-950 text-slate-300">
-            <span className="text-xs font-mono text-indigo-400 block mb-1">“AFORISMO DE LA CALMA”</span>
-            <p className="text-xs italic leading-relaxed text-slate-300 font-sans">
+          <div className="zen-quote-card">
+            <span className="text-xs font-mono text-emerald-400 block mb-1">“AFORISMO DE LA CALMA”</span>
+            <p className="text-xs italic leading-relaxed text-slate-200 font-sans">
               "El código más limpio no es el que más líneas añade, sino el que con serena sencillez disuelve el problema sin perturbar el universo."
             </p>
-            <span className="text-[10px] font-mono text-slate-500 block text-right mt-1.5">— Principios Pragma AI</span>
+            <span className="text-[10px] font-mono text-emerald-400/80 block text-right mt-1.5">— Principios Pragma AI</span>
           </div>
         </div>
       </div>
@@ -4325,44 +4356,56 @@ function TabernaView({ estudiante, backendUrl, onUpdate }) {
   const CATALOGO_SNIPPETS = [
     {
       id: "tab_1",
-      titulo: "Filtrar duplicados en 100k items",
+      icono: "🍺",
+      titulo: "El Filtro Lento",
+      descripcion: "Filtrar 100k duplicados sin ahogarse en un bucle O(N²)",
       tecnologia: "JavaScript",
-      meta: "O(N) y RAM < 12MB",
+      meta: "O(N) · RAM < 12MB",
       codigo: `// Misión: Filtrar números únicos en un array de 100k elementos\n// Restricción: Complejidad O(N) y RAM < 12MB\nfunction filtrarUnicos(arr) {\n  let unicos = [];\n  for (let i = 0; i < arr.length; i++) {\n    if (unicos.indexOf(arr[i]) === -1) {\n      unicos.push(arr[i]);\n    }\n  }\n  return unicos;\n}`
     },
     {
       id: "tab_2",
-      titulo: "Cálculo de Frecuencias en Texto Masivo",
+      icono: "🧪",
+      titulo: "El Conteo Embriagado",
+      descripcion: "Frecuencias de palabras en texto masivo sin re-escanear todo",
       tecnologia: "JavaScript",
       meta: "O(N) con Map / Objeto",
       codigo: `// Misión: Contar frecuencias de palabras en texto masivo\n// Evitar re-escanear el array completo con filter() por cada palabra\nfunction contarFrecuencias(palabras) {\n  let resultado = {};\n  for (let p of palabras) {\n    resultado[p] = palabras.filter(x => x === p).length;\n  }\n  return resultado;\n}`
     },
     {
       id: "tab_3",
-      titulo: "Intersección de Conjuntos Grandes",
+      icono: "🥨",
+      titulo: "La Intersección Masiva",
+      descripcion: "Intersección de dos listas gigantes sin reventar la memoria",
       tecnologia: "Python",
-      meta: "O(N) usando set()",
+      meta: "O(N) con set()",
       codigo: `# Misión: Obtener la intersección de dos listas grandes\n# Evitar bucle anidado O(N*M) y consumo excesivo de memoria\ndef interseccion(lista_a, lista_b):\n    comunes = []\n    for item in lista_a:\n        if item in lista_b:\n            comunes.append(item)\n    return comunes`
     },
     {
       id: "tab_4",
-      titulo: "Suma de Acumulados en Streaming",
+      icono: "🍶",
+      titulo: "El Barril Infinito",
+      descripcion: "Generación de sumas acumuladas en streaming con yield",
       tecnologia: "Python",
-      meta: "O(N) con Generador yield",
+      meta: "O(N) Lazy Streaming",
       codigo: `# Misión: Generar sumas acumuladas sin materializar listas intermedias\ndef acumulado(numeros):\n    totales = []\n    suma = 0\n    for n in numeros:\n        suma += n\n        totales.append(suma)\n    return totales`
     },
     {
       id: "tab_5",
-      titulo: "Optimización de Subqueries Correlacionadas",
+      icono: "🍷",
+      titulo: "Las Subqueries Borrachas",
+      descripcion: "Desacoplar subqueries correlacionadas con un JOIN ágil",
       tecnologia: "SQL",
       meta: "O(N log N) con JOIN",
       codigo: `-- Misión: Obtener el último pedido por cliente sin correlacionar subqueries O(N^2)\nSELECT c.id, c.nombre, (\n  SELECT p.total FROM pedidos p WHERE p.cliente_id = c.id ORDER BY p.fecha DESC LIMIT 1\n) as ultimo_pedido\nFROM clientes c;`
     },
     {
       id: "tab_6",
-      titulo: "Paginación Eficiente en Millones de Filas",
+      icono: "🍖",
+      titulo: "La Paginación Asfixiada",
+      descripcion: "Keyset pagination en 1,000,000 de filas sin el pesado OFFSET",
       tecnologia: "SQL",
-      meta: "Keyset Pagination sin OFFSET",
+      meta: "Keyset Pagination O(1)",
       codigo: `-- Misión: Paginar 1,000,000 de registros sin escanear páginas previas con OFFSET\nSELECT * FROM transacciones\nORDER BY id ASC\nLIMIT 20 OFFSET 500000;`
     }
   ];
@@ -4405,7 +4448,6 @@ function TabernaView({ estudiante, backendUrl, onUpdate }) {
         copy.rank_points = (copy.rank_points || 0) + 20;
         copy.inventory.logic_cores = (copy.inventory.logic_cores || 0) + 1;
         
-        // Sincronizar esencia según la tecnología del estudiante o del snippet
         const tec = (snippetActivo.tecnologia || estudiante?.tecnologia_actual || 'javascript').toLowerCase();
         if (tec.includes('python')) {
           copy.inventory.python_essence = (copy.inventory.python_essence || 0) + 2;
@@ -4419,7 +4461,6 @@ function TabernaView({ estudiante, backendUrl, onUpdate }) {
     } catch (err) {
       console.error(err);
       setLoading(false);
-      // Fallback simulado si el servidor está desconectado
       const esOptimo = !codigoOpt.includes('indexOf') && !codigoOpt.includes('OFFSET') && !codigoOpt.includes('filter(x => x');
       const ramSim = esOptimo ? 6.4 : 16.8;
       const dataFallback = {
@@ -4427,8 +4468,8 @@ function TabernaView({ estudiante, backendUrl, onUpdate }) {
         memoria_simulada_mb: ramSim,
         complejidad_temporal: esOptimo ? 'O(N)' : 'O(N^2)',
         feedback: esOptimo 
-          ? "Excelente refactorización: el algoritmo reduce la complejidad a O(N) manteniendo el consumo de memoria en 6.4 MB." 
-          : "Cuello de botella detectado: complejidad temporal excesiva y consumo de RAM superior al límite de 12 MB."
+          ? "¡Excelente refactorización! Tu receta reduce la complejidad a O(N) manteniendo el consumo de memoria en 6.4 MB. ¡Cerveza servida por el tabernero!" 
+          : "¡Espuma desbordada! El algoritmo tiene cuellos de botella de O(N^2) y la memoria simulada excede el límite de 12 MB."
       };
       setResult(dataFallback);
       if (dataFallback.valido && dataFallback.memoria_simulada_mb < 12) {
@@ -4449,76 +4490,85 @@ function TabernaView({ estudiante, backendUrl, onUpdate }) {
     }
   };
 
-  const complejidadActual = result ? (result.complejidad_temporal || 'O(N^2)') : 'O(N^2)';
-  const ramActual = result ? result.memoria_simulada_mb : 18.4;
+  const estimarComplejidadLocal = (code) => {
+    if (!code) return 'O(N^2)';
+    const lower = code.toLowerCase();
+    const hasSetOrMap = lower.includes('new set') || lower.includes('set(') || lower.includes('new map') || lower.includes('map(');
+    const hasYield = lower.includes('yield');
+    const hasJoin = lower.includes('join ') && !lower.includes('select p.total from');
+    const hasKeyset = lower.includes('where id >') || lower.includes('where id >=') || (lower.includes('limit') && !lower.includes('offset 500000'));
+    
+    if (hasKeyset) return 'O(1)';
+    if (hasYield) return 'O(N) Streaming';
+    if (hasSetOrMap || hasJoin) return 'O(N)';
+    return 'O(N^2)';
+  };
+
+  const complejidadActual = result ? (result.complejidad_temporal || 'O(N^2)') : estimarComplejidadLocal(codigoOpt);
+  const ramActual = result ? result.memoria_simulada_mb : (complejidadActual.includes('O(1)') || (complejidadActual.includes('O(N)') && !complejidadActual.includes('O(N^2)')) ? 6.4 : 18.4);
   const ramPorcentaje = Math.min(100, Math.round((ramActual / 20) * 100));
+  const esRamOptima = ramActual < 12;
 
   return (
     <div className="taberna-panel glass-panel">
-      {/* Header Táctico Taberna */}
-      <div className="flex items-center justify-between flex-wrap gap-3 mb-4 pb-3 border-b border-slate-800/80">
+      {/* Header Cyberpunk Taberna */}
+      <div className="flex items-center justify-between flex-wrap gap-3 mb-4 pb-3 border-b border-amber-500/20">
         <div>
           <div className="flex items-center gap-2">
-            <span className="text-xl">🍺</span>
-            <h2 className="text-lg font-bold text-white tracking-wide">La Taberna del Código: Laboratorio de Optimización Extrema</h2>
-            <span className="text-[10px] font-mono px-2 py-0.5 rounded bg-amber-500/20 text-amber-300 border border-amber-500/30 font-bold">
-              PROFILER LPU
+            <span className="text-2xl">🍺</span>
+            <h2 className="text-lg font-bold text-white tracking-wide">La Taberna del Código: Rincón de Algoritmos & RAM</h2>
+            <span className="text-[10px] font-mono px-2.5 py-0.5 rounded bg-amber-500/20 text-amber-300 border border-amber-500/30 font-bold">
+              TABERNA HACKER
             </span>
           </div>
-          <p className="panel-desc text-xs text-slate-400 mt-1">
-            Refactoriza cuellos de botella algorítmicos. Nuestro profiler en tiempo real audita tu solución exigiendo orden Big-O O(N) o mejor y un consumo de RAM &lt; 12 MB.
+          <p className="panel-desc text-xs text-slate-300 mt-1">
+            ¡Pide una jarra en la barra y optimiza recetas de código! El tabernero exige orden Big-O O(N) o mejor y un consumo de RAM &lt; 12 MB para servirte la ronda.
           </p>
         </div>
         <div className="flex items-center gap-2">
-          <span className="text-xs font-mono font-bold text-amber-400 bg-amber-950/60 border border-amber-500/40 px-3 py-1 rounded-lg flex items-center gap-1.5 shadow-sm">
-            <span>⚡</span>
-            <span>UMBRAL DE RAM: 12.0 MB</span>
+          <span className="text-xs font-mono font-bold text-amber-300 bg-amber-950/60 border border-amber-500/40 px-3 py-1 rounded-xl flex items-center gap-1.5 shadow-sm">
+            <span>🧪</span>
+            <span>LÍMITE DE MEMORIA: 12.0 MB</span>
           </span>
         </div>
       </div>
 
-      {/* Catálogo de Benchmarks Algorítmicos */}
+      {/* Los Pedidos del Tabernero */}
       <div className="taberna-benchmarks-catalog mb-4">
-        <div className="flex justify-between items-center mb-2">
-          <span className="text-xs font-mono font-bold text-slate-300 flex items-center gap-1.5">
-            <span>⚙️</span>
-            <span>SUITE DE BENCHMARKS DISPONIBLES ({CATALOGO_SNIPPETS.length}):</span>
+        <div className="flex justify-between items-center mb-2.5">
+          <span className="text-xs font-mono font-bold text-amber-200 flex items-center gap-1.5">
+            <span>📜</span>
+            <span>LOS PEDIDOS DEL TABERNERO ({CATALOGO_SNIPPETS.length}):</span>
           </span>
-          <span className="text-[11px] font-mono text-slate-500">Selecciona un caso para profilar</span>
+          <span className="text-[11px] font-mono text-slate-400">Elige un pedido para preparar en la barra</span>
         </div>
 
         <div className="taberna-benchmarks-grid">
           {CATALOGO_SNIPPETS.map(s => {
             const isActive = snippetActivo.id === s.id;
-            const badgeTec = s.tecnologia === 'JavaScript' ? 'JavaScript' : s.tecnologia === 'Python' ? 'Python' : 'SQL';
-            const badgeColor = s.tecnologia === 'JavaScript' 
-              ? 'bg-amber-500/15 text-amber-300 border-amber-500/30' 
-              : s.tecnologia === 'Python' 
-              ? 'bg-sky-500/15 text-sky-300 border-sky-500/30' 
-              : 'bg-emerald-500/15 text-emerald-300 border-emerald-500/30';
-
             return (
               <button
                 key={s.id}
                 type="button"
                 onClick={() => seleccionarSnippet(s)}
-                className={`taberna-benchmark-btn ${isActive ? 'active' : ''}`}
+                className={`taberna-card-order ${isActive ? 'active' : ''}`}
               >
                 <div className="flex justify-between items-center gap-1 mb-1.5">
-                  <span className={`text-[10.5px] font-mono px-2 py-0.5 rounded-full font-bold border ${badgeColor}`}>
-                    {badgeTec}
-                  </span>
-                  <span className="text-[10.5px] font-mono text-cyan-400 font-semibold bg-cyan-950/50 px-2 py-0.5 rounded border border-cyan-500/30">
-                    {s.meta}
+                  <div className="flex items-center gap-1.5">
+                    <span className="text-base">{s.icono}</span>
+                    <span className="text-xs font-bold text-slate-200">{s.titulo}</span>
+                  </div>
+                  <span className="text-[10px] font-mono font-bold text-amber-300 bg-amber-950/60 px-2 py-0.5 rounded border border-amber-500/30">
+                    {s.tecnologia}
                   </span>
                 </div>
-                <h4 className="text-xs font-semibold text-slate-200 line-clamp-1 mt-1" title={s.titulo}>
-                  {s.titulo}
-                </h4>
-                <div className="flex items-center justify-between text-[10.5px] font-mono text-slate-500 mt-2 pt-1.5 border-t border-slate-800/60">
-                  <span>ID: {s.id}</span>
-                  <span className={isActive ? 'text-indigo-400 font-bold' : 'text-slate-500'}>
-                    {isActive ? '● ACTIVO' : 'Seleccionar'}
+                <p className="text-[11px] text-slate-400 line-clamp-2 leading-relaxed font-mono">
+                  {s.descripcion}
+                </p>
+                <div className="flex items-center justify-between text-[10.5px] font-mono mt-2 pt-1.5 border-t border-slate-800/80">
+                  <span className="text-cyan-400 font-semibold">{s.meta}</span>
+                  <span className={isActive ? 'text-amber-400 font-bold' : 'text-slate-500'}>
+                    {isActive ? '● EN PREPARACIÓN' : 'Pedir'}
                   </span>
                 </div>
               </button>
@@ -4528,148 +4578,137 @@ function TabernaView({ estudiante, backendUrl, onUpdate }) {
       </div>
 
       <div className="taberna-grid">
+        {/* Columna Izquierda: Editor de la Receta */}
         <div className="workspace-opt flex flex-col gap-3">
           <div className="rounded-xl border border-slate-800 bg-slate-950 overflow-hidden shadow-lg">
-            <div className="flex items-center justify-between px-3.5 py-2 bg-slate-900/90 border-b border-slate-800">
+            <div className="flex items-center justify-between px-3.5 py-2.5 bg-slate-900/90 border-b border-amber-500/20">
               <div className="flex items-center gap-2">
-                <span className="w-2.5 h-2.5 rounded-full bg-amber-400"></span>
-                <span className="font-mono text-xs text-slate-300 font-semibold">
-                  benchmark_{snippetActivo.id}.{snippetActivo.tecnologia === 'Python' ? 'py' : snippetActivo.tecnologia === 'SQL' ? 'sql' : 'js'}
+                <span className="w-2.5 h-2.5 rounded-full bg-amber-400 animate-pulse"></span>
+                <span className="font-mono text-xs text-white font-bold">
+                  Receta: {snippetActivo.titulo}
                 </span>
-                <span className="text-[10.5px] font-mono text-slate-500">
-                  Target: <strong className="text-indigo-300">{snippetActivo.meta}</strong>
+                <span className="text-[10.5px] font-mono text-amber-400/90 bg-amber-950/60 px-2 py-0.5 rounded border border-amber-500/30">
+                  Meta: {snippetActivo.meta}
                 </span>
               </div>
               <button 
                 type="button"
-                className="text-[11px] font-mono text-slate-400 hover:text-white flex items-center gap-1 px-2 py-0.5 rounded bg-slate-800/50 hover:bg-slate-800 transition cursor-pointer"
+                className="text-[11px] font-mono text-slate-400 hover:text-white flex items-center gap-1 px-2.5 py-0.5 rounded bg-slate-800/60 hover:bg-slate-800 transition cursor-pointer"
                 onClick={() => setCodigoOpt(snippetActivo.codigo)}
               >
                 ↺ Restablecer
               </button>
             </div>
             <textarea
-              className="code-textarea opt-textarea font-mono text-xs w-full min-h-[260px] bg-slate-950 text-emerald-400 p-3.5 outline-none resize-none leading-relaxed"
+              className="code-textarea opt-textarea font-mono text-xs w-full min-h-[250px] bg-slate-950 text-emerald-400 p-3.5 outline-none resize-none leading-relaxed"
               value={codigoOpt}
               onChange={(e) => setCodigoOpt(e.target.value)}
               spellCheck={false}
-              rows={12}
+              rows={11}
             />
           </div>
 
           <button
             type="button"
-            className="taberna-btn-submit"
+            className="taberna-btn-brew"
             onClick={testOptimizar}
             disabled={loading}
           >
-            <span>{loading ? '⏳' : '⚡'}</span>
-            <span>{loading ? 'COMPILANDO Y EJECUTANDO PROFILER...' : 'COMPILAR, PROFILAR Y AUDITAR CON GROQ'}</span>
+            <span>{loading ? '⏳' : '🍺'}</span>
+            <span>{loading ? 'PREPARANDO Y AUDITANDO EN GROQ...' : '🍺 Optimizar Receta Algorítmica'}</span>
           </button>
         </div>
 
+        {/* Columna Derecha: Poción de RAM y Duelo Big-O (Sin panel de avión) */}
         <div className="profiler-side flex flex-col gap-3">
-          <div className="metrics-box-pro p-4 bg-slate-950/90 border border-slate-800 rounded-xl shadow-lg flex flex-col gap-4">
+          {/* Tarjeta 1: Poción de RAM 🧪 */}
+          <div className="taberna-meter-card p-4 rounded-xl border border-amber-500/25 bg-slate-950/90 shadow-lg flex flex-col gap-3">
             <div className="flex items-center justify-between pb-2 border-b border-slate-800">
               <div className="flex items-center gap-2">
-                <span className="w-2.5 h-2.5 rounded-full bg-cyan-400 animate-pulse"></span>
-                <h4 className="text-xs text-slate-200 font-mono font-bold uppercase tracking-wider">
-                  TELEMETRÍA DE RENDIMIENTO
+                <span className="text-lg">🧪</span>
+                <h4 className="text-xs text-amber-200 font-mono font-bold uppercase tracking-wider">
+                  POCIÓN DE RAM DEL TABERNERO
                 </h4>
               </div>
-              <span className="text-[10.5px] font-mono text-slate-400 bg-slate-900 px-2 py-0.5 rounded border border-slate-800">
-                PROFILER EN VIVO
+              <span className={`text-[10.5px] font-mono font-bold px-2 py-0.5 rounded border ${esRamOptima ? 'bg-emerald-950/80 text-emerald-300 border-emerald-500/40' : 'bg-rose-950/80 text-rose-300 border-rose-500/40'}`}>
+                {esRamOptima ? '✓ CONSUMO LIGERO' : '⚠️ EXCESO CRÍTICO'}
               </span>
             </div>
 
-            {/* Medidor de RAM con límite de 12MB completamente desacoplado */}
-            <div className="ram-gauge-card">
-              <div className="flex justify-between items-baseline mb-2">
-                <span className="text-xs font-mono text-slate-400">Consumo de Memoria Heap:</span>
-                <div className="flex items-baseline gap-1.5 font-mono">
-                  <span className={`text-base font-black ${ramActual < 12 ? 'text-emerald-400' : 'text-rose-400'}`}>
-                    {ramActual} MB
-                  </span>
-                  <span className={`text-[11px] font-bold ${ramActual < 12 ? 'text-emerald-400' : 'text-rose-400'}`}>
-                    {ramActual < 12 ? '(Óptimo)' : '(Exceso Crítico)'}
-                  </span>
-                </div>
-              </div>
-
-              {/* Barra de progreso de RAM con marcadores */}
-              <div className="ram-progress-track">
-                <div 
-                  className={`ram-progress-fill ${ramActual < 12 ? 'ram-fill-optimal' : 'ram-fill-exceeded'}`}
-                  style={{ width: `${ramPorcentaje}%` }}
-                />
-                {/* Marcador límite 12MB (60% de 20MB) */}
-                <div 
-                  className="ram-limit-marker"
-                  style={{ left: '60%' }}
-                  title="Límite máximo permitido: 12MB"
-                />
-              </div>
-
-              {/* Eje de marcas calibradas con separación generosa */}
-              <div className="ram-axis-markers">
-                <span>0 MB</span>
-                <span className="ram-limit-tag">
-                  ▲ Límite Máximo: 12 MB
+            <div className="flex justify-between items-baseline">
+              <span className="text-xs font-mono text-slate-300">Consumo de Memoria Heap:</span>
+              <div className="flex items-baseline gap-1 font-mono">
+                <span className={`text-xl font-black ${esRamOptima ? 'text-emerald-400' : 'text-rose-400'}`}>
+                  {ramActual} MB
                 </span>
-                <span>20 MB Max</span>
+                <span className="text-slate-500 text-xs">/ 12.0 MB máx</span>
               </div>
             </div>
 
-            {/* Curvas Big-O SVG Interactivas */}
-            <div className="big-o-curves-card p-3 rounded-lg bg-slate-900/80 border border-slate-800/90">
-              <div className="flex justify-between items-center text-xs font-mono mb-2">
-                <span className="text-slate-300 font-semibold">Complejidad Teórica Big-O:</span>
-                <span className={`font-mono font-bold text-xs px-2.5 py-0.5 rounded border ${
-                  complejidadActual.includes('O(1)') || (complejidadActual.includes('O(N)') && !complejidadActual.includes('O(N^2)')) 
-                    ? 'bg-emerald-500/15 text-emerald-400 border-emerald-500/40 shadow-[0_0_8px_rgba(16,185,129,0.2)]' 
-                    : 'bg-rose-500/15 text-rose-400 border-rose-500/40 shadow-[0_0_8px_rgba(244,63,94,0.2)]'
+            {/* Barra de RAM tipo jarra de cerveza */}
+            <div className="taberna-ram-track">
+              <div 
+                className={`taberna-ram-fill ${esRamOptima ? 'optimal' : 'exceeded'}`}
+                style={{ width: `${ramPorcentaje}%` }}
+              />
+              <div className="taberna-ram-target-line" style={{ left: '60%' }} title="Límite: 12MB">
+                <span className="taberna-ram-target-tag">12 MB</span>
+              </div>
+            </div>
+
+            <p className="text-[11px] font-mono text-slate-400 mt-1">
+              {esRamOptima 
+                ? '🍺 ¡Cerveza bien tirada! El código no ahoga la memoria del servidor.' 
+                : '💥 ¡Espuma desbordada! Tu solución consume demasiada RAM; usa Maps, sets o generadores.'}
+            </p>
+          </div>
+
+          {/* Tarjeta 2: La Apuesta del Tabernero (Duelo Big-O Directo) */}
+          <div className="taberna-duel-card p-4 rounded-xl border border-slate-800 bg-slate-900/80 shadow-lg flex flex-col gap-3">
+            <div className="flex items-center justify-between pb-2 border-b border-slate-800">
+              <div className="flex items-center gap-2">
+                <span className="text-lg">🎲</span>
+                <h4 className="text-xs text-slate-200 font-mono font-bold uppercase tracking-wider">
+                  LA APUESTA DEL TABERNERO
+                </h4>
+              </div>
+              <span className="text-[10px] font-mono text-slate-400 bg-slate-950 px-2 py-0.5 rounded border border-slate-800">
+                DUELO BIG-O
+              </span>
+            </div>
+
+            {/* Comparativa directa sin gráficos de avión */}
+            <div className="grid grid-cols-2 gap-3 text-center font-mono">
+              <div className="p-3 rounded-xl bg-slate-950/80 border border-slate-800">
+                <span className="text-[10px] text-slate-400 block mb-1">TU RECETA:</span>
+                <span className={`text-lg font-black ${
+                  complejidadActual.includes('O(1)') || (complejidadActual.includes('O(N)') && !complejidadActual.includes('O(N^2)'))
+                    ? 'text-emerald-400' 
+                    : 'text-rose-400'
                 }`}>
                   {complejidadActual}
                 </span>
               </div>
 
-              <div className="p-2.5 bg-slate-950 rounded-lg border border-slate-800/80">
-                <svg viewBox="0 0 240 85" className="w-full h-24">
-                  {/* Grid de Fondo */}
-                  <line x1="20" y1="20" x2="220" y2="20" stroke="#1e293b" strokeDasharray="2,2" strokeWidth="0.8" />
-                  <line x1="20" y1="45" x2="220" y2="45" stroke="#1e293b" strokeDasharray="2,2" strokeWidth="0.8" />
-                  
-                  {/* Ejes */}
-                  <line x1="20" y1="5" x2="20" y2="75" stroke="#475569" strokeWidth="1.5" />
-                  <line x1="20" y1="75" x2="225" y2="75" stroke="#475569" strokeWidth="1.5" />
-                  
-                  {/* Curva O(1) - Verde */}
-                  <line 
-                    x1="20" y1="66" x2="195" y2="66" 
-                    stroke={complejidadActual.includes('O(1)') ? '#10b981' : '#334155'} 
-                    strokeWidth={complejidadActual.includes('O(1)') ? 3 : 1.2}
-                    strokeDasharray={complejidadActual.includes('O(1)') ? 'none' : '3,3'} 
-                  />
-                  <text x="200" y="69" fill="#10b981" fontSize="9.5" fontFamily="monospace" fontWeight="bold">O(1)</text>
-
-                  {/* Curva O(N) - Azul */}
-                  <line 
-                    x1="20" y1="72" x2="190" y2="26" 
-                    stroke={complejidadActual.includes('O(N)') && !complejidadActual.includes('O(N^2)') ? '#38bdf8' : '#334155'} 
-                    strokeWidth={complejidadActual.includes('O(N)') && !complejidadActual.includes('O(N^2)') ? 3 : 1.2} 
-                  />
-                  <text x="195" y="25" fill="#38bdf8" fontSize="9.5" fontFamily="monospace" fontWeight="bold">O(N)</text>
-
-                  {/* Curva O(N^2) - Rojo */}
-                  <path 
-                    d="M 20 74 Q 100 70 145 10" 
-                    fill="none" 
-                    stroke={complejidadActual.includes('O(N^2)') ? '#f43f5e' : '#334155'} 
-                    strokeWidth={complejidadActual.includes('O(N^2)') ? 3 : 1.2} 
-                  />
-                  <text x="150" y="14" fill="#f43f5e" fontSize="9.5" fontFamily="monospace" fontWeight="bold">O(N²)</text>
-                </svg>
+              <div className="p-3 rounded-xl bg-slate-950/80 border border-amber-500/20">
+                <span className="text-[10px] text-amber-400/80 block mb-1">RETO TABERNERO:</span>
+                <span className="text-lg font-black text-amber-300">
+                  {snippetActivo.meta.includes('O(1)') ? 'O(1)' : 'O(N)'}
+                </span>
               </div>
+            </div>
+
+            <div className={`p-2.5 rounded-lg border text-xs font-mono flex items-center gap-2 ${
+              complejidadActual.includes('O(1)') || (complejidadActual.includes('O(N)') && !complejidadActual.includes('O(N^2)'))
+                ? 'bg-emerald-950/40 border-emerald-500/30 text-emerald-300'
+                : 'bg-rose-950/40 border-rose-500/30 text-rose-300'
+            }`}>
+              <span>{complejidadActual.includes('O(1)') || (complejidadActual.includes('O(N)') && !complejidadActual.includes('O(N^2)')) ? '🍺' : '⏳'}</span>
+              <span>
+                {complejidadActual.includes('O(1)') || (complejidadActual.includes('O(N)') && !complejidadActual.includes('O(N^2)'))
+                  ? '¡Excelente! Tu receta compite con las mejores optimizaciones.'
+                  : 'Bucle anidado detectado. El tabernero te pide reducir iteraciones.'}
+              </span>
             </div>
           </div>
 
@@ -4677,9 +4716,9 @@ function TabernaView({ estudiante, backendUrl, onUpdate }) {
           {result && (
             <div className={`eval-result-card ${result.valido && result.memoria_simulada_mb < 12 ? 'success' : 'fail'} p-3.5 rounded-xl border animate-scale-in`}>
               <div className="flex items-center gap-2 mb-1">
-                <span className="text-base">{result.valido && result.memoria_simulada_mb < 12 ? '🚀' : '⚠️'}</span>
+                <span className="text-base">{result.valido && result.memoria_simulada_mb < 12 ? '🍺' : '⚠️'}</span>
                 <h4 className="font-bold text-xs">
-                  {result.valido && result.memoria_simulada_mb < 12 ? 'Algoritmo Aprobado para Producción' : 'Optimización Requerida'}
+                  {result.valido && result.memoria_simulada_mb < 12 ? '¡Ronda Servida! Algoritmo Aprobado' : 'Receta Rechazada por el Tabernero'}
                 </h4>
               </div>
               <p className="retro text-xs text-slate-300 leading-relaxed font-mono">{result.feedback}</p>
@@ -6121,56 +6160,36 @@ function DefenseView({ estudiante, backendUrl, onUpdate }) {
 
   const initialLives = hasChronosLife ? 4 : 3;
 
-  const OLEADAS_ESTRUCTURADAS = [
+  const MECANET_WAVES = [
     {
       oleada: 1,
-      titulo: "Oleada 1: Errores Sintácticos",
-      snippets: [
-        { id: "w1_1", text: "if (status = 'active') {", corrupt: true },
-        { id: "w1_2", text: "const total = calc();", corrupt: false },
-        { id: "w1_3", text: "return; processData();", corrupt: true },
-        { id: "w1_4", text: "let items = [];", corrupt: false }
-      ]
+      titulo: "Oleada 1: Variables & Flujo de Control",
+      subtitulo: "Palabras clave esenciales de JavaScript",
+      words: ["const", "let", "function", "return", "while", "break", "import", "export"]
     },
     {
       oleada: 2,
-      titulo: "Oleada 2: Acceso y Tipos",
-      snippets: [
-        { id: "w2_1", text: "user.settings.theme.dark", corrupt: true },
-        { id: "w2_2", text: "JSON.parse(rawJson)", corrupt: false },
-        { id: "w2_3", text: "numbers.sort((a,b)=>a-b)", corrupt: false },
-        { id: "w2_4", text: "null.toString()", corrupt: true }
-      ]
+      titulo: "Oleada 2: Métodos de Arreglo & Datos",
+      subtitulo: "Transformación y filtrado de colecciones",
+      words: ["filter", "reduce", "map", "forEach", "length", "push", "slice", "splice"]
     },
     {
       oleada: 3,
-      titulo: "Oleada 3: Promesas y Asincronía",
-      snippets: [
-        { id: "w3_1", text: "fetch(url) // sin catch", corrupt: true },
-        { id: "w3_2", text: "await Promise.all(tasks)", corrupt: false },
-        { id: "w3_3", text: "async () => { throw err; }", corrupt: true },
-        { id: "w3_4", text: "const res = await api.get();", corrupt: false }
-      ]
+      titulo: "Oleada 3: Promesas & Asincronía",
+      subtitulo: "Concurrencia, estados y event loop",
+      words: ["async", "await", "Promise", "resolve", "reject", "catch", "finally", "fetch"]
     },
     {
       oleada: 4,
-      titulo: "Oleada 4: Fugas de Memoria",
-      snippets: [
-        { id: "w4_1", text: "setInterval(poll, 10)", corrupt: true },
-        { id: "w4_2", text: "window.addEventListener('scroll', h)", corrupt: true },
-        { id: "w4_3", text: "const cache = new Map();", corrupt: false },
-        { id: "w4_4", text: "subscription.unsubscribe();", corrupt: false }
-      ]
+      titulo: "Oleada 4: Clases & POO",
+      subtitulo: "Herencia, constructores y prototipos",
+      words: ["class", "constructor", "extends", "super", "static", "prototype", "this", "yield"]
     },
     {
       oleada: 5,
-      titulo: "Oleada 5: Inyección y Seguridad Crítica",
-      snippets: [
-        { id: "w5_1", text: "db.query('SELECT * WHERE u=' + u)", corrupt: true },
-        { id: "w5_2", text: "eval(payload)", corrupt: true },
-        { id: "w5_3", text: "bcrypt.hash(password, 10)", corrupt: false },
-        { id: "w5_4", text: "sanitizeInput(params)", corrupt: false }
-      ]
+      titulo: "Oleada 5: Seguridad Crítica & Excepciones",
+      subtitulo: "Validación estricta y blindaje defensivo",
+      words: ["try", "throw", "Error", "sanitize", "bcrypt", "typeof", "strict", "instanceof"]
     }
   ];
 
@@ -6181,34 +6200,74 @@ function DefenseView({ estudiante, backendUrl, onUpdate }) {
   const [score, setScore] = useState(0);
   const [highScore, setHighScore] = useState(pragma.defense_stats?.highscore || 120000);
   const [currentWave, setCurrentWave] = useState(1);
-  const [corruptsLeftInWave, setCorruptsLeftInWave] = useState(2);
   const [firewallHp, setFirewallHp] = useState(100);
-  const [power, setPower] = useState(100);
+  const [power, setPower] = useState(0);
   const [combo, setCombo] = useState(1);
   const [lives, setLives] = useState(initialLives);
-  const [fallingLines, setFallingLines] = useState([]);
+  const [cyberShieldUsed, setCyberShieldUsed] = useState(false);
+  const [barrierHitAlert, setBarrierHitAlert] = useState(false);
+
+  // Mecanet Typing Engine State
+  const [wavePendingWords, setWavePendingWords] = useState([]);
+  const [activeWords, setActiveWords] = useState([]);
+  const [typedInput, setTypedInput] = useState('');
+  const [targetWordId, setTargetWordId] = useState(null);
   const [laserEffect, setLaserEffect] = useState(null);
   const [empBlast, setEmpBlast] = useState(false);
-  const [cyberShieldUsed, setCyberShieldUsed] = useState(false);
   const [turretPaddleX, setTurretPaddleX] = useState(50);
+  const [inputErrorAnim, setInputErrorAnim] = useState(false);
+
+  // Telemetría de mecanografía: WPM y Precisión
+  const [totalCharsTyped, setTotalCharsTyped] = useState(0);
+  const [totalErrors, setTotalErrors] = useState(0);
+  const [startTime, setStartTime] = useState(null);
 
   const gameLoopRef = useRef(null);
   const autoTurretRef = useRef(null);
   const playfieldRef = useRef(null);
+  const typingInputRef = useRef(null);
+  const pendingWordsRef = useRef([]);
 
-  const spawnWaveSnippets = (waveIdx) => {
-    const waveData = OLEADAS_ESTRUCTURADAS[waveIdx - 1];
+  // Enfoque automático del campo de mecanografía
+  useEffect(() => {
+    if (gameStarted && !gameOver && !victory && typingInputRef.current) {
+      typingInputRef.current.focus();
+    }
+  }, [gameStarted, gameOver, victory]);
+
+  // Iniciar oleada cargando la cola de palabras
+  const startWave = (waveIdx) => {
+    const waveData = MECANET_WAVES[waveIdx - 1];
     if (!waveData) return;
-    const initialFalling = waveData.snippets.map((snip, i) => ({
-      id: `${snip.id}_${Date.now()}_${i}`,
-      text: snip.text,
-      corrupt: snip.corrupt,
-      x: 15 + i * 22,
-      y: 10 + (i % 2) * 12
+
+    const wordQueue = waveData.words.map(w => ({
+      text: w,
+      isRetry: false,
+      retryCount: 0
     }));
-    setFallingLines(initialFalling);
-    const countCorrupt = waveData.snippets.filter(s => s.corrupt).length;
-    setCorruptsLeftInWave(countCorrupt);
+
+    // Desplegar las 3 primeras palabras en carriles diferenciados
+    const initialActive = [];
+    const lanes = [18, 45, 72];
+    const initialCount = Math.min(3, wordQueue.length);
+    for (let i = 0; i < initialCount; i++) {
+      const item = wordQueue.shift();
+      initialActive.push({
+        id: `m_${waveIdx}_${i}_${Date.now()}_${Math.random()}`,
+        text: item.text,
+        isRetry: item.isRetry,
+        retryCount: item.retryCount,
+        x: lanes[i % lanes.length],
+        y: 6 + (i * 9),
+        speed: 1.0 + (waveIdx * 0.16)
+      });
+    }
+
+    pendingWordsRef.current = wordQueue;
+    setWavePendingWords([...wordQueue]);
+    setActiveWords(initialActive);
+    setTypedInput('');
+    setTargetWordId(null);
   };
 
   const startGame = () => {
@@ -6219,88 +6278,184 @@ function DefenseView({ estudiante, backendUrl, onUpdate }) {
     setScore(0);
     setCurrentWave(1);
     setFirewallHp(100);
-    setPower(100);
+    setPower(0);
     setCombo(1);
     setLives(initialLives);
     setCyberShieldUsed(false);
-    spawnWaveSnippets(1);
+    setTotalCharsTyped(0);
+    setTotalErrors(0);
+    setStartTime(Date.now());
+    startWave(1);
   };
 
-  const handleMouseMove = (e) => {
-    if (!playfieldRef.current) return;
-    const rect = playfieldRef.current.getBoundingClientRect();
-    const relX = ((e.clientX - rect.left) / rect.width) * 100;
-    setTurretPaddleX(Math.max(10, Math.min(90, relX)));
-  };
-
-  const dispararLinea = (id, corrupt, x, y) => {
-    if (!gameStarted || gameOver || victory) return;
-
+  // Eliminación de palabra por acierto de mecanografía
+  const triggerWordDestruction = (word, byTyping = true) => {
+    // Disparo de rayo láser hacia la palabra objetivo
     setLaserEffect({
       x1: turretPaddleX,
       y1: 90,
-      x2: x + 8,
-      y2: y + 3
+      x2: word.x + 8,
+      y2: word.y + 4
     });
     setTimeout(() => setLaserEffect(null), 180);
 
-    if (corrupt) {
-      const mult = hasComboDouble ? 2 : 1;
-      const puntos = 2500 * mult;
-      setScore(s => s + puntos);
-      setCombo(c => c + 1);
-      setPower(p => Math.min(100, p + (hasVoidFast ? 25 : 15)));
+    // Cálculo de puntuación y bonificaciones
+    const mult = (hasComboDouble ? 2 : 1) * combo;
+    const basePts = (word.text.length * 400) + (word.isRetry ? 3500 : 2200);
+    const puntos = basePts * mult;
 
-      const nextLeft = corruptsLeftInWave - 1;
-      setCorruptsLeftInWave(nextLeft);
+    setScore(s => s + puntos);
+    setCombo(c => c + 1);
+    setPower(p => Math.min(100, p + (hasVoidFast ? 25 : 15)));
 
-      if (nextLeft <= 0) {
-        // Oleada completada
+    if (byTyping) {
+      setTotalCharsTyped(chars => chars + word.text.length);
+    }
+
+    // Remover palabra eliminada y reponer desde pendingWordsRef de inmediato
+    setActiveWords(prev => {
+      const remaining = prev.filter(w => w.id !== word.id);
+
+      if (remaining.length < 3 && pendingWordsRef.current.length > 0) {
+        const nextItem = pendingWordsRef.current.shift();
+        const randomLane = Math.floor(Math.random() * 62) + 16;
+        remaining.push({
+          id: `m_spawn_${Date.now()}_${Math.random()}`,
+          text: nextItem.text,
+          isRetry: nextItem.isRetry,
+          retryCount: nextItem.retryCount,
+          x: randomLane,
+          y: 2,
+          speed: 1.0 + (currentWave * 0.16)
+        });
+        setWavePendingWords([...pendingWordsRef.current]);
+      }
+
+      if (remaining.length === 0 && pendingWordsRef.current.length === 0) {
         if (currentWave >= 5) {
-          // Victoria definitiva
-          completarVictoria();
+          setTimeout(() => completarVictoria(), 300);
         } else {
           const nextW = currentWave + 1;
           setCurrentWave(nextW);
-          spawnWaveSnippets(nextW);
+          setTimeout(() => startWave(nextW), 400);
         }
       }
-    } else {
-      // Penalización
-      setLives(l => Math.max(0, l - 1));
-      setCombo(1);
-    }
-    setFallingLines(prev => prev.filter(line => line.id !== id));
+      return remaining;
+    });
   };
 
+  // Manejador de mecanografía táctica en tiempo real: Mecanet puro sin caracteres falsos
+  const handleTypingChange = (e) => {
+    const val = e.target.value;
+    if (!gameStarted || gameOver || victory) return;
+
+    if (!val) {
+      setTypedInput('');
+      setTargetWordId(null);
+      return;
+    }
+
+    // Si el usuario borró con backspace, permitir siempre
+    if (val.length < typedInput.length) {
+      setTypedInput(val);
+      return;
+    }
+
+    const valLower = val.toLowerCase();
+
+    // Caso 1: Hay un objetivo activo fijado
+    if (targetWordId) {
+      const currentTarget = activeWords.find(w => w.id === targetWordId);
+      if (currentTarget) {
+        const targetLower = currentTarget.text.toLowerCase();
+        if (targetLower.startsWith(valLower)) {
+          setTurretPaddleX(currentTarget.x + 8);
+          if (valLower === targetLower) {
+            triggerWordDestruction(currentTarget, true);
+            setTypedInput('');
+            setTargetWordId(null);
+          } else {
+            setTypedInput(val);
+          }
+          return;
+        } else {
+          // Tecla errónea sobre el objetivo fijado: feedback de error sin corromper el input
+          setTotalErrors(err => err + 1);
+          setCombo(1);
+          setInputErrorAnim(true);
+          setTimeout(() => setInputErrorAnim(false), 220);
+          return;
+        }
+      }
+    }
+
+    // Caso 2: Buscar nuevo objetivo entre las palabras activas
+    const matching = activeWords.filter(w => w.text.toLowerCase().startsWith(valLower));
+    if (matching.length > 0) {
+      const candidate = matching.reduce((prev, curr) => (curr.y > prev.y ? curr : prev), matching[0]);
+      setTargetWordId(candidate.id);
+      setTurretPaddleX(candidate.x + 8);
+
+      if (valLower === candidate.text.toLowerCase()) {
+        triggerWordDestruction(candidate, true);
+        setTypedInput('');
+        setTargetWordId(null);
+      } else {
+        setTypedInput(val);
+      }
+    } else {
+      // Caracter inicial erróneo
+      setTotalErrors(err => err + 1);
+      setCombo(1);
+      setInputErrorAnim(true);
+      setTimeout(() => setInputErrorAnim(false), 220);
+    }
+  };
+
+  // Detonación masiva EMP Blast
   const detonarFirewallBlast = () => {
     if (power < 100 || !gameStarted || gameOver || victory) return;
 
     setEmpBlast(true);
     setTimeout(() => setEmpBlast(false), 500);
 
-    setFallingLines(prev => {
-      const criticos = prev.filter(l => l.corrupt);
-      const bonusScore = criticos.length * 5000 * (hasComboDouble ? 2 : 1);
-      setScore(s => s + bonusScore);
-      setCombo(c => c + criticos.length);
-      return prev.filter(l => !l.corrupt);
-    });
-
+    setScore(s => s + (activeWords.length * 3000 * (hasComboDouble ? 2 : 1)));
+    setCombo(c => c + activeWords.length);
     setPower(0);
-    const nextLeft = Math.max(0, corruptsLeftInWave - 2);
-    setCorruptsLeftInWave(nextLeft);
-    if (nextLeft <= 0) {
+
+    setTypedInput('');
+    setTargetWordId(null);
+
+    const nextActive = [];
+    const count = Math.min(3, pendingWordsRef.current.length);
+    for (let i = 0; i < count; i++) {
+      const nextItem = pendingWordsRef.current.shift();
+      nextActive.push({
+        id: `m_spawn_${Date.now()}_${Math.random()}`,
+        text: nextItem.text,
+        isRetry: nextItem.isRetry,
+        retryCount: nextItem.retryCount,
+        x: Math.floor(Math.random() * 62) + 16,
+        y: 2,
+        speed: 1.0 + (currentWave * 0.16)
+      });
+    }
+
+    setActiveWords(nextActive);
+    setWavePendingWords([...pendingWordsRef.current]);
+
+    if (nextActive.length === 0 && pendingWordsRef.current.length === 0) {
       if (currentWave >= 5) {
         completarVictoria();
       } else {
         const nextW = currentWave + 1;
         setCurrentWave(nextW);
-        spawnWaveSnippets(nextW);
+        startWave(nextW);
       }
     }
   };
 
+  // Victoria definitiva
   const completarVictoria = () => {
     setVictory(true);
     clearInterval(gameLoopRef.current);
@@ -6308,10 +6463,9 @@ function DefenseView({ estudiante, backendUrl, onUpdate }) {
     setScore(finalScore);
     if (finalScore > highScore) setHighScore(finalScore);
 
-    // Otorgar recompensas: +15 Shards, +2 Cores, +2 Esencia según tecnología
     const copy = { ...(estudiante?.pragma_profile || {}) };
     if (!copy.inventory) copy.inventory = {};
-    copy.rank_points = (copy.rank_points || 0) + 30;
+    copy.rank_points = (copy.rank_points || 0) + 35;
     copy.inventory.silicon_shards = (copy.inventory.silicon_shards || 0) + 15;
     copy.inventory.logic_cores = (copy.inventory.logic_cores || 0) + 2;
 
@@ -6330,96 +6484,146 @@ function DefenseView({ estudiante, backendUrl, onUpdate }) {
 
     onUpdate(copy);
 
+    const elapsedMin = startTime ? Math.max(0.1, (Date.now() - startTime) / 60000) : 0.1;
+    const finalWpm = Math.round((totalCharsTyped / 5) / elapsedMin);
+    const totalAtt = totalCharsTyped + totalErrors;
+    const finalAcc = totalAtt > 0 ? Math.round((totalCharsTyped / totalAtt) * 100) : 100;
+
     setGameSummary({
       score: finalScore,
       highscore: Math.max(highScore, finalScore),
-      rp: 30,
+      rp: 35,
       shards: 15,
       cores: 2,
-      esencia: 2
+      esencia: 2,
+      wpm: finalWpm,
+      accuracy: finalAcc
     });
   };
 
-  // Matrix Beam Perk: torreta cada 6s
+  // Matrix Beam Perk: torreta automática cada 7s
   useEffect(() => {
     if (!gameStarted || !hasAutoTurret || victory || gameOver) return;
     autoTurretRef.current = setInterval(() => {
-      setFallingLines(prev => {
-        const critico = prev.find(l => l.corrupt);
-        if (critico) {
-          dispararLinea(critico.id, true, critico.x, critico.y);
-        }
+      setActiveWords(prev => {
+        if (prev.length === 0) return prev;
+        const closest = prev.reduce((a, b) => (b.y > a.y ? b : a), prev[0]);
+        triggerWordDestruction(closest, false);
         return prev;
       });
-    }, 6000);
+    }, 7000);
     return () => clearInterval(autoTurretRef.current);
   }, [gameStarted, hasAutoTurret, victory, gameOver]);
 
-  // Ciclo de juego: Caída continua de bloques
+  // Ciclo principal de juego: caída de palabras y REINTENTOS MECANET
   useEffect(() => {
     if (!gameStarted || gameOver || victory) return;
 
     gameLoopRef.current = setInterval(() => {
-      setFallingLines(prev => {
-        let impactoCritico = false;
+      setActiveWords(prev => {
+        let barrierBreach = false;
+        const remainingActive = [];
+        const wordsToRequeue = [];
+        let targetLost = false;
 
-        const updated = prev.map(line => {
-          const nextY = line.y + 2.2;
-          if (nextY >= 92) {
-            if (line.corrupt) {
-              impactoCritico = true;
+        prev.forEach(word => {
+          const nextY = word.y + (word.speed || 1.35);
+          if (nextY >= 88) {
+            barrierBreach = true;
+            if (targetWordId === word.id) {
+              targetLost = true;
             }
-            return null;
+            // REGLA MECANET: La palabra que falló se re-encola para volver a caer hasta ser eliminada
+            wordsToRequeue.push({
+              text: word.text,
+              isRetry: true,
+              retryCount: (word.retryCount || 0) + 1
+            });
+          } else {
+            remainingActive.push({ ...word, y: nextY });
           }
-          return { ...line, y: nextY };
-        }).filter(Boolean);
+        });
 
-        if (impactoCritico) {
+        if (targetLost) {
+          setTargetWordId(null);
+          setTypedInput('');
+        }
+
+        if (barrierBreach) {
+          setBarrierHitAlert(true);
+          setTimeout(() => setBarrierHitAlert(false), 380);
+
           if (hasCyberImmune && !cyberShieldUsed) {
             setCyberShieldUsed(true);
           } else {
-            setFirewallHp(hp => {
-              const nextHp = Math.max(0, hp - 15);
-              setCombo(1);
-              return nextHp;
+            setLives(l => {
+              const nextL = Math.max(0, l - 1);
+              setFirewallHp(Math.round((nextL / initialLives) * 100));
+              return nextL;
             });
+            setCombo(1);
           }
         }
 
-        // Si quedan pocos bloques en la oleada activa, reponer de la misma oleada
-        if (updated.length < 3 && corruptsLeftInWave > 0) {
-          const waveData = OLEADAS_ESTRUCTURADAS[currentWave - 1];
-          if (waveData) {
-            const rand = waveData.snippets[Math.floor(Math.random() * waveData.snippets.length)];
-            updated.push({
-              id: `${rand.id}_${Date.now()}_${Math.random()}`,
-              text: rand.text,
-              corrupt: rand.corrupt,
-              x: Math.floor(Math.random() * 68) + 12,
-              y: 0
-            });
+        // Reinsertar palabras re-encoladas de forma síncrona
+        if (wordsToRequeue.length > 0) {
+          pendingWordsRef.current.push(...wordsToRequeue);
+        }
+
+        // Reponer palabras activas desde la cola si hay espacio (< 3)
+        while (remainingActive.length < 3 && pendingWordsRef.current.length > 0) {
+          const nextItem = pendingWordsRef.current.shift();
+          const randomLane = Math.floor(Math.random() * 62) + 16;
+          remainingActive.push({
+            id: `m_spawn_${Date.now()}_${Math.random()}`,
+            text: nextItem.text,
+            isRetry: nextItem.isRetry,
+            retryCount: nextItem.retryCount,
+            x: randomLane,
+            y: 2,
+            speed: 1.0 + (currentWave * 0.16)
+          });
+        }
+
+        setWavePendingWords([...pendingWordsRef.current]);
+
+        // Evaluar fin de oleada si no quedan ni activas ni en cola
+        if (remainingActive.length === 0 && pendingWordsRef.current.length === 0) {
+          if (currentWave >= 5) {
+            setTimeout(() => completarVictoria(), 300);
+          } else {
+            const nextW = currentWave + 1;
+            setCurrentWave(nextW);
+            setTimeout(() => startWave(nextW), 400);
           }
         }
 
-        return updated;
+        return remainingActive;
       });
-    }, 240);
+    }, 200);
 
     return () => clearInterval(gameLoopRef.current);
-  }, [gameStarted, gameOver, victory, currentWave, corruptsLeftInWave, cyberShieldUsed, hasCyberImmune]);
+  }, [gameStarted, gameOver, victory, currentWave, hasCyberImmune, cyberShieldUsed, initialLives, targetWordId]);
 
-  // Detección de derrota
+  // Detección de colapso de cortafuegos
   useEffect(() => {
     if (gameStarted && !gameOver && !victory && (firewallHp <= 0 || lives <= 0)) {
       setGameOver(true);
       clearInterval(gameLoopRef.current);
       if (score > highScore) setHighScore(score);
 
+      const elapsedMin = startTime ? Math.max(0.1, (Date.now() - startTime) / 60000) : 0.1;
+      const finalWpm = Math.round((totalCharsTyped / 5) / elapsedMin);
+      const totalAtt = totalCharsTyped + totalErrors;
+      const finalAcc = totalAtt > 0 ? Math.round((totalCharsTyped / totalAtt) * 100) : 100;
+
       setGameSummary({
         score,
         highscore: Math.max(highScore, score),
         rp: 5,
-        shards: 1
+        shards: 1,
+        wpm: finalWpm,
+        accuracy: finalAcc
       });
 
       const copy = { ...(estudiante?.pragma_profile || {}) };
@@ -6430,39 +6634,47 @@ function DefenseView({ estudiante, backendUrl, onUpdate }) {
     }
   }, [firewallHp, lives, gameStarted, gameOver, victory]);
 
+  // Telemetría en vivo
+  const elapsedMin = startTime ? Math.max(0.1, (Date.now() - startTime) / 60000) : 0.1;
+  const currentWpm = Math.round((totalCharsTyped / 5) / elapsedMin);
+  const totalAtt = totalCharsTyped + totalErrors;
+  const currentAcc = totalAtt > 0 ? Math.round((totalCharsTyped / totalAtt) * 100) : 100;
+  const retriesInWave = activeWords.filter(w => w.isRetry).length + wavePendingWords.filter(w => w.isRetry).length;
+  const wordsRemainingTotal = activeWords.length + wavePendingWords.length;
+
   return (
     <div className="defense-panel glass-panel spec-defense-layout">
       {!gameStarted ? (
         <div className="start-screen-spec p-6 max-w-3xl mx-auto flex flex-col items-center text-center">
           {/* Header del Centro de Mando */}
           <div className="flex items-center justify-center gap-3 mb-2">
-            <span className="text-2xl">🛡️</span>
+            <span className="text-2xl">⌨️</span>
             <h2 className="text-xl text-white font-mono font-black tracking-wider">
-              SYNTAX DEFENSE: FIREWALL TÁCTICO CIBERNÉTICO
+              SYNTAX DEFENSE: MECANET TÁCTICO CIBERNÉTICO
             </h2>
-            <span className="text-[10px] text-indigo-300 bg-indigo-950/80 border border-indigo-500/40 px-2.5 py-0.5 rounded font-mono font-bold">
-              FIREWALL LVL 5
+            <span className="text-[10px] text-cyan-300 bg-cyan-950/80 border border-cyan-500/40 px-2.5 py-0.5 rounded font-mono font-bold">
+              MODO MECANET
             </span>
           </div>
-          <p className="text-xs text-slate-400 font-mono mb-6 max-w-xl leading-relaxed">
-            Intercepta y desintegra los paquetes de código corruptos (<span className="text-rose-400 font-bold">● CRITICAL BUG</span>) con el láser de fotones antes de que impacten la barrera de contención. Permite el paso seguro del código limpio (<span className="text-cyan-400 font-bold">✓ CÓDIGO OK</span>).
+          <p className="text-xs text-slate-300 font-mono mb-6 max-w-xl leading-relaxed">
+            Escribe a toda velocidad las palabras clave de código que descienden para desintegrarlas con el cañón láser fotónico. <strong className="text-amber-300">Regla Mecanet:</strong> Las palabras que impacten la barrera dañarán el cortafuegos y <strong className="text-rose-400">se re-encolarán como reintentos</strong> hasta que las mecanografíes sin fallar.
           </p>
 
           {/* Matriz de las 5 Oleadas Tácticas */}
           <div className="defense-waves-grid">
-            {OLEADAS_ESTRUCTURADAS.map(w => (
+            {MECANET_WAVES.map(w => (
               <div key={w.oleada} className="wave-card-spec">
                 <div>
-                  <span className="text-[10px] font-bold text-indigo-400 block mb-1">
+                  <span className="text-[10px] font-bold text-cyan-400 block mb-1">
                     FASE 0{w.oleada}
                   </span>
                   <h5 className="text-[11px] font-semibold text-slate-200 line-clamp-2 leading-snug">
                     {w.titulo.replace(`Oleada ${w.oleada}: `, '')}
                   </h5>
                 </div>
-                <div className="text-[9.5px] text-slate-500 mt-2 pt-1 border-t border-slate-800/60 flex items-center justify-between">
-                  <span>{w.snippets.filter(s => s.corrupt).length} Bugs</span>
-                  <span className="text-emerald-400">Seguro</span>
+                <div className="text-[9.5px] text-slate-400 mt-2 pt-1 border-t border-slate-800/60 flex items-center justify-between">
+                  <span>{w.words.length} Palabras</span>
+                  <span className="text-emerald-400 font-mono">100% Precisión</span>
                 </div>
               </div>
             ))}
@@ -6475,8 +6687,8 @@ function DefenseView({ estudiante, backendUrl, onUpdate }) {
               <span className="text-amber-400 font-bold text-sm">{highScore.toLocaleString()} PTS</span>
             </div>
             <div className="p-3 rounded-xl bg-slate-950/90 border border-slate-800 text-center">
-              <span className="text-slate-500 block text-[10px]">RUNAS EQUIPADAS:</span>
-              <span className="text-emerald-400 font-bold text-sm">{activePerks.length} Perks Activos</span>
+              <span className="text-slate-500 block text-[10px]">RUNAS ACTIVAS:</span>
+              <span className="text-emerald-400 font-bold text-sm">{activePerks.length} Perks</span>
             </div>
             <div className="p-3 rounded-xl bg-slate-950/90 border border-slate-800 text-center col-span-2 sm:col-span-1">
               <span className="text-slate-500 block text-[10px]">ESCUDOS TÁCTICOS:</span>
@@ -6491,28 +6703,32 @@ function DefenseView({ estudiante, backendUrl, onUpdate }) {
             onClick={startGame}
           >
             <span>⚡</span>
-            <span>ACTIVAR PROTOCOLO DE DEFENSA CIBERNÉTICA</span>
+            <span>INICIAR DESAFÍO DE MECANOGRAFÍA DEFENSIVA</span>
           </button>
         </div>
       ) : (
         <div className="arcade-grid-arena relative overflow-hidden rounded-2xl border border-slate-800 bg-slate-950 shadow-2xl">
           {/* Header del HUD */}
-          <div className="hud-header-stats p-3.5 bg-slate-900/95 border-b border-slate-800 flex justify-between items-center text-xs font-mono">
+          <div className="hud-header-stats p-3 bg-slate-900/95 border-b border-slate-800 flex justify-between items-center text-xs font-mono">
             <div className="flex items-center gap-4">
               <div>
                 <span className="text-slate-500 text-[10px] block">PUNTAJE</span>
                 <span className="text-indigo-300 font-bold text-sm">{score.toLocaleString()}</span>
               </div>
               <div className="hidden sm:block">
-                <span className="text-slate-500 text-[10px] block">RÉCORD</span>
-                <span className="text-amber-400 font-bold">{highScore.toLocaleString()}</span>
+                <span className="text-slate-500 text-[10px] block">WPM</span>
+                <span className="text-cyan-400 font-bold">{currentWpm}</span>
+              </div>
+              <div className="hidden sm:block">
+                <span className="text-slate-500 text-[10px] block">PRECISIÓN</span>
+                <span className="text-emerald-400 font-bold">{currentAcc}%</span>
               </div>
             </div>
 
             {/* Barra de Integridad del Firewall (0 - 100%) */}
             <div className="flex flex-col items-center flex-1 max-w-sm mx-4">
               <div className="flex justify-between w-full text-[10.5px] mb-1">
-                <span className="text-slate-400 font-semibold">INTEGRIDAD DEL FIREWALL</span>
+                <span className="text-slate-400 font-semibold">BARRERA FIREWALL</span>
                 <span className={`font-bold ${firewallHp > 50 ? 'text-emerald-400' : firewallHp > 20 ? 'text-amber-400' : 'text-rose-400'}`}>
                   {firewallHp}%
                 </span>
@@ -6533,7 +6749,7 @@ function DefenseView({ estudiante, backendUrl, onUpdate }) {
 
             <div className="flex items-center gap-4 text-right">
               <div>
-                <span className="text-slate-500 text-[10px] block">OLEADA</span>
+                <span className="text-slate-500 text-[10px] block">FASE</span>
                 <span className="text-cyan-400 font-bold text-sm">{currentWave} / 5</span>
               </div>
               <div className="tactical-shields flex gap-1.5 items-center">
@@ -6546,36 +6762,23 @@ function DefenseView({ estudiante, backendUrl, onUpdate }) {
             </div>
           </div>
 
-          {/* Área de juego principal con Matriz Cibernética */}
+          {/* Área de juego principal Mecanet */}
           <div 
             ref={playfieldRef}
-            className="game-playfield-spec relative h-[440px] bg-slate-950 overflow-hidden select-none cursor-crosshair"
-            onMouseMove={handleMouseMove}
+            className={`game-playfield-spec relative h-[420px] bg-slate-950 overflow-hidden select-none cursor-default ${barrierHitAlert ? 'barrier-breach-shake' : ''}`}
+            onClick={() => typingInputRef.current && typingInputRef.current.focus()}
           >
-            {/* Grid y Carriles Tácticos de Paquetes */}
-            <div className="defense-lanes-grid">
-              <div className="defense-lane">
-                <span>// CANAL 01: SINTAXIS</span>
-              </div>
-              <div className="defense-lane">
-                <span>// CANAL 02: ACCESO</span>
-              </div>
-              <div className="defense-lane">
-                <span>// CANAL 03: ASYNC</span>
-              </div>
-              <div className="defense-lane">
-                <span>// CANAL 04: KERNEL</span>
-              </div>
-            </div>
+            {/* Grid de fondo */}
+            <div className="playfield-grid-overlay" />
 
-            {/* Título sutil de la oleada */}
-            <div className="absolute top-2 left-0 right-0 text-center pointer-events-none z-10">
-              <span className="text-[10px] font-mono text-cyan-300/80 bg-slate-900/80 px-3 py-1 rounded-full border border-cyan-500/30 uppercase tracking-widest shadow-sm">
-                {OLEADAS_ESTRUCTURADAS[currentWave - 1]?.titulo}
+            {/* Título de la oleada actual */}
+            <div className="absolute top-2.5 left-0 right-0 text-center pointer-events-none z-10">
+              <span className="text-[11px] font-mono text-cyan-300 bg-slate-900/90 px-3.5 py-1 rounded-full border border-cyan-500/30 uppercase tracking-widest shadow-md">
+                {MECANET_WAVES[currentWave - 1]?.titulo}
               </span>
             </div>
 
-            {/* Efecto de Rayo Láser */}
+            {/* Rayo Láser Táctico */}
             {laserEffect && (
               <svg className="laser-svg-overlay absolute inset-0 w-full h-full pointer-events-none z-20">
                 <line 
@@ -6586,41 +6789,58 @@ function DefenseView({ estudiante, backendUrl, onUpdate }) {
                   stroke="#22d3ee" 
                   strokeWidth="3.5"
                   strokeLinecap="round"
-                  className="filter drop-shadow-[0_0_8px_#22d3ee]"
+                  className="filter drop-shadow-[0_0_10px_#22d3ee]"
                 />
               </svg>
             )}
 
-            {/* Fragmentos de código cayendo */}
-            {fallingLines.map(line => (
-              <div
-                key={line.id}
-                className={`falling-code-block ${line.corrupt ? 'corrupt' : 'clean'}`}
-                style={{ left: `${line.x}%`, top: `${line.y}%` }}
-                onClick={() => dispararLinea(line.id, line.corrupt, line.x, line.y)}
-              >
-                <span className={`block-warning-tag ${line.corrupt ? 'text-rose-400' : 'text-emerald-400'}`}>
-                  {line.corrupt ? '● CRITICAL BUG (DISPARAR)' : '✓ CÓDIGO OK (DEJAR PASAR)'}
-                </span>
-                <code className="block-code-text">{line.text}</code>
-              </div>
-            ))}
+            {/* Palabras de Código Descendiendo (Mecanet Cards) */}
+            {activeWords.map(word => {
+              const isTargeted = word.id === targetWordId;
+              const isMatch = isTargeted && typedInput.length > 0;
+              const matchedChars = isMatch ? word.text.slice(0, typedInput.length) : '';
+              const remainingChars = isMatch ? word.text.slice(typedInput.length) : word.text;
 
-            {/* Visual Firewall Energy Barrier at bottom */}
+              return (
+                <div
+                  key={word.id}
+                  className={`mecanet-falling-card ${word.isRetry ? 'is-retry-card' : ''} ${isTargeted ? 'is-targeted-card' : ''}`}
+                  style={{ left: `${word.x}%`, top: `${word.y}%` }}
+                >
+                  {word.isRetry && (
+                    <span className="mecanet-retry-pill">
+                      ⚠️ REINTENTO MECANET {word.retryCount > 1 ? `(x${word.retryCount})` : ''}
+                    </span>
+                  )}
+                  <div className="mecanet-word-content font-mono font-bold text-sm tracking-wide">
+                    {isMatch ? (
+                      <>
+                        <span className="mecanet-char-matched text-emerald-400 font-black">{matchedChars}</span>
+                        <span className="mecanet-char-unmatched text-white">{remainingChars}</span>
+                      </>
+                    ) : (
+                      <span className={word.isRetry ? 'text-amber-300' : 'text-cyan-300'}>{word.text}</span>
+                    )}
+                  </div>
+                  {isTargeted && <div className="mecanet-target-crosshair" />}
+                </div>
+              );
+            })}
+
+            {/* Barrera de Energía Inferior con Cañón Láser */}
             <div className="defense-energy-barrier">
               <span className="text-[9px] font-mono text-cyan-400 font-bold tracking-wider">
-                [ BARRERA DE ENERGÍA ACTIVA ]
+                [ BARRERA DE CONTENCIÓN CORTAFUEGOS ]
               </span>
-              {/* Cañón Láser Táctico que sigue el cursor */}
               <div 
                 className="defense-laser-cannon"
-                style={{ left: `${turretPaddleX}%` }}
+                style={{ left: `${turretPaddleX}%`, transition: 'left 0.08s ease-out' }}
               >
-                <div style={{ width: '10px', height: '12px', background: '#22d3ee', borderRadius: '2px 2px 0 0', boxShadow: '0 0 8px #22d3ee' }}></div>
-                <div style={{ width: '32px', height: '8px', background: '#4f46e5', borderRadius: '2px' }}></div>
+                <div style={{ width: '12px', height: '14px', background: '#22d3ee', borderRadius: '3px 3px 0 0', boxShadow: '0 0 10px #22d3ee' }}></div>
+                <div style={{ width: '36px', height: '8px', background: '#4f46e5', borderRadius: '2px' }}></div>
               </div>
               <span className="text-[9px] font-mono text-indigo-400 font-bold tracking-wider">
-                DEFENSA DE NODO CENTRAL
+                SISTEMA MECANET ACTIVO
               </span>
             </div>
 
@@ -6631,10 +6851,10 @@ function DefenseView({ estudiante, backendUrl, onUpdate }) {
                   🏆
                 </div>
                 <h3 className="text-xl text-white font-mono font-black tracking-wider">
-                  ¡DEFENSA TÁCTICA VICTORIOSA!
+                  ¡DEFENSA MECANET SUPERADA!
                 </h3>
-                <p className="text-xs text-slate-400 max-w-sm mt-1 mb-4 font-mono">
-                  Has neutralizado exitosamente las 5 oleadas de amenazas y preservado la integridad del cortafuegos.
+                <p className="text-xs text-slate-300 max-w-sm mt-1 mb-4 font-mono">
+                  Has mecanografiado y neutralizado con éxito todas las oleadas de código con reintentos completados.
                 </p>
 
                 <div className="p-4 rounded-xl bg-slate-900 border border-slate-800 text-xs font-mono mb-5 w-full max-w-xs space-y-2 shadow-lg">
@@ -6643,12 +6863,12 @@ function DefenseView({ estudiante, backendUrl, onUpdate }) {
                     <span className="text-cyan-400 font-bold text-sm">{score.toLocaleString()}</span>
                   </div>
                   <div className="flex justify-between text-slate-400 text-[11px]">
-                    <span>INTEGRIDAD RESTANTE:</span>
-                    <span className="text-emerald-400 font-bold">{firewallHp}%</span>
+                    <span>VELOCIDAD / PRECISIÓN:</span>
+                    <span className="text-emerald-400 font-bold">{currentWpm} WPM · {currentAcc}%</span>
                   </div>
                   <div className="flex justify-between text-emerald-300 font-semibold border-t border-slate-800 pt-2 text-[11px]">
                     <span>RECOMPENSAS:</span>
-                    <span>+15 Shards · +2 Cores · +2 Esencia</span>
+                    <span>+35 RP · +15 Shards · +2 Cores</span>
                   </div>
                 </div>
 
@@ -6678,19 +6898,23 @@ function DefenseView({ estudiante, backendUrl, onUpdate }) {
                   🛡️
                 </div>
                 <h3 className="text-xl text-white font-mono font-black tracking-wider">
-                  FIREWALL COMPROMETIDO
+                  CORTAFUEGOS COLAPSADO
                 </h3>
                 <p className="text-xs text-slate-400 max-w-sm mt-1 mb-4 font-mono">
-                  El cortafuegos ha colapsado ante la penetración de bugs en la oleada {currentWave}.
+                  Las anomalías de código superaron la barrera en la oleada {currentWave}.
                 </p>
 
                 <div className="p-4 rounded-xl bg-slate-900 border border-slate-800 text-xs font-mono mb-5 w-full max-w-xs space-y-2 shadow-lg">
                   <div className="flex justify-between text-slate-300">
-                    <span>PUNTAJE ALCANZADO:</span>
+                    <span>PUNTAJE:</span>
                     <span className="text-white font-bold">{score.toLocaleString()}</span>
                   </div>
-                  <div className="flex justify-between text-amber-400 text-[11px]">
-                    <span>RECOMPENSA DE ESFUERZO:</span>
+                  <div className="flex justify-between text-slate-400 text-[11px]">
+                    <span>WPM / PRECISIÓN:</span>
+                    <span className="text-amber-400 font-bold">{currentWpm} WPM · {currentAcc}%</span>
+                  </div>
+                  <div className="flex justify-between text-amber-400 text-[11px] border-t border-slate-800 pt-1.5">
+                    <span>RECOMPENSA:</span>
                     <span>+5 RP · +1 Shard</span>
                   </div>
                 </div>
@@ -6715,27 +6939,72 @@ function DefenseView({ estudiante, backendUrl, onUpdate }) {
             )}
           </div>
 
-          {/* Footer de Controles y Habilidad Especial */}
-          <div className="hud-footer-stats p-3.5 bg-slate-900/95 border-t border-slate-800 flex justify-between items-center text-xs font-mono">
-            <div className="flex items-center gap-3">
-              <span className="text-slate-400">MULTIPLICADOR: <strong className="text-amber-400 text-sm">x{combo}</strong></span>
-              <span className="text-slate-600 hidden sm:inline">|</span>
-              <span className="text-slate-400 hidden sm:inline">PAQUETES RESTANTES: <strong className="text-cyan-400">{corruptsLeftInWave}</strong></span>
+          {/* Barra de Entrada Táctica Mecanet */}
+          <div className="mecanet-tactical-bottom-bar p-3 bg-slate-900/95 border-t border-slate-800 flex items-center justify-between gap-4">
+            <div className="flex items-center gap-3 flex-1 max-w-xl">
+              <span className="text-xl text-cyan-400">⌨️</span>
+              <div className={`mecanet-input-wrapper flex-1 ${inputErrorAnim ? 'input-shake-error' : ''}`}>
+                <input
+                  ref={typingInputRef}
+                  type="text"
+                  className="mecanet-type-field w-full px-4 py-2.5 rounded-xl font-mono text-sm font-bold bg-slate-950 border border-slate-700 text-cyan-300 placeholder-slate-500 outline-none focus:border-cyan-400 focus:shadow-[0_0_15px_rgba(34,211,238,0.4)] transition-all"
+                  placeholder="Escribe la palabra de código... [Esc cancela objetivo · Espacio activa EMP]"
+                  value={typedInput}
+                  onChange={handleTypingChange}
+                  onKeyDown={(e) => {
+                    if (e.key === 'Escape') {
+                      e.preventDefault();
+                      setTypedInput('');
+                      setTargetWordId(null);
+                    } else if (e.key === ' ' && power === 100) {
+                      e.preventDefault();
+                      detonarFirewallBlast();
+                    }
+                  }}
+                  autoComplete="off"
+                  autoCapitalize="off"
+                  spellCheck="false"
+                />
+              </div>
+              {typedInput && (
+                <button
+                  type="button"
+                  className="text-xs font-mono text-slate-400 hover:text-white px-2 py-1 bg-slate-800 rounded border border-slate-700 cursor-pointer"
+                  onClick={() => { setTypedInput(''); setTargetWordId(null); }}
+                  title="Limpiar entrada actual (o presiona Escape)"
+                >
+                  Esc
+                </button>
+              )}
             </div>
 
-            <button 
-              type="button"
-              className={`h-10 px-5 rounded-xl text-xs font-mono font-black transition-all flex items-center gap-2 cursor-pointer ${
-                power === 100 
-                  ? 'bg-gradient-to-r from-indigo-600 to-purple-600 hover:from-indigo-500 hover:to-purple-500 text-white shadow-lg shadow-indigo-600/40 animate-pulse border border-indigo-400' 
-                  : 'bg-slate-850 text-slate-500 border border-slate-800 cursor-not-allowed opacity-50'
-              }`}
-              onClick={detonarFirewallBlast}
-              disabled={power < 100}
-            >
-              <span>💥</span>
-              <span>EMP BLAST {power === 100 ? '(LISTO)' : `(${power}%)`}</span>
-            </button>
+            <div className="flex items-center gap-4 text-xs font-mono">
+              <div className="text-slate-400 hidden md:block">
+                <span>PENDIENTES: <strong className="text-cyan-400">{wordsRemainingTotal}</strong></span>
+                {retriesInWave > 0 && (
+                  <span className="ml-2 text-amber-400 font-bold">(⚠️ {retriesInWave} reintentos)</span>
+                )}
+              </div>
+
+              <div className="text-slate-400 hidden sm:block">
+                <span>COMBO: <strong className="text-amber-400 font-bold">x{combo}</strong></span>
+              </div>
+
+              <button 
+                type="button"
+                className={`h-10 px-4 rounded-xl text-xs font-mono font-black transition-all flex items-center gap-2 cursor-pointer ${
+                  power === 100 
+                    ? 'bg-gradient-to-r from-indigo-600 to-purple-600 hover:from-indigo-500 hover:to-purple-500 text-white shadow-lg shadow-indigo-600/40 animate-pulse border border-indigo-400' 
+                    : 'bg-slate-800/60 text-slate-500 border border-slate-800 cursor-not-allowed opacity-50'
+                }`}
+                onClick={detonarFirewallBlast}
+                disabled={power < 100}
+                title={power === 100 ? 'Detonar pulso electromagnético destructor' : 'Acumula aciertos para recargar EMP'}
+              >
+                <span>💥</span>
+                <span>EMP {power === 100 ? '(LISTO)' : `(${power}%)`}</span>
+              </button>
+            </div>
           </div>
         </div>
       )}
@@ -7070,6 +7339,7 @@ function DungeonView({ estudiante, backendUrl, onUpdate }) {
   const [tacticalToast, setTacticalToast] = useState(null);
 
   const textareaRef = useRef(null);
+  const nucleoAwardedRef = useRef(false);
 
   // Persistencia de habitaciones desbloqueadas usando Set
   const initialRooms = Array.isArray(pragma.dungeon_progress?.unlocked_rooms) && pragma.dungeon_progress.unlocked_rooms.length > 0
@@ -7124,8 +7394,11 @@ function DungeonView({ estudiante, backendUrl, onUpdate }) {
 
     // Visibilidad: Entrada siempre visible, salas adyacentes, o desbloqueadas
     const isDiscovered = isPlayerHere || isCleared || isAdjacentToPlayer || isAdjacentToAnyCleared || (x === 0 && y === 0);
-    // Accesibilidad para clic directo: Adyacente al jugador o ya desbloqueada
-    const isAccessible = isPlayerHere || isCleared || isAdjacentToPlayer;
+    // Accesibilidad real para movimiento en la mazmorra:
+    // - Tu propia sala actual
+    // - Cualquier sala ya superada
+    // - Una sala adyacente SI Y SOLO SI tu sala actual ya está desbloqueada
+    const isAccessible = isPlayerHere || isCleared || (isAdjacentToPlayer && isRoomUnlocked);
 
     return {
       cellId,
@@ -7143,7 +7416,11 @@ function DungeonView({ estudiante, backendUrl, onUpdate }) {
   const handleCellClick = (x, y) => {
     const status = checkCellStatus(x, y);
     if (!status.isAccessible) {
-      setTacticalToast("⚠️ Compuerta fuera de rango táctico. Solo puedes moverte a salas contiguas o ya superadas.");
+      if (!isRoomUnlocked && (Math.abs(posX - x) + Math.abs(posY - y) === 1)) {
+        setTacticalToast("🔒 Compuerta bloqueada por cortafuegos. Resuelve la consulta SQL de esta sala para abrir el paso hacia nuevas áreas.");
+      } else {
+        setTacticalToast("⚠️ Compuerta fuera de rango táctico. Solo puedes moverte a salas contiguas o ya superadas.");
+      }
       return;
     }
     setPosX(x);
@@ -7182,16 +7459,32 @@ function DungeonView({ estudiante, backendUrl, onUpdate }) {
 
   // Movimiento por brújula / cruceta D-pad
   const mover = (dir) => {
+    let targetX = posX;
+    let targetY = posY;
+
+    if (dir === 'norte' && posY > 0) targetY = posY - 1;
+    if (dir === 'sur' && posY < 2) targetY = posY + 1;
+    if (dir === 'oeste' && posX > 0) targetX = posX - 1;
+    if (dir === 'este' && posX < 2) targetX = posX + 1;
+
+    if (targetX === posX && targetY === posY) return;
+
+    const targetCellId = DUNGEON_GRID[targetY][targetX];
+    const isTargetCleared = unlockedRooms.includes(targetCellId);
+
+    // Si la sala destino no está superada y la sala actual tampoco está superada, compuerta cerrada
+    if (!isTargetCleared && !isRoomUnlocked) {
+      setTacticalToast("🔒 Compuerta bloqueada por cortafuegos. Resuelve la consulta SQL de esta sala para habilitar el avance.");
+      return;
+    }
+
     setFeedback(null);
     setQueryInput('');
     setQueryResultData(null);
     setPedagogicalChecks([]);
     setShowHintCard(false);
-
-    if (dir === 'norte' && posY > 0) setPosY(y => y - 1);
-    if (dir === 'sur' && posY < 2) setPosY(y => y + 1);
-    if (dir === 'oeste' && posX > 0) setPosX(x => x - 1);
-    if (dir === 'este' && posX < 2) setPosX(x => x + 1);
+    setPosX(targetX);
+    setPosY(targetY);
   };
 
   // Comprobar y ejecutar consulta SQL
@@ -7284,7 +7577,8 @@ function DungeonView({ estudiante, backendUrl, onUpdate }) {
 
   // Despacho reactivo de victoria y recompensas de la sala Núcleo [2,2]
   useEffect(() => {
-    if (currentRoom.id === 'nucleo' && !unlockedRooms.includes('nucleo')) {
+    if (currentRoom.id === 'nucleo' && !unlockedRooms.includes('nucleo') && !nucleoAwardedRef.current) {
+      nucleoAwardedRef.current = true;
       desbloquearHabitacionExitosa(currentRoom.mockSample, 50, 3, 10, 'nucleo');
     }
   }, [currentRoom.id, unlockedRooms]);
@@ -7457,38 +7751,38 @@ function DungeonView({ estudiante, backendUrl, onUpdate }) {
               ))}
             </div>
 
-            {/* Brújula / D-pad Táctico */}
-            <div className="dungeon-compass-container mt-4 p-3 rounded-xl bg-slate-950/90 border border-slate-800 shadow-lg">
-              <div className="compass-header flex justify-between items-center mb-2.5 text-[11px] font-mono text-slate-400 pb-1.5 border-b border-slate-800/80">
+            {/* Brújula / D-pad Táctico Compacto */}
+            <div className="dungeon-compass-container mt-3 p-2.5 rounded-xl bg-slate-950/90 border border-slate-800 shadow-md">
+              <div className="compass-header flex justify-between items-center mb-2 text-[10.5px] font-mono text-slate-400 pb-1 border-b border-slate-800/80">
                 <span className="font-semibold text-slate-300">D-PAD DE NAVEGACIÓN</span>
-                <span className="text-cyan-400 font-bold">RADAR ACTIVO</span>
+                <span className="text-cyan-400 font-bold">ACTIVO</span>
               </div>
-              <div className="compass-cross-layout flex flex-col items-center gap-2">
+              <div className="compass-cross-layout flex flex-col items-center gap-1.5">
                 <button
                   type="button"
-                  className="btn-compass btn-compass-n w-36 h-9 rounded-lg font-mono text-xs font-bold transition flex items-center justify-center gap-1.5 cursor-pointer disabled:opacity-30 disabled:cursor-not-allowed"
+                  className="btn-compass btn-compass-n w-28 h-8 rounded-lg font-mono text-xs font-bold transition flex items-center justify-center gap-1 cursor-pointer disabled:opacity-30 disabled:cursor-not-allowed"
                   onClick={() => mover('norte')}
                   disabled={posY === 0}
                   title="Mover al Norte"
                 >
                   ▲ NORTE
                 </button>
-                <div className="compass-mid-row flex items-center justify-center gap-2 w-full">
+                <div className="compass-mid-row flex items-center justify-center gap-1.5 w-full">
                   <button
                     type="button"
-                    className="btn-compass btn-compass-w flex-1 h-9 rounded-lg font-mono text-xs font-bold transition flex items-center justify-center gap-1.5 cursor-pointer disabled:opacity-30 disabled:cursor-not-allowed"
+                    className="btn-compass btn-compass-w flex-1 h-8 rounded-lg font-mono text-xs font-bold transition flex items-center justify-center gap-1 cursor-pointer disabled:opacity-30 disabled:cursor-not-allowed"
                     onClick={() => mover('oeste')}
                     disabled={posX === 0}
                     title="Mover al Oeste"
                   >
                     ◀ OESTE
                   </button>
-                  <div className="compass-radar-core px-3 h-9 rounded-lg flex items-center justify-center font-mono text-xs font-black bg-slate-950 border border-cyan-500/40 text-cyan-400 shadow-[inset_0_0_8px_rgba(6,182,212,0.3)]">
+                  <div className="compass-radar-core px-2.5 h-8 rounded-lg flex items-center justify-center font-mono text-xs font-black bg-slate-950 border border-cyan-500/40 text-cyan-400 shadow-[inset_0_0_8px_rgba(6,182,212,0.3)]">
                     [{posX},{posY}]
                   </div>
                   <button
                     type="button"
-                    className="btn-compass btn-compass-e flex-1 h-9 rounded-lg font-mono text-xs font-bold transition flex items-center justify-center gap-1.5 cursor-pointer disabled:opacity-30 disabled:cursor-not-allowed"
+                    className="btn-compass btn-compass-e flex-1 h-8 rounded-lg font-mono text-xs font-bold transition flex items-center justify-center gap-1 cursor-pointer disabled:opacity-30 disabled:cursor-not-allowed"
                     onClick={() => mover('este')}
                     disabled={posX === 2}
                     title="Mover al Este"
@@ -7498,7 +7792,7 @@ function DungeonView({ estudiante, backendUrl, onUpdate }) {
                 </div>
                 <button
                   type="button"
-                  className="btn-compass btn-compass-s w-36 h-9 rounded-lg font-mono text-xs font-bold transition flex items-center justify-center gap-1.5 cursor-pointer disabled:opacity-30 disabled:cursor-not-allowed"
+                  className="btn-compass btn-compass-s w-28 h-8 rounded-lg font-mono text-xs font-bold transition flex items-center justify-center gap-1 cursor-pointer disabled:opacity-30 disabled:cursor-not-allowed"
                   onClick={() => mover('sur')}
                   disabled={posY === 2}
                   title="Mover al Sur"
@@ -7543,7 +7837,7 @@ function DungeonView({ estudiante, backendUrl, onUpdate }) {
             </div>
           </div>
 
-          {/* Pilar 1: Esquema Relacional de la Tabla */}
+          {/* Pilar 1: Esquema Relacional Estructurado en Tarjetas Verticales */}
           <div className="schema-tactical-panel mb-4 p-3.5 rounded-xl border border-slate-800 bg-slate-950/90 shadow-md">
             <div className="schema-panel-header flex justify-between items-center mb-3">
               <div className="flex items-center gap-2">
@@ -7561,14 +7855,24 @@ function DungeonView({ estudiante, backendUrl, onUpdate }) {
               </button>
             </div>
 
-            {/* Badges de Columnas con Tipos */}
-            <div className="schema-columns-list flex flex-wrap gap-2 mb-3">
+            {/* Columnas en Tarjetas Verticales Estructuradas */}
+            <div className="schema-columns-vertical-grid grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-2.5 mb-3">
               {currentRoom.columns.map((col, idx) => (
-                <div key={idx} className="column-spec-chip flex items-center gap-1.5 px-2.5 py-1 rounded-lg bg-slate-900 border border-slate-800 shadow-sm" title={col.desc}>
-                  <span className="col-name font-mono text-xs font-bold text-slate-200">{col.name}</span>
-                  {renderTypeBadge(col)}
-                  {col.isPk && <span className="text-[9px] font-mono font-bold text-amber-400 bg-amber-950/80 border border-amber-500/40 px-1.5 py-0.5 rounded" title="Primary Key">PK</span>}
-                  {col.isFk && <span className="text-[9px] font-mono font-bold text-indigo-400 bg-indigo-950/80 border border-indigo-500/40 px-1.5 py-0.5 rounded" title="Foreign Key">FK</span>}
+                <div key={idx} className="column-spec-card p-2.5 rounded-xl bg-slate-900/90 border border-slate-800 hover:border-cyan-500/50 transition-all flex flex-col justify-between shadow-sm">
+                  <div className="flex items-center justify-between gap-1.5 mb-1.5">
+                    <span className="col-name font-mono text-xs font-bold text-slate-100 flex items-center gap-1">
+                      <span className="text-cyan-400">#</span>
+                      {col.name}
+                    </span>
+                    <div className="flex items-center gap-1">
+                      {renderTypeBadge(col)}
+                      {col.isPk && <span className="text-[9px] font-mono font-bold text-amber-400 bg-amber-950/90 border border-amber-500/50 px-1.5 py-0.5 rounded shadow-sm" title="Primary Key">PK</span>}
+                      {col.isFk && <span className="text-[9px] font-mono font-bold text-indigo-400 bg-indigo-950/90 border border-indigo-500/50 px-1.5 py-0.5 rounded shadow-sm" title="Foreign Key">FK</span>}
+                    </div>
+                  </div>
+                  <p className="text-[10.5px] font-mono text-slate-400 leading-snug">
+                    {col.desc}
+                  </p>
                 </div>
               ))}
             </div>
@@ -7611,7 +7915,34 @@ function DungeonView({ estudiante, backendUrl, onUpdate }) {
             )}
           </div>
 
-          {/* Pilar 3: Consola, Snippets y Visor */}
+          {/* Tarjeta Destacada de Misión: ¿Qué debes consultar? */}
+          {currentRoom.id !== 'nucleo' && (
+            <div className="dungeon-mission-card p-4 rounded-xl bg-gradient-to-r from-indigo-950/80 via-slate-900 to-slate-950 border border-indigo-500/40 shadow-lg mb-4">
+              <div className="flex items-center justify-between mb-2">
+                <div className="flex items-center gap-2">
+                  <span className="text-xl">🎯</span>
+                  <h4 className="text-xs font-mono font-black text-indigo-200 tracking-wider uppercase">
+                    ¿QUÉ DEBES CONSULTAR EN ESTA COMPUERTA?
+                  </h4>
+                </div>
+                <span className="text-[10px] font-mono px-2.5 py-0.5 rounded-full bg-cyan-950/80 border border-cyan-500/40 text-cyan-300 font-bold">
+                  OBJETIVO SQL
+                </span>
+              </div>
+              <p className="text-sm font-mono font-bold text-slate-100 leading-snug mb-2.5">
+                {currentRoom.objective}
+              </p>
+              <div className="flex items-center gap-3 text-[11px] font-mono text-slate-400 pt-2 border-t border-slate-800/80 flex-wrap">
+                <span>Tabla destino: <strong className="text-emerald-400 font-bold">{currentRoom.name}</strong></span>
+                <span>·</span>
+                <span>Comando: <strong className="text-cyan-300">DQL (Data Query Language)</strong></span>
+                <span>·</span>
+                <span className="text-amber-300/90">Escribe la consulta abajo y ejecuta</span>
+              </div>
+            </div>
+          )}
+
+          {/* Pilar 3: Consola DataGrip / Supabase, Snippets y Visor */}
           {currentRoom.id !== 'nucleo' ? (
             <div className="dungeon-console-section mb-4">
               {/* Barra de Snippets Rápidos */}
@@ -7643,8 +7974,21 @@ function DungeonView({ estudiante, backendUrl, onUpdate }) {
                 ))}
               </div>
 
-              {/* Editor SQL */}
-              <div className="sql-editor-wrap rounded-xl border border-slate-800 bg-slate-950 overflow-hidden shadow-md">
+              {/* Editor SQL Estilo DataGrip / Supabase */}
+              <div className="sql-editor-wrap datagrip-editor-frame rounded-xl border border-slate-800 bg-slate-950 overflow-hidden shadow-md">
+                {/* Cabecera IDE estilo DataGrip */}
+                <div className="datagrip-editor-header flex items-center justify-between px-3.5 py-2 bg-slate-900/90 border-b border-slate-800 text-[11px] font-mono text-slate-400">
+                  <div className="flex items-center gap-2">
+                    <span className="text-emerald-400">📄</span>
+                    <span className="text-slate-200 font-bold">{currentRoom.name}_query.sql</span>
+                    <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse ml-1" />
+                  </div>
+                  <div className="flex items-center gap-3 text-[10px] text-slate-500">
+                    <span className="text-cyan-400 font-semibold">POSTGRESQL 16</span>
+                    <span>UTF-8</span>
+                  </div>
+                </div>
+
                 <textarea
                   ref={textareaRef}
                   className="code-textarea sql-dungeon-textarea font-mono text-xs w-full bg-slate-950 text-emerald-300 p-3.5 outline-none resize-y min-h-[125px] leading-relaxed"
@@ -7759,32 +8103,36 @@ function DungeonView({ estudiante, backendUrl, onUpdate }) {
                 </div>
               )}
 
-              {/* Visor Interactivo de Resultados de Consulta */}
+              {/* Visor Interactivo de Resultados de Consulta Estilo DataGrip / Supabase */}
               {queryResultData && queryResultData.length > 0 && (
-                <div className="sql-results-viewer mt-3 bg-slate-950/90 border border-slate-800 rounded-lg p-3">
-                  <div className="results-header flex justify-between items-center text-xs font-mono text-slate-400 mb-2">
+                <div className="sql-results-viewer datagrip-results-viewer mt-3 bg-slate-950/95 border border-slate-800 rounded-xl p-3 shadow-lg">
+                  <div className="results-header flex justify-between items-center text-xs font-mono text-slate-400 mb-2 pb-2 border-b border-slate-800/80">
                     <span className="font-bold text-cyan-400 flex items-center gap-1.5">
                       <span>📊</span>
-                      <span>RESULTADO DE LA CONSULTA ({queryResultData.length} {queryResultData.length === 1 ? 'registro' : 'registros'}):</span>
+                      <span>RESULTADOS · {queryResultData.length} {queryResultData.length === 1 ? 'FILA DEVUELTA' : 'FILAS DEVUELTAS'}</span>
                     </span>
-                    <span className="text-[10px] text-slate-500 font-mono">CONEXIÓN VIRTUAL ACTIVA</span>
+                    <span className="text-[10px] text-emerald-400 font-mono font-bold bg-emerald-950/80 border border-emerald-500/40 px-2 py-0.5 rounded">
+                      ● CONEXIÓN ACTIVA
+                    </span>
                   </div>
-                  <div className="overflow-x-auto">
-                    <table className="dungeon-results-table">
+                  <div className="overflow-x-auto rounded-lg border border-slate-800/80">
+                    <table className="dungeon-results-table w-full text-xs font-mono">
                       <thead>
-                        <tr className="border-b border-slate-800 bg-slate-900/80">
+                        <tr className="border-b border-slate-800 bg-slate-900">
                           {Object.keys(queryResultData[0]).map((key, i) => (
-                            <th key={i} className="p-2 text-left text-cyan-300 font-semibold">{key}</th>
+                            <th key={i} className="py-2.5 px-3 text-left text-cyan-300 font-bold uppercase tracking-wider">{key}</th>
                           ))}
                         </tr>
                       </thead>
                       <tbody>
                         {queryResultData.map((row, rIdx) => (
-                          <tr key={rIdx} className="border-b border-slate-800/40 hover:bg-slate-900/30">
+                          <tr key={rIdx} className={`border-b border-slate-800/40 hover:bg-slate-900/60 transition-colors ${rIdx % 2 === 0 ? 'bg-slate-950' : 'bg-slate-900/30'}`}>
                             {Object.values(row).map((val, cIdx) => (
-                              <td key={cIdx} className="p-2 text-slate-300">
+                              <td key={cIdx} className="py-2 px-3 text-slate-300">
                                 {typeof val === 'boolean' ? (
-                                  <span className={val ? 'text-emerald-400 font-bold' : 'text-rose-400 font-bold'}>{String(val)}</span>
+                                  <span className={`px-2 py-0.5 rounded text-[10px] font-bold border ${val ? 'bg-emerald-950/70 border-emerald-500/40 text-emerald-300' : 'bg-rose-950/70 border-rose-500/40 text-rose-300'}`}>
+                                    {String(val).toUpperCase()}
+                                  </span>
                                 ) : (
                                   String(val)
                                 )}
