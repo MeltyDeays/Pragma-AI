@@ -23,6 +23,9 @@ export function EstudianteProvider({ children }) {
         setEstudiante(res.data.estudiante);
         setTareas(res.data.tareas || []);
         setTemario(res.data.temario || []);
+      } else if (res.status === 404) {
+        cerrarSesion();
+        mostrarMensaje('Tu sesión anterior expiró o el perfil no existe. Inicia sesión nuevamente.', 'advertencia');
       } else {
         mostrarMensaje(res.error || 'Error al cargar el estado', 'error');
       }

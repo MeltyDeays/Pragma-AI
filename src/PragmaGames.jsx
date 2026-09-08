@@ -4445,15 +4445,14 @@ function ZenView({ estudiante, backendUrl, onUpdate }) {
   const safePauseAudio = () => {
     if (audioRef.current) {
       if (playPromiseRef.current) {
-        playPromiseRef.current
+        const p = playPromiseRef.current;
+        p.catch(() => {})
           .then(() => {
             if (audioRef.current) {
               audioRef.current.pause();
             }
           })
-          .catch(() => {
-            // Ignorar aborts causados por pausas inmediatas
-          })
+          .catch(() => {})
           .finally(() => {
             playPromiseRef.current = null;
           });
@@ -4468,7 +4467,14 @@ function ZenView({ estudiante, backendUrl, onUpdate }) {
   };
 
   useEffect(() => {
+    const handleAudioRejection = (e) => {
+      if (e?.reason?.name === 'AbortError' || (e?.reason?.message && e.reason.message.includes('pause()'))) {
+        e.preventDefault();
+      }
+    };
+    window.addEventListener('unhandledrejection', handleAudioRejection);
     return () => {
+      window.removeEventListener('unhandledrejection', handleAudioRejection);
       detenerSynthAmbient();
       safePauseAudio();
     };
@@ -4492,24 +4498,32 @@ function ZenView({ estudiante, backendUrl, onUpdate }) {
           audioRef.current.loop = true;
         }
         if (audioRef.current) {
-          const promise = audioRef.current.play();
-          playPromiseRef.current = promise;
-          if (promise !== undefined && typeof promise.then === 'function') {
-            promise
-              .then(() => {
-                setIsPlaying(true);
-              })
-              .catch((err) => {
-                if (err && err.name !== 'AbortError') {
-                  console.warn('Audio play fallback a sintetizador:', err);
-                  setUseSynthAudio(true);
-                  iniciarSynthAmbient();
+          try {
+            const promise = audioRef.current.play();
+            playPromiseRef.current = promise;
+            if (promise !== undefined && typeof promise.then === 'function') {
+              promise
+                .then(() => {
                   setIsPlaying(true);
-                }
-              })
-              .finally(() => {
-                playPromiseRef.current = null;
-              });
+                })
+                .catch((err) => {
+                  if (err && err.name !== 'AbortError' && !err.message?.includes('pause()')) {
+                    console.warn('Audio play fallback a sintetizador:', err);
+                    setUseSynthAudio(true);
+                    iniciarSynthAmbient();
+                    setIsPlaying(true);
+                  }
+                })
+                .finally(() => {
+                  playPromiseRef.current = null;
+                });
+            }
+          } catch (syncErr) {
+            if (syncErr && syncErr.name !== 'AbortError') {
+              setUseSynthAudio(true);
+              iniciarSynthAmbient();
+              setIsPlaying(true);
+            }
           }
         } else {
           setUseSynthAudio(true);
