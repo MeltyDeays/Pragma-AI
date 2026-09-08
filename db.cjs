@@ -673,7 +673,7 @@ const RESILIENT_FALLBACK_MODELS = [
   'llama-3.1-8b-instant'
 ];
 
-async function ejecutarGroqConReintentos(messages, model = 'llama-3.3-70b-versatile', responseFormat = null, maxReintentos = 6) {
+async function ejecutarGroqConReintentos(messages, model = 'llama-3.3-70b-versatile', responseFormat = null, maxReintentos = 6, extraParams = {}) {
   let delay = 1000;
   if (groqClients.length === 0) {
     throw new Error('No hay claves API de Groq configuradas en el pool.');
@@ -687,7 +687,13 @@ async function ejecutarGroqConReintentos(messages, model = 'llama-3.3-70b-versat
     const activeClient = groqClients[activeIndex];
 
     try {
-      const params = { messages, model: activeModel };
+      const params = {
+        messages,
+        model: activeModel,
+        max_tokens: extraParams.max_tokens || 6000,
+        temperature: extraParams.temperature ?? 0.3,
+        ...extraParams
+      };
       if (responseFormat) {
         params.response_format = responseFormat;
       }

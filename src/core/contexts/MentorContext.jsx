@@ -124,10 +124,18 @@ export function MentorProvider({ children }) {
       });
 
       if (res.ok && res.data) {
+        const nuevosBps = Array.isArray(res.data.blueprints) ? res.data.blueprints : null;
         setPlanActivo(prev => ({
           ...prev,
-          mensajes: res.data.mensajes || prev.mensajes
+          mensajes: res.data.mensajes || prev.mensajes,
+          ...(nuevosBps ? { blueprints: nuevosBps } : {})
         }));
+        if (nuevosBps) {
+          setPlanesMentor(prev => prev.map(p => p.id === planActivo.id ? { ...p, blueprints: nuevosBps } : p));
+        }
+        if (res.data.nuevo_blueprint?.titulo) {
+          mostrarMensaje(`⚡ ¡Nuevo Blueprint detectado y añadido: "${res.data.nuevo_blueprint.titulo}"!`, 'exito');
+        }
         setMensajeChatMentor('');
         setChatError(null);
         await cargarGuiasAyuda(planActivo.id);
@@ -218,6 +226,68 @@ export function MentorProvider({ children }) {
     }
   };
 
+  const [regenerandoPlan, setRegenerandoPlan] = useState(false);
+  const [regenerandoWord, setRegenerandoWord] = useState(false);
+
+  const regenerarPlanMentor = async (planId, enfoque = null, instrucciones = null) => {
+    if (!planId) return null;
+    setRegenerandoPlan(true);
+    try {
+      const res = await safeFetchJson(`${API_BASE}/api/mentor/planes/${planId}/regenerar-plan`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          enfoque: enfoque || null,
+          instrucciones_adicionales: instrucciones || null
+        }),
+        timeoutMs: 65000
+      });
+      if (res.ok && res.data && res.data.plan) {
+        mostrarMensaje('¡Plan de desarrollo regenerado y enriquecido con éxito!', 'exito');
+        const planActualizado = res.data.plan;
+        setPlanActivo(planActualizado);
+        setPlanesMentor(prev => prev.map(p => p.id === planId ? planActualizado : p));
+        await cargarPlanesMentor(estudiante?.id);
+        return planActualizado;
+      } else {
+        mostrarMensaje(res.error || 'Error al regenerar el plan.', 'error');
+        return null;
+      }
+    } catch (err) {
+      console.error('Error al regenerar plan mentor:', err);
+      mostrarMensaje('Error de red al regenerar el plan.', 'error');
+      return null;
+    } finally {
+      setRegenerandoPlan(false);
+    }
+  };
+
+  const regenerarWordPlan = async (planId) => {
+    if (!planId) return null;
+    setRegenerandoWord(true);
+    try {
+      const res = await safeFetchJson(`${API_BASE}/api/mentor/planes/${planId}/regenerar-word`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' }
+      });
+      if (res.ok && res.data && res.data.word_url) {
+        mostrarMensaje('¡Documento Word reconstruido con formato enriquecido!', 'exito');
+        setPlanActivo(prev => prev && prev.id === planId ? { ...prev, word_url: res.data.word_url } : prev);
+        setPlanesMentor(prev => prev.map(p => p.id === planId ? { ...p, word_url: res.data.word_url } : p));
+        return res.data.word_url;
+      } else {
+        mostrarMensaje(res.error || 'Error al reconstruir documento Word.', 'error');
+        return null;
+      }
+    } catch (err) {
+      console.error('Error al regenerar word:', err);
+      mostrarMensaje('Error de red al regenerar documento Word.', 'error');
+      return null;
+    } finally {
+      setRegenerandoWord(false);
+    }
+  };
+
   useEffect(() => {
     if (planActivo?.id) {
       cargarGuiasAyuda(planActivo.id);
@@ -255,7 +325,11 @@ export function MentorProvider({ children }) {
       enviarMensajeChatMentor,
       regenerarGuiaAyuda,
       generarBlueprintsDinamicos,
-      blueprintsLoading
+      blueprintsLoading,
+      regenerandoPlan,
+      regenerandoWord,
+      regenerarPlanMentor,
+      regenerarWordPlan
     }}>
       {children}
     </MentorContext.Provider>

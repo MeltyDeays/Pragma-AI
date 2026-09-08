@@ -6,7 +6,8 @@ import {
 } from 'lucide-react';
 import { parsearMarkdownMentor, parsearInlineMarkdown } from '../../core/controladores/markdown';
 import { descargarDocumentoPDF } from '../../core/controladores/pdfGenerator';
-import { LISTA_BLUEPRINTS, BLUEPRINT_CATEGORIAS } from '../modelos/blueprintsModel';
+import DiccionarioEstructuras from './DiccionarioEstructuras';
+import { BLUEPRINT_CATEGORIAS } from '../modelos/blueprintsModel';
 
 const normalizarTexto = (texto) =>
   (texto || '')
@@ -89,13 +90,19 @@ export default function MentorChat({
   setChatError = null,
   cancelarConsultaMentor = null,
   generarBlueprintsDinamicos = null,
-  blueprintsLoading = false
+  blueprintsLoading = false,
+  regenerandoPlan = false,
+  regenerandoWord = false,
+  regenerarPlanMentor = null,
+  regenerarWordPlan = null
 }) {
   const [esMovil, setEsMovil] = useState(false);
   const [copiadoId, setCopiadoId] = useState(null);
   const [busquedaBlueprint, setBusquedaBlueprint] = useState('');
   const [categoriaBlueprint, setCategoriaBlueprint] = useState('Todos');
-  const [origenBlueprints, setOrigenBlueprints] = useState('proyecto');
+  const [vistaDiccionario, setVistaDiccionario] = useState(false);
+  const [mostrarModalRegenerarPlan, setMostrarModalRegenerarPlan] = useState(false);
+  const [enfoqueRegeneracion, setEnfoqueRegeneracion] = useState('');
 
   useEffect(() => {
     const handleResize = () => {
@@ -195,9 +202,7 @@ export default function MentorChat({
     }
   })();
 
-  const listaBase = origenBlueprints === 'proyecto' ? blueprintsDelProyecto : LISTA_BLUEPRINTS;
-
-  const blueprintsFiltrados = listaBase.filter(bp => {
+  const blueprintsFiltrados = blueprintsDelProyecto.filter(bp => {
     const coincideCategoria = categoriaBlueprint === 'Todos' || bp.categoria === categoriaBlueprint;
     const q = normalizarTexto(busquedaBlueprint.trim());
     const catAlias = ALIAS_CATEGORIAS[q];
@@ -228,8 +233,27 @@ export default function MentorChat({
         <div className="mentor-sidebar-list">
           <button 
             type="button"
-            className={`mentor-project-item new-project-btn ${!planActivo ? 'active' : ''}`}
-            onClick={() => setPlanActivo(null)}
+            className={`mentor-project-item nav-diccionario-btn ${vistaDiccionario ? 'active' : ''}`}
+            onClick={() => {
+              setVistaDiccionario(true);
+              setPlanActivo(null);
+            }}
+          >
+            <Database size={16} className="text-amber-400" />
+            <div className="project-item-title">📚 Diccionario de Estructuras</div>
+          </button>
+
+          <div className="sidebar-section-divider">
+            <span>PROYECTOS ACTIVOS</span>
+          </div>
+
+          <button 
+            type="button"
+            className={`mentor-project-item new-project-btn ${!planActivo && !vistaDiccionario ? 'active' : ''}`}
+            onClick={() => {
+              setPlanActivo(null);
+              setVistaDiccionario(false);
+            }}
           >
             <Sparkles size={16} /> + Proponer Idea Nueva
           </button>
@@ -237,8 +261,11 @@ export default function MentorChat({
             <button
               key={p.id}
               type="button"
-              className={`mentor-project-item ${planActivo?.id === p.id ? 'active' : ''}`}
-              onClick={() => setPlanActivo(p)}
+              className={`mentor-project-item ${planActivo?.id === p.id && !vistaDiccionario ? 'active' : ''}`}
+              onClick={() => {
+                setPlanActivo(p);
+                setVistaDiccionario(false);
+              }}
             >
               <div className="project-item-title">{p.titulo}</div>
               <div className="project-item-date">{new Date(p.creado_en).toLocaleDateString()}</div>
@@ -248,7 +275,17 @@ export default function MentorChat({
       </div>
 
       <div className="mentor-main-panel">
-        {!planActivo ? (
+        {vistaDiccionario ? (
+          <DiccionarioEstructuras
+            planesMentor={planesMentor}
+            onUsarEstructura={(idea) => {
+              setIdeaProyecto(idea);
+              setVistaDiccionario(false);
+              setPlanActivo(null);
+            }}
+            onVolverAProyectos={() => setVistaDiccionario(false)}
+          />
+        ) : !planActivo ? (
           <div className="mentor-proposal-card">
             <div className="proposal-header">
               <Sparkles className="icon-spark-proposal" />
@@ -315,7 +352,7 @@ export default function MentorChat({
                   className={`plan-tab-btn ${tabMentorColumn === 'blueprints' ? 'active' : ''}`}
                   onClick={() => setTabMentorColumn('blueprints')}
                 >
-                  <Layers size={14} /> Blueprints & Recursos {blueprintsDelProyecto.length > 0 ? `(${blueprintsDelProyecto.length})` : `(${LISTA_BLUEPRINTS.length})`}
+                  <Layers size={14} /> Blueprints del Proyecto ({blueprintsDelProyecto.length})
                 </button>
                 <button
                   type="button"
@@ -329,8 +366,51 @@ export default function MentorChat({
               {tabMentorColumn === 'plan' ? (
                 <>
                   <div className="plan-column-header" style={{ flexWrap: 'wrap', gap: '8px' }}>
-                    <h2>{planActivo.titulo}</h2>
-                    <div style={{ display: 'flex', gap: '8px', flexWrap: 'wrap' }}>
+                    <div>
+                      <h2>{planActivo.titulo}</h2>
+                      <p className="text-xs text-slate-400 mt-0.5">Plan de Arquitectura Técnica y Código de Producción</p>
+                    </div>
+                    <div style={{ display: 'flex', gap: '8px', flexWrap: 'wrap', alignItems: 'center' }}>
+                      <button
+                        type="button"
+                        className="btn-action-regen-plan"
+                        disabled={regenerandoPlan}
+                        onClick={() => setMostrarModalRegenerarPlan(true)}
+                        title="Volver a generar el plan completo con arquitectura y código exhaustivo con IA"
+                      >
+                        {regenerandoPlan ? (
+                          <>
+                            <RefreshCw size={13} className="animate-spin" />
+                            <span>Diseñando Plan Exhaustivo...</span>
+                          </>
+                        ) : (
+                          <>
+                            <RefreshCw size={13} />
+                            <span>🔄 Volver a generar Plan</span>
+                          </>
+                        )}
+                      </button>
+
+                      <button
+                        type="button"
+                        className="btn-action-regen-word"
+                        disabled={regenerandoWord || !planActivo?.id}
+                        onClick={() => regenerarWordPlan?.(planActivo.id)}
+                        title="Reconstruir el documento Word (.docx) con formato corporativo, sombreado de código y tablas"
+                      >
+                        {regenerandoWord ? (
+                          <>
+                            <RefreshCw size={13} className="animate-spin" />
+                            <span>Actualizando Word...</span>
+                          </>
+                        ) : (
+                          <>
+                            <RefreshCw size={13} />
+                            <span>Actualizar Word</span>
+                          </>
+                        )}
+                      </button>
+
                       <button
                         type="button"
                         onClick={handleDescargarPlanPDF}
@@ -358,6 +438,37 @@ export default function MentorChat({
                   </div>
 
                   <div className="mentor-plan-body markdown-content-mentor">
+                    {(!planActivo.plan_markdown || planActivo.plan_markdown.length < 500) && (
+                      <div className="plan-incompleto-banner">
+                        <div className="flex items-start gap-3">
+                          <AlertTriangle size={20} className="text-amber-400 flex-shrink-0 mt-0.5" />
+                          <div>
+                            <h4 className="font-bold text-amber-300 text-sm">Plan en formato preliminar o recortado</h4>
+                            <p className="text-xs text-slate-300 mt-1">
+                              Este plan tiene un contenido breve. Puedes pulsar a continuación para que la IA diseñe el documento exhaustivo de 4 dimensiones con bloques de código completos y funcionales.
+                            </p>
+                          </div>
+                        </div>
+                        <button
+                          type="button"
+                          className="btn-banner-regenerar-cta"
+                          disabled={regenerandoPlan}
+                          onClick={() => regenerarPlanMentor?.(planActivo.id)}
+                        >
+                          {regenerandoPlan ? (
+                            <>
+                              <RefreshCw size={13} className="animate-spin" />
+                              <span>Diseñando Plan Exhaustivo...</span>
+                            </>
+                          ) : (
+                            <>
+                              <Sparkles size={13} />
+                              <span>⚡ Generar Plan Completo Ahora</span>
+                            </>
+                          )}
+                        </button>
+                      </div>
+                    )}
                     {parsearMarkdownMentor(planActivo.plan_markdown)}
                   </div>
                 </>
@@ -366,53 +477,44 @@ export default function MentorChat({
                   <div className="blueprints-header">
                     <div className="blueprints-header-top">
                       <div>
-                        <h3>📐 Blueprints Arquitectónicos & Recursos</h3>
+                        <h3>📐 Blueprints de este Proyecto</h3>
                         <p className="text-xs text-slate-400">
-                          {origenBlueprints === 'proyecto'
-                            ? `Andamios técnicos generados dinámicamente con IA adaptados al stack de "${planActivo?.titulo || 'tu proyecto'}".`
-                            : `Plantillas y andamios arquitectónicos estándar listos para producción (${LISTA_BLUEPRINTS.length} disponibles).`}
+                          Andamios de código específicos para "{planActivo?.titulo}". Se crearon al iniciar y van apareciendo nuevos automáticamente conforme chateas y resuelves dudas con el mentor.
                         </p>
                       </div>
 
                       <div className="blueprints-header-actions">
-                        <div className="bp-source-switch">
-                          <button
-                            type="button"
-                            className={`btn-bp-source ${origenBlueprints === 'proyecto' ? 'active' : ''}`}
-                            onClick={() => setOrigenBlueprints('proyecto')}
-                          >
-                            🎯 Para este Proyecto ({blueprintsDelProyecto.length})
-                          </button>
-                          <button
-                            type="button"
-                            className={`btn-bp-source ${origenBlueprints === 'biblioteca' ? 'active' : ''}`}
-                            onClick={() => setOrigenBlueprints('biblioteca')}
-                          >
-                            📚 Biblioteca Base ({LISTA_BLUEPRINTS.length})
-                          </button>
-                        </div>
+                        <button
+                          type="button"
+                          className="btn-bp-generate-ai"
+                          disabled={blueprintsLoading || !planActivo?.id}
+                          onClick={() => generarBlueprintsDinamicos?.(planActivo?.id)}
+                          title="Generar nuevos blueprints personalizados con IA para este proyecto"
+                        >
+                          {blueprintsLoading ? (
+                            <>
+                              <RefreshCw size={13} className="animate-spin" />
+                              <span>Diseñando con IA...</span>
+                            </>
+                          ) : (
+                            <>
+                              <Sparkles size={13} />
+                              <span>{blueprintsDelProyecto.length > 0 ? '✨ Generar Más con IA' : '✨ Generar con IA'}</span>
+                            </>
+                          )}
+                        </button>
 
-                        {origenBlueprints === 'proyecto' && (
-                          <button
-                            type="button"
-                            className="btn-bp-generate-ai"
-                            disabled={blueprintsLoading || !planActivo?.id}
-                            onClick={() => generarBlueprintsDinamicos?.(planActivo?.id)}
-                            title="Generar nuevos blueprints personalizados con IA para este proyecto"
-                          >
-                            {blueprintsLoading ? (
-                              <>
-                                <RefreshCw size={13} className="animate-spin" />
-                                <span>Generando con IA...</span>
-                              </>
-                            ) : (
-                              <>
-                                <Sparkles size={13} />
-                                <span>{blueprintsDelProyecto.length > 0 ? 'Regenerar con IA' : 'Generar con IA'}</span>
-                              </>
-                            )}
-                          </button>
-                        )}
+                        <button
+                          type="button"
+                          className="btn-bp-switch-library"
+                          onClick={() => {
+                            setVistaDiccionario(true);
+                            setPlanActivo(null);
+                          }}
+                          title="Explorar el Diccionario de Estructuras por industria"
+                        >
+                          📚 Diccionario de Estructuras
+                        </button>
                       </div>
                     </div>
 
@@ -422,7 +524,7 @@ export default function MentorChat({
                         <Search size={14} className="blueprints-search-icon" />
                         <input
                           type="text"
-                          placeholder={origenBlueprints === 'proyecto' ? "Buscar en blueprints de este proyecto..." : "Buscar blueprint o snippet..."}
+                          placeholder="Buscar en blueprints de este proyecto..."
                           value={busquedaBlueprint}
                           onChange={(e) => setBusquedaBlueprint(e.target.value)}
                           className="blueprints-search-input"
@@ -454,14 +556,14 @@ export default function MentorChat({
                     </div>
                   </div>
 
-                  {origenBlueprints === 'proyecto' && blueprintsDelProyecto.length === 0 ? (
+                  {blueprintsDelProyecto.length === 0 ? (
                     <div className="blueprints-dynamic-generator-card">
                       <div className="bp-gen-icon-wrap">
                         <Sparkles size={30} className="text-indigo-400 animate-pulse" />
                       </div>
-                      <h4>Generar Blueprints Específicos con IA</h4>
+                      <h4>Blueprints Específicos para "{planActivo?.titulo}"</h4>
                       <p>
-                        Cada proyecto tiene requerimientos y stacks únicos. Pulsa para que el Arquitecto IA analice el alcance, stack tecnológico y contratos de <strong>"{planActivo?.titulo}"</strong> y diseñe entre 4 y 6 andamios de código 100% personalizados y listos para producción.
+                        Aún no tienes blueprints asociados a este proyecto. El Arquitecto IA puede analizar el stack y alcance de tu proyecto para generar andamios de código listos para producción. Además, <strong>cada vez que chatees con el mentor</strong> sobre arquitecturas o componentes, se irán agregando nuevos blueprints automáticamente aquí.
                       </p>
                       <div className="bp-gen-actions">
                         <button
@@ -478,22 +580,25 @@ export default function MentorChat({
                           ) : (
                             <>
                               <Sparkles size={15} />
-                              <span>✨ Generar Blueprints para "{planActivo?.titulo}"</span>
+                              <span>✨ Generar Blueprints Iniciales con IA</span>
                             </>
                           )}
                         </button>
                         <button
                           type="button"
                           className="btn-bp-switch-library"
-                          onClick={() => setOrigenBlueprints('biblioteca')}
+                          onClick={() => {
+                            setVistaDiccionario(true);
+                            setPlanActivo(null);
+                          }}
                         >
-                          📚 Ver Biblioteca Base ({LISTA_BLUEPRINTS.length})
+                          📚 Explorar Diccionario de Estructuras
                         </button>
                       </div>
                     </div>
                   ) : blueprintsFiltrados.length === 0 ? (
                     <div className="blueprints-empty-state">
-                      <p className="text-sm text-slate-400">No se encontraron blueprints con los filtros aplicados en esta vista.</p>
+                      <p className="text-sm text-slate-400">No se encontraron blueprints con los filtros aplicados en este proyecto.</p>
                       <button
                         type="button"
                         className="btn-bp-reset"
@@ -517,10 +622,8 @@ export default function MentorChat({
                                 <h4 className="font-semibold text-white text-sm">{bp.titulo}</h4>
                               </div>
                               <div className="flex items-center gap-1.5">
-                                {origenBlueprints === 'proyecto' && (
-                                  <span className="bp-dyn-badge" title="Blueprint adaptado dinámicamente a este proyecto">⚡ IA Proyecto</span>
-                                )}
-                                <span className={`bp-tag ${bp.tagClass}`}>{bp.categoria}</span>
+                                <span className="bp-dyn-badge" title="Blueprint generado específicamente para este proyecto">⚡ Proyecto</span>
+                                <span className={`bp-tag ${bp.tagClass || 'bp-tag-arch'}`}>{bp.categoria || 'Modular'}</span>
                               </div>
                             </div>
                             <p className="bp-desc">{bp.desc}</p>
@@ -1129,6 +1232,87 @@ export default function MentorChat({
           </div>
         )}
       </div>
+
+      {/* Modal para Volver a Generar el Plan */}
+      {mostrarModalRegenerarPlan && (
+        <div className="modal-regenerar-overlay animate-fade-in">
+          <div className="modal-regenerar-card">
+            <div className="modal-regenerar-header">
+              <div className="flex items-center gap-2">
+                <RefreshCw size={18} className="text-amber-400" />
+                <h3>Volver a Generar Plan de Implementación</h3>
+              </div>
+              <button
+                type="button"
+                className="modal-regenerar-close"
+                onClick={() => setMostrarModalRegenerarPlan(false)}
+              >
+                ✕
+              </button>
+            </div>
+
+            <div className="modal-regenerar-body">
+              <p className="text-sm text-slate-300">
+                El Arquitecto IA rediseñará desde cero un <strong>Plan de Implementación de Producción Exhaustivo</strong> para <strong>"{planActivo?.titulo}"</strong>.
+              </p>
+
+              <div className="modal-regenerar-features">
+                <div className="modal-feat-item">✓ 4 Dimensiones Técnicas (Arquitectura, Código, Integración y Pruebas)</div>
+                <div className="modal-feat-item">✓ Código de inicialización de archivos desde la línea 1 con imports y clients</div>
+                <div className="modal-feat-item">✓ Operaciones completas (GET, POST atómico con locks, PUT, DELETE, notificaciones)</div>
+                <div className="modal-feat-item">✓ Nuevo documento Word (.docx) con formato corporativo y código sombreado</div>
+                <div className="modal-feat-item">✓ Nuevos blueprints fundacionales adaptados para este proyecto</div>
+              </div>
+
+              <div className="form-group mt-3">
+                <label className="text-xs font-semibold text-slate-300 block mb-1">
+                  Enfoque o requerimientos adicionales para el nuevo plan (opcional):
+                </label>
+                <textarea
+                  rows={3}
+                  className="modal-regenerar-textarea"
+                  placeholder="Ej: Quiero enfocarlo más en Node.js con TypeScript, agregar autenticación con refresh tokens, y que la base de datos sea PostgreSQL..."
+                  value={enfoqueRegeneracion}
+                  onChange={(e) => setEnfoqueRegeneracion(e.target.value)}
+                />
+              </div>
+            </div>
+
+            <div className="modal-regenerar-footer">
+              <button
+                type="button"
+                className="btn-modal-cancelar"
+                onClick={() => setMostrarModalRegenerarPlan(false)}
+                disabled={regenerandoPlan}
+              >
+                Cancelar
+              </button>
+              <button
+                type="button"
+                className="btn-modal-confirmar-regen"
+                disabled={regenerandoPlan}
+                onClick={async () => {
+                  setMostrarModalRegenerarPlan(false);
+                  await regenerarPlanMentor?.(planActivo?.id, enfoqueRegeneracion, enfoqueRegeneracion);
+                  setEnfoqueRegeneracion('');
+                }}
+              >
+                {regenerandoPlan ? (
+                  <>
+                    <RefreshCw size={14} className="animate-spin" />
+                    <span>Diseñando Plan...</span>
+                  </>
+                ) : (
+                  <>
+                    <Sparkles size={14} />
+                    <span>🚀 Confirmar y Regenerar Plan con IA</span>
+                  </>
+                )}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

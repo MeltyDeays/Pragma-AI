@@ -9,11 +9,70 @@ const tareasPublicDir = path.join(__dirname, '..', 'public', 'tareas');
 
 const MODELO_MENTOR = 'llama-3.3-70b-versatile';
 
+function parseInlineRuns(text, baseStyle = {}) {
+  const runs = [];
+  if (!text) return runs;
+  const regex = /(\*\*([^*]+)\*\*|\*([^*]+)\*|`([^`]+)`)/g;
+  let lastIdx = 0;
+  let match;
+
+  while ((match = regex.exec(text)) !== null) {
+    if (match.index > lastIdx) {
+      runs.push(new docx.TextRun({
+        text: text.substring(lastIdx, match.index),
+        font: "Calibri",
+        size: 20,
+        color: "334155",
+        ...baseStyle
+      }));
+    }
+    if (match[2]) {
+      runs.push(new docx.TextRun({
+        text: match[2],
+        font: "Calibri",
+        size: 20,
+        color: "1E293B",
+        bold: true,
+        ...baseStyle
+      }));
+    } else if (match[3]) {
+      runs.push(new docx.TextRun({
+        text: match[3],
+        font: "Calibri",
+        size: 20,
+        color: "334155",
+        italics: true,
+        ...baseStyle
+      }));
+    } else if (match[4]) {
+      runs.push(new docx.TextRun({
+        text: ` ${match[4]} `,
+        font: "Consolas",
+        size: 18,
+        color: "0F172A",
+        shading: { type: docx.ShadingType.CLEAR, fill: "E2E8F0" }
+      }));
+    }
+    lastIdx = regex.lastIndex;
+  }
+
+  if (lastIdx < text.length) {
+    runs.push(new docx.TextRun({
+      text: text.substring(lastIdx),
+      font: "Calibri",
+      size: 20,
+      color: "334155",
+      ...baseStyle
+    }));
+  }
+  return runs.length > 0 ? runs : [new docx.TextRun({ text, font: "Calibri", size: 20, color: "334155", ...baseStyle })];
+}
+
 async function generarDocumentoWord(titulo, subtitulo, introduccion, planMarkdown, planId, prefijo) {
-  const safeSubtitulo = (subtitulo || 'DOCUMENTO').toString().toUpperCase();
-  const safeTitulo = (titulo || 'GUÍA TÉCNICA').toString().toUpperCase();
-  const safeIntro = introduccion ? String(introduccion) : '';
-  const safeMarkdown = (planMarkdown || '').toString();
+  const safeSubtitulo = (subtitulo || 'DOCUMENTO DE IMPLEMENTACIÓN TÉCNICA').toString().toUpperCase();
+  const safeTitulo = (titulo || 'PLAN DE ARQUITECTURA').toString().toUpperCase();
+  const safeIntro = introduccion ? String(introduccion).trim() : '';
+  const safeMarkdown = (planMarkdown || '').toString().replace(/\r\n/g, '\n');
   const safePrefijo = (prefijo || 'doc').toString().replace(/[^a-zA-Z0-9_-]/g, '_');
   const safePlanId = (planId || crypto.randomUUID()).toString();
 
@@ -22,26 +81,296 @@ async function generarDocumentoWord(titulo, subtitulo, introduccion, planMarkdow
   }
 
   const lines = safeMarkdown.split('\n');
-  const contentParagraphs = lines.map(line => {
-    const t = (line || '').trim();
-    let b = false, s = 20, c = "334155", bs = 0, tx = t;
-    if (t.startsWith('###')) { b = true; s = 22; c = "4F46E5"; bs = 120; tx = t.replace(/^###\s*/, '').trim(); }
-    else if (t.startsWith('##')) { b = true; s = 24; c = "1E293B"; bs = 160; tx = t.replace(/^##\s*/, '').trim(); }
-    else if (t.startsWith('#')) { b = true; s = 28; c = "111827"; bs = 200; tx = t.replace(/^#\s*/, '').trim(); }
-    return new docx.Paragraph({
-      children: [new docx.TextRun({ text: tx || ' ', bold: b, size: s, color: c, font: "Segoe UI" })],
-      spacing: { before: bs, after: 80 }
-    });
-  });
+  const contentNodes = [];
+  let inCodeBlock = false;
+  let codeBuffer = [];
+  let tableBuffer = [];
+  let calloutBuffer = [];
+
+  const flushCodeBlock = () => {
+    if (codeBuffer.length === 0) return;
+    for (let j = 0; j < codeBuffer.length; j++) {
+      contentNodes.push(new docx.Paragraph({
+        children: [new docx.TextRun({
+          text: codeBuffer[j] || ' ',
+          font: "Consolas",
+          size: 18,
+          color: "0F172A"
+        })],
+        shading: { type: docx.ShadingType.CLEAR, fill: "F1F5F9" },
+        border: { left: { color: "6366F1", space: 4, value: "single", size: 12 } },
+        spacing: { before: 15, after: 15 },
+        indent: { left: 240 }
+      }));
+    }
+    codeBuffer = [];
+  };
+
+  const flushCallout = () => {
+    if (calloutBuffer.length === 0) return;
+    const calloutText = calloutBuffer.join(' ');
+    contentNodes.push(new docx.Table({
+      width: { size: 100, type: docx.WidthType.PERCENTAGE },
+      borders: {
+        top: { style: docx.BorderStyle.NONE, size: 0, color: "auto" },
+        bottom: { style: docx.BorderStyle.NONE, size: 0, color: "auto" },
+        left: { style: docx.BorderStyle.SINGLE, size: 24, color: "0F766E" },
+        right: { style: docx.BorderStyle.NONE, size: 0, color: "auto" },
+      },
+      rows: [
+        new docx.TableRow({
+          children: [
+            new docx.TableCell({
+              shading: { fill: "F8FAFC" },
+              margins: { top: 140, bottom: 140, left: 200, right: 140 },
+              children: [
+                new docx.Paragraph({
+                  children: parseInlineRuns(calloutText, { color: "334155", italics: true })
+                })
+              ]
+            })
+          ]
+        })
+      ]
+    }));
+    contentNodes.push(new docx.Paragraph({ spacing: { after: 120 } }));
+    calloutBuffer = [];
+  };
+
+  const flushTable = () => {
+    if (tableBuffer.length === 0) return;
+    const cleanRows = tableBuffer.filter(r => !/^[|\s-:]+$/.test(r.trim()));
+    if (cleanRows.length === 0) { tableBuffer = []; return; }
+
+    const parsedRows = cleanRows.map(r => 
+      r.split('|')
+        .map(c => c.trim())
+        .filter((_, idx, arr) => idx > 0 && idx < arr.length - 1)
+    ).filter(cells => cells.length > 0);
+
+    if (parsedRows.length > 0) {
+      const docxRows = parsedRows.map((cells, rowIdx) => {
+        const isHeader = rowIdx === 0;
+        return new docx.TableRow({
+          tableHeader: isHeader,
+          children: cells.map(cellText => new docx.TableCell({
+            shading: { fill: isHeader ? "1E293B" : (rowIdx % 2 === 0 ? "FFFFFF" : "F1F5F9") },
+            margins: { top: 120, bottom: 120, left: 160, right: 160 },
+            borders: {
+              top: { style: docx.BorderStyle.SINGLE, size: 4, color: "CBD5E1" },
+              bottom: { style: docx.BorderStyle.SINGLE, size: 4, color: "CBD5E1" },
+              left: { style: docx.BorderStyle.SINGLE, size: 4, color: "CBD5E1" },
+              right: { style: docx.BorderStyle.SINGLE, size: 4, color: "CBD5E1" }
+            },
+            children: [
+              new docx.Paragraph({
+                children: parseInlineRuns(cellText, isHeader ? { color: "FFFFFF", bold: true } : { color: "334155" })
+              })
+            ]
+          }))
+        });
+      });
+
+      contentNodes.push(new docx.Table({
+        width: { size: 100, type: docx.WidthType.PERCENTAGE },
+        rows: docxRows
+      }));
+      contentNodes.push(new docx.Paragraph({ spacing: { after: 140 } }));
+    }
+    tableBuffer = [];
+  };
+
+  for (let i = 0; i < lines.length; i++) {
+    const rawLine = lines[i] || '';
+    const t = rawLine.trim();
+
+    if (t.startsWith('```')) {
+      if (inCodeBlock) {
+        flushCodeBlock();
+        inCodeBlock = false;
+      } else {
+        inCodeBlock = true;
+        codeBuffer = [];
+      }
+      continue;
+    }
+
+    if (inCodeBlock) {
+      codeBuffer.push(rawLine);
+      continue;
+    }
+
+    if (t.startsWith('|') && t.endsWith('|')) {
+      tableBuffer.push(t);
+      continue;
+    } else if (tableBuffer.length > 0) {
+      flushTable();
+    }
+
+    if (t.startsWith('>')) {
+      calloutBuffer.push(t.replace(/^>\s*/, ''));
+      continue;
+    } else if (calloutBuffer.length > 0) {
+      flushCallout();
+    }
+
+    if (!t) {
+      contentNodes.push(new docx.Paragraph({ spacing: { after: 80 } }));
+      continue;
+    }
+
+    if (t.startsWith('####')) {
+      contentNodes.push(new docx.Paragraph({
+        children: parseInlineRuns(t.replace(/^####\s*/, ''), { bold: true, size: 21, color: "4F46E5" }),
+        spacing: { before: 160, after: 60 }
+      }));
+    } else if (t.startsWith('###')) {
+      contentNodes.push(new docx.Paragraph({
+        children: parseInlineRuns(t.replace(/^###\s*/, ''), { bold: true, size: 22, color: "0F766E" }),
+        spacing: { before: 200, after: 80 }
+      }));
+    } else if (t.startsWith('##')) {
+      contentNodes.push(new docx.Paragraph({
+        children: parseInlineRuns(t.replace(/^##\s*/, ''), { bold: true, size: 26, color: "1E293B" }),
+        border: { bottom: { color: "CBD5E1", space: 4, value: "single", size: 8 } },
+        spacing: { before: 280, after: 120 }
+      }));
+    } else if (t.startsWith('#')) {
+      contentNodes.push(new docx.Paragraph({
+        children: parseInlineRuns(t.replace(/^#\s*/, ''), { bold: true, size: 30, color: "111827" }),
+        border: { bottom: { color: "4F46E5", space: 6, value: "single", size: 14 } },
+        spacing: { before: 340, after: 140 }
+      }));
+    } else if (/^-\s*\[([ xX])\]/.test(t)) {
+      const isChecked = /^-\s*\[[xX]\]/.test(t);
+      const itemText = t.replace(/^-\s*\[[ xX]\]\s*/, '');
+      contentNodes.push(new docx.Paragraph({
+        children: [
+          new docx.TextRun({
+            text: isChecked ? "☑ " : "☐ ",
+            font: "Segoe UI Symbol",
+            size: 20,
+            bold: true,
+            color: isChecked ? "10B981" : "64748B"
+          }),
+          ...parseInlineRuns(itemText, { color: isChecked ? "0F766E" : "334155" })
+        ],
+        spacing: { before: 30, after: 30 },
+        indent: { left: 240 }
+      }));
+    } else if (t.startsWith('- ') || t.startsWith('* ')) {
+      contentNodes.push(new docx.Paragraph({
+        children: parseInlineRuns(t.replace(/^[-*]\s*/, ''), { color: "334155" }),
+        bullet: { level: 0 },
+        spacing: { before: 30, after: 30 }
+      }));
+    } else if (/^\d+\.\s/.test(t)) {
+      contentNodes.push(new docx.Paragraph({
+        children: parseInlineRuns(t, { color: "334155" }),
+        spacing: { before: 40, after: 40 },
+        indent: { left: 240 }
+      }));
+    } else {
+      contentNodes.push(new docx.Paragraph({
+        children: parseInlineRuns(t, { color: "334155" }),
+        spacing: { before: 40, after: 80 }
+      }));
+    }
+  }
+
+  flushCodeBlock();
+  flushTable();
+  flushCallout();
 
   const doc = new docx.Document({
     sections: [{
-      properties: { page: { margin: { top: 1440, bottom: 1440, left: 1440, right: 1440 } } },
+      properties: {
+        page: {
+          margin: { top: 1440, bottom: 1440, left: 1440, right: 1440 }
+        }
+      },
       children: [
-        new docx.Paragraph({ children: [new docx.TextRun({ text: safeSubtitulo, bold: true, size: 16, color: "4F46E5", font: "Segoe UI" })], spacing: { after: 60 } }),
-        new docx.Paragraph({ children: [new docx.TextRun({ text: safeTitulo, bold: true, size: 30, color: "1E293B", font: "Segoe UI" })], border: { bottom: { color: "10B981", space: 15, value: "single", size: 18 } }, spacing: { after: 200 } }),
-        ...(safeIntro ? [new docx.Paragraph({ children: [new docx.TextRun({ text: safeIntro, size: 20, font: "Segoe UI", color: "334155" })], spacing: { after: 250 } })] : []),
-        ...contentParagraphs
+        new docx.Paragraph({
+          children: [
+            new docx.TextRun({
+              text: safeSubtitulo,
+              bold: true,
+              size: 16,
+              color: "4F46E5",
+              font: "Calibri"
+            })
+          ],
+          spacing: { after: 60 }
+        }),
+        new docx.Paragraph({
+          children: [
+            new docx.TextRun({
+              text: safeTitulo,
+              bold: true,
+              size: 32,
+              color: "1E293B",
+              font: "Calibri"
+            })
+          ],
+          border: { bottom: { color: "10B981", space: 15, value: "single", size: 18 } },
+          spacing: { after: 200 }
+        }),
+        ...(safeIntro ? [
+          new docx.Table({
+            width: { size: 100, type: docx.WidthType.PERCENTAGE },
+            borders: {
+              top: { style: docx.BorderStyle.NONE, size: 0, color: "auto" },
+              bottom: { style: docx.BorderStyle.NONE, size: 0, color: "auto" },
+              left: { style: docx.BorderStyle.SINGLE, size: 24, color: "0F766E" },
+              right: { style: docx.BorderStyle.NONE, size: 0, color: "auto" },
+            },
+            rows: [
+              new docx.TableRow({
+                children: [
+                  new docx.TableCell({
+                    shading: { fill: "F8FAFC" },
+                    margins: { top: 140, bottom: 140, left: 200, right: 140 },
+                    children: [
+                      new docx.Paragraph({
+                        children: [
+                          new docx.TextRun({ text: "RESUMEN EJECUTIVO & OBJETIVOS PEDAGÓGICOS", bold: true, size: 16, color: "0F766E", font: "Calibri" })
+                        ],
+                        spacing: { after: 60 }
+                      }),
+                      new docx.Paragraph({
+                        children: parseInlineRuns(safeIntro, { color: "334155", italics: true })
+                      })
+                    ]
+                  })
+                ]
+              })
+            ]
+          }),
+          new docx.Paragraph({ spacing: { after: 200 } })
+        ] : []),
+        ...contentNodes,
+        new docx.Paragraph({
+          children: [
+            new docx.TextRun({
+              text: "──────────────────────────────────────────────────────",
+              color: "CBD5E1",
+              size: 16
+            })
+          ],
+          spacing: { before: 300, after: 60 }
+        }),
+        new docx.Paragraph({
+          children: [
+            new docx.TextRun({
+              text: `Documento generado por Pragma AI Academic Architecture Engine • ${new Date().toLocaleDateString('es-ES', { day: 'numeric', month: 'long', year: 'numeric' })}`,
+              size: 16,
+              color: "94A3B8",
+              italics: true,
+              font: "Calibri"
+            })
+          ],
+          spacing: { after: 100 }
+        })
       ]
     }]
   });
@@ -92,11 +421,16 @@ El plan debe estructurarse obligatoriamente en "plan_markdown" con estas dimensi
 ## 3. Integración Paso a Paso & Resultado en Ejecución (comandos de instalación, .env de muestra, cableado entre capas y descripción exacta de cómo se ve en pantalla/consola).
 ## 4. Criterios de Verificación & Catálogo de Trampas Comunes (checklist ejecutable de pruebas y errores frecuentes a evitar adaptados al nivel del estudiante).
 
+REGLAS DE LONGITUD Y TOKENS:
+- "plan_markdown" DEBE SER UN DOCUMENTO TÉCNICO EXHAUSTIVO, EXTENSO Y PROFUNDO. ESTÁ TERMINANTEMENTE PROHIBIDO RESUMIRLO O CORTARLO A UN SOLO ENCABEZADO.
+- Debe contener código real, rutas y ejemplos paso a paso para cada fase.
+- En "blueprints", incluye exactamente 2 o 3 blueprints fundacionales iniciales más críticos para arrancar este proyecto. Los blueprints adicionales se generarán dinámicamente en el chat según el estudiante converse y plantee nuevas dudas.
+
 Debes responder estrictamente en formato JSON con la siguiente estructura:
 {
   "titulo": "Título formal del proyecto",
   "introduccion_pedagogica": "Resumen ejecutivo y objetivos pedagógicos",
-  "plan_markdown": "Markdown detallado estructurado cumpliendo las directivas de inicialización y código completo",
+  "plan_markdown": "Markdown detallado y completo cumpliendo exhaustivamente las 4 dimensiones técnicas y bloques de código reales",
   "conceptos_clave": [
     { "termino": "Nombre del concepto", "explicacion": "Definición y aplicación práctica en este proyecto" }
   ],
@@ -114,15 +448,57 @@ Debes responder estrictamente en formato JSON con la siguiente estructura:
     }
   ]
 }`;
-    const up = `Plan para: "${idea_proyecto}". ${github_url ? `Repo: ${github_url}` : ''} Nivel: ${est.nivel_actual || 'Intermedio'}. Perfil: ${pcStr}`;
-    const cc = await ejecutarGroqConReintentos([{ role: 'system', content: sp }, { role: 'user', content: up }], MODELO_MENTOR, { type: 'json_object' });
+    const up = `Diseña el plan técnico exhaustivo para: "${idea_proyecto}". ${github_url ? `Repo: ${github_url}` : ''} Nivel: ${est.nivel_actual || 'Intermedio'}. Perfil: ${pcStr}`;
+    const cc = await ejecutarGroqConReintentos(
+      [{ role: 'system', content: sp }, { role: 'user', content: up }],
+      MODELO_MENTOR,
+      { type: 'json_object' },
+      6,
+      { max_tokens: 7500, temperature: 0.25 }
+    );
     const rawContent = cc?.choices?.[0]?.message?.content || '{}';
     const data = parsearJSONGroq(rawContent) || {};
     const titulo = data.titulo || (typeof idea_proyecto === 'string' ? idea_proyecto.slice(0, 60) : 'Proyecto');
     const intro = data.introduccion_pedagogica || 'Plan de implementación práctica para el proyecto.';
-    const planMarkdown = data.plan_markdown || `# ${titulo}\n\nPlan generado.`;
+    let planMarkdown = data.plan_markdown || '';
+
+    // BLINDAJE ANTI-TRUNCAMIENTO: Si Groq devolvió un string recortado en el JSON, regenerar directamente en Markdown
+    if (!planMarkdown || planMarkdown.length < 600 || !planMarkdown.includes('##')) {
+      console.log('Detectado plan_markdown trunco en JSON. Solicitando generación Markdown directa...');
+      try {
+        const fallbackCc = await ejecutarGroqConReintentos([
+          {
+            role: 'system',
+            content: `Eres un Arquitecto de Software Senior y Mentor de Proyectos de Élite.
+Genera un Plan de Implementación de Software de Producción, EXHAUSTIVO, EXTENSO y 100% COMPLETO (mínimo 1500 palabras) en formato Markdown puro para el proyecto: "${titulo}".
+TERMINANTEMENTE PROHIBIDO recortar el plan o devolver sólo títulos.
+Estructura obligatoria con bloques de código completos y funcionales (sin elipsis ni TODOs):
+# ${titulo}
+## 1. Arquitectura y Árbol de Archivos (árbol de directorios anotado con responsabilidades modulares)
+## 2. Inicialización de Archivos & Código Funcional Copiable (archivos reales de inicio a fin con GET, POST atómico con locks, PUT, DELETE y notificaciones completas)
+## 3. Integración Paso a Paso & Resultado en Ejecución (comandos de instalación, .env de muestra, cableado y resultado visual/consola)
+## 4. Criterios de Verificación & Catálogo de Trampas Comunes (checklist de validación y errores frecuentes a evitar adaptados al nivel del estudiante).`
+          },
+          {
+            role: 'user',
+            content: `Genera el plan de arquitectura y código de producción completo para: "${idea_proyecto}". ${github_url ? `Repo base: ${github_url}` : ''} Nivel: ${est.nivel_actual || 'Intermedio'}.`
+          }
+        ], MODELO_MENTOR, null, 6, { max_tokens: 7500, temperature: 0.25 });
+        const fallbackContent = fallbackCc?.choices?.[0]?.message?.content;
+        if (fallbackContent && fallbackContent.length > 500) {
+          planMarkdown = fallbackContent;
+        }
+      } catch (errFb) {
+        console.warn('Fallback Markdown directo falló, usando planMarkdown obtenido:', errFb.message);
+      }
+    }
+
+    if (!planMarkdown || planMarkdown.length < 100) {
+      planMarkdown = `# ${titulo}\n\n## 1. Arquitectura y Árbol de Archivos\n- src/\n\n## 2. Inicialización de Archivos & Código Funcional Copiable\n\`\`\`javascript\n// Código inicial\n\`\`\`\n\n## 3. Integración Paso a Paso & Resultado en Ejecución\n1. Iniciar servidor.\n\n## 4. Criterios de Verificación & Catálogo de Trampas Comunes\n- Verificar pruebas unitarias.`;
+    }
+
     const planUuid = crypto.randomUUID();
-    const docUrl = await generarDocumentoWord(titulo, 'PLAN DE IMPLEMENTACIÓN', intro, planMarkdown, planUuid, 'plan');
+    const docUrl = await generarDocumentoWord(titulo, 'PLAN DE IMPLEMENTACIÓN TÉCNICA', intro, planMarkdown, planUuid, 'plan');
     const bpsDinamicos = Array.isArray(data.blueprints) ? data.blueprints : [];
     await client.query(
       `INSERT INTO profesor_mentor_planes (id, estudiante_id, titulo, idea_proyecto, github_url, plan_markdown, word_url, mensajes, blueprints) VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9)`,
@@ -143,6 +519,187 @@ Debes responder estrictamente en formato JSON con la siguiente estructura:
     console.error('Error al generar plan:', e);
     const status = e.status || (e.message && e.message.includes('Groq') ? 503 : 500);
     res.status(status).json({ error: 'Error al generar el plan de implementación', detalle: e.message || 'Error interno' });
+  }
+});
+
+router.post('/api/mentor/planes/:plan_id/regenerar-plan', async (req, res) => {
+  const { plan_id } = req.params;
+  const { enfoque, instrucciones_adicionales } = req.body || {};
+  try {
+    const pRes = await client.query('SELECT * FROM profesor_mentor_planes WHERE id = $1', [plan_id]);
+    if (!pRes.rows || pRes.rows.length === 0) {
+      return res.status(404).json({ error: 'Plan no encontrado' });
+    }
+    const plan = pRes.rows[0];
+    const estRes = await client.query('SELECT * FROM profesor_estudiantes WHERE id = $1', [plan.estudiante_id]);
+    const est = (estRes.rows && estRes.rows[0]) || {};
+    const pcStr = typeof est.perfil_cognitivo === 'object' ? JSON.stringify(est.perfil_cognitivo || {}) : (est.perfil_cognitivo || '{}');
+
+    const promptExtra = [
+      enfoque ? `Enfoque solicitado para esta regeneración: "${enfoque}".` : '',
+      instrucciones_adicionales ? `Instrucciones del estudiante: "${instrucciones_adicionales}".` : ''
+    ].filter(Boolean).join(' ');
+
+    const sp = `Eres un Arquitecto de Software Senior y Mentor de Proyectos de Élite.
+Tu misión es REGENERAR Y PROFUNDIZAR de forma EXHAUSTIVA el Plan de Implementación para este proyecto.
+
+PROYECTO: "${plan.titulo}"
+IDEA ORIGINAL: "${plan.idea_proyecto}"
+${plan.github_url ? `REPOSITORIO BASE: ${plan.github_url}` : ''}
+${promptExtra ? `AJUSTES DE REGENERACIÓN: ${promptExtra}` : ''}
+
+NEGATIVE CONSTRAINTS ESTRICTAS:
+- TERMINANTEMENTE PROHIBIDO resumir, omitir código o dejar funciones con placeholders o elipsis.
+- Todo bloque de código debe ser 100% funcional, limpio, copiable, con importaciones completas, tipado y manejo de excepciones robusto.
+
+El plan debe estructurarse obligatoriamente en "plan_markdown" con estas 4 dimensiones técnicas completas (mínimo 1500 palabras en total):
+## 1. Arquitectura y Árbol de Archivos (árbol de directorios anotado con responsabilidades modulares de cada archivo).
+## 2. Inicialización de Archivos & Código Funcional Copiable (bloques de código completos de arranque, imports, modelos y servicios con operaciones GET/POST atómico/PUT/DELETE y notificaciones completas).
+## 3. Integración Paso a Paso & Resultado en Ejecución (comandos de instalación, .env de muestra, cableado entre capas y descripción exacta de cómo se ve en pantalla/consola).
+## 4. Criterios de Verificación & Catálogo de Trampas Comunes (checklist ejecutable de pruebas y errores frecuentes a evitar adaptados al nivel del estudiante).
+
+Debes responder estrictamente en formato JSON con la siguiente estructura:
+{
+  "titulo": "${plan.titulo}",
+  "introduccion_pedagogica": "Resumen ejecutivo actualizado y objetivos pedagógicos profundizados",
+  "plan_markdown": "Markdown completo y detallado cumpliendo exhaustivamente las 4 dimensiones técnicas con código real copiable",
+  "blueprints": [
+    {
+      "id": "bp_proj_regen_1",
+      "titulo": "Título técnico del Blueprint específico",
+      "categoria": "Modular / Database / Backend / Seguridad / Frontend / Realtime / Testing / Cloud",
+      "icono": "Layers / Database / Code2 / ShieldCheck / Cpu / Radio / Smartphone / Cloud / Lock / Terminal / Activity",
+      "tagClass": "bp-tag-arch / bp-tag-db / bp-tag-back / bp-tag-sec / bp-tag-front / bp-tag-realtime / bp-tag-test / bp-tag-cloud",
+      "desc": "Propósito concreto y responsabilidad en el flujo del proyecto",
+      "snippet": "// Código completo de producción",
+      "copyText": "Código copiable",
+      "askPrompt": "Pregunta sugerida para profundizar con el mentor"
+    }
+  ]
+}`;
+
+    const cc = await ejecutarGroqConReintentos(
+      [
+        { role: 'system', content: sp },
+        { role: 'user', content: `Regenera el plan técnico exhaustivo para: "${plan.idea_proyecto}". ${promptExtra} Nivel: ${est.nivel_actual || 'Intermedio'}. Perfil: ${pcStr}` }
+      ],
+      MODELO_MENTOR,
+      { type: 'json_object' },
+      6,
+      { max_tokens: 7500, temperature: 0.25 }
+    );
+
+    const rawContent = cc?.choices?.[0]?.message?.content || '{}';
+    const data = parsearJSONGroq(rawContent) || {};
+    const titulo = data.titulo || plan.titulo;
+    const intro = data.introduccion_pedagogica || 'Plan de implementación práctica regenerado para el proyecto.';
+    let planMarkdown = data.plan_markdown || '';
+
+    // Blindaje anti-truncamiento de regeneración
+    if (!planMarkdown || planMarkdown.length < 600 || !planMarkdown.includes('##')) {
+      console.log('Detectado plan_markdown trunco en regeneración. Solicitando Markdown directo...');
+      try {
+        const fbCc = await ejecutarGroqConReintentos([
+          {
+            role: 'system',
+            content: `Eres un Arquitecto de Software Senior y Mentor de Proyectos de Élite.
+Genera un Plan de Implementación de Software de Producción, EXHAUSTIVO, EXTENSO y 100% COMPLETO (mínimo 1500 palabras) en formato Markdown puro para el proyecto: "${titulo}".
+${promptExtra ? `AJUSTES: ${promptExtra}` : ''}
+TERMINANTEMENTE PROHIBIDO recortar el plan o devolver sólo títulos.
+Estructura obligatoria con bloques de código completos y funcionales (sin elipsis ni TODOs):
+# ${titulo}
+## 1. Arquitectura y Árbol de Archivos (árbol de directorios anotado con responsabilidades modulares)
+## 2. Inicialización de Archivos & Código Funcional Copiable (archivos reales de inicio a fin con GET, POST atómico con locks, PUT, DELETE y notificaciones completas)
+## 3. Integración Paso a Paso & Resultado en Ejecución (comandos de instalación, .env de muestra, cableado y resultado visual/consola)
+## 4. Criterios de Verificación & Catálogo de Trampas Comunes (checklist de validación y errores frecuentes a evitar adaptados al nivel del estudiante).`
+          },
+          {
+            role: 'user',
+            content: `Regenera y profundiza el plan técnico de arquitectura completo para: "${plan.idea_proyecto}". Nivel: ${est.nivel_actual || 'Intermedio'}.`
+          }
+        ], MODELO_MENTOR, null, 6, { max_tokens: 7500, temperature: 0.25 });
+        const fbContent = fbCc?.choices?.[0]?.message?.content;
+        if (fbContent && fbContent.length > 500) {
+          planMarkdown = fbContent;
+        }
+      } catch (errFb) {
+        console.warn('Fallback Markdown directo en regeneración falló:', errFb.message);
+      }
+    }
+
+    if (!planMarkdown || planMarkdown.length < 100) {
+      planMarkdown = plan.plan_markdown;
+    }
+
+    const docUrl = await generarDocumentoWord(
+      titulo,
+      'PLAN DE IMPLEMENTACIÓN TÉCNICA (REGENERADO)',
+      intro,
+      planMarkdown,
+      plan.id,
+      'plan_regen'
+    );
+
+    const bpsDinamicos = (Array.isArray(data.blueprints) && data.blueprints.length > 0)
+      ? data.blueprints
+      : (Array.isArray(plan.blueprints) ? plan.blueprints : []);
+
+    const hist = typeof plan.mensajes === 'string' ? JSON.parse(plan.mensajes || '[]') : (plan.mensajes || []);
+    const nowIso = new Date().toISOString();
+    const updatedMsgs = [
+      ...hist,
+      {
+        remitente: 'mentor',
+        texto: `🔄 He regenerado y enriquecido el **Plan de Implementación** de tu proyecto "${titulo}" con arquitectura exhaustiva, código de inicialización y operaciones completas. Puedes consultarlo en la pestaña del plan y descargar el nuevo documento Word.`,
+        fecha: nowIso
+      }
+    ];
+
+    await client.query(
+      `UPDATE profesor_mentor_planes SET titulo = $1, plan_markdown = $2, word_url = $3, blueprints = $4, mensajes = $5 WHERE id = $6`,
+      [titulo, planMarkdown, docUrl, JSON.stringify(bpsDinamicos), JSON.stringify(updatedMsgs), plan_id]
+    );
+
+    res.json({
+      success: true,
+      plan: {
+        id: plan.id,
+        estudiante_id: plan.estudiante_id,
+        titulo,
+        idea_proyecto: plan.idea_proyecto,
+        github_url: plan.github_url,
+        plan_markdown: planMarkdown,
+        word_url: docUrl,
+        mensajes: updatedMsgs,
+        blueprints: bpsDinamicos
+      }
+    });
+  } catch(e) {
+    console.error('Error al regenerar plan:', e);
+    const status = e.status || (e.message && e.message.includes('Groq') ? 503 : 500);
+    res.status(status).json({ error: 'Error al regenerar el plan de implementación', detalle: e.message || 'Error interno' });
+  }
+});
+
+router.post('/api/mentor/planes/:plan_id/regenerar-word', async (req, res) => {
+  const { plan_id } = req.params;
+  try {
+    const pRes = await client.query('SELECT * FROM profesor_mentor_planes WHERE id = $1', [plan_id]);
+    if (!pRes.rows || pRes.rows.length === 0) return res.status(404).json({ error: 'Plan no encontrado' });
+    const plan = pRes.rows[0];
+    const docUrl = await generarDocumentoWord(
+      plan.titulo,
+      'PLAN DE IMPLEMENTACIÓN TÉCNICA',
+      `Plan exhaustivo de arquitectura y código funcional para: ${plan.idea_proyecto}`,
+      plan.plan_markdown,
+      plan.id,
+      'plan_word'
+    );
+    await client.query('UPDATE profesor_mentor_planes SET word_url = $1 WHERE id = $2', [docUrl, plan_id]);
+    res.json({ success: true, word_url: docUrl });
+  } catch(e) {
+    console.error('Error al regenerar Word del plan:', e);
+    res.status(500).json({ error: 'Error al regenerar documento Word', detalle: e.message });
   }
 });
 
@@ -347,11 +904,27 @@ MENSAJE DEL CHAT (mensaje_chat):
 - Redacta una respuesta conversacional, motivadora y didáctica de 2 a 4 párrafos en el tono de la personalidad activa.
 - Explica la estrategia central y orienta al estudiante a revisar la guía técnica detallada generada.
 
+GENERACIÓN DINÁMICA DE BLUEPRINTS EN TIEMPO REAL:
+Si la consulta del estudiante o tu respuesta describe, diseña o refactoriza un componente técnico reusable, modelo de base de datos, servicio, middleware o andamio de código relevante para este proyecto, extrae y define ese componente en el campo "nuevo_blueprint". Si la consulta es puramente teórica o no introduce un nuevo andamio de código, envía null.
+
 Debes responder estrictamente en formato JSON:
 {
   "mensaje_chat": "Respuesta conversacional para el panel de chat",
   "documento_ayuda_titulo": "Título formal de la guía",
-  "documento_ayuda_markdown": "Markdown cumpliendo estrictamente las 4 dimensiones obligatorias"
+  "documento_ayuda_markdown": "Markdown cumpliendo estrictamente las 4 dimensiones obligatorias",
+  "nuevo_blueprint": null
+}
+
+O si se diseñó un componente técnico específico:
+"nuevo_blueprint": {
+  "titulo": "Título técnico del componente",
+  "categoria": "Modular / Database / Backend / Seguridad / Frontend / Realtime / Testing / Cloud",
+  "icono": "Layers / Database / Code2 / ShieldCheck / Cpu / Radio / Smartphone / Cloud / Lock / Terminal / Activity",
+  "tagClass": "bp-tag-arch / bp-tag-db / bp-tag-back / bp-tag-sec / bp-tag-front / bp-tag-realtime / bp-tag-test / bp-tag-cloud",
+  "desc": "Propósito concreto y responsabilidad en el proyecto",
+  "snippet": "// Código funcional completo del componente",
+  "copyText": "Código copiable",
+  "askPrompt": "Pregunta sugerida para profundizar con el mentor"
 }`;
 
     const msgs = [
@@ -367,7 +940,7 @@ Debes responder estrictamente en formato JSON:
       { role: 'user', content: mensaje }
     ];
 
-    const cc = await ejecutarGroqConReintentos(msgs, MODELO_MENTOR, { type: 'json_object' });
+    const cc = await ejecutarGroqConReintentos(msgs, MODELO_MENTOR, { type: 'json_object' }, 6, { max_tokens: 6500, temperature: 0.3 });
     const rawContent = cc?.choices?.[0]?.message?.content || '{}';
     const data = parsearJSONGroq(rawContent) || {};
 
@@ -392,6 +965,31 @@ Debes responder estrictamente en formato JSON:
       fecha: nowIso
     };
 
+    // Procesar nuevo blueprint dinámico si fue generado por la IA en el chat
+    let planBlueprints = Array.isArray(plan.blueprints)
+      ? plan.blueprints
+      : (typeof plan.blueprints === 'string' ? JSON.parse(plan.blueprints || '[]') : []);
+
+    let blueprintGenerado = null;
+    if (data.nuevo_blueprint && data.nuevo_blueprint.titulo && data.nuevo_blueprint.snippet) {
+      blueprintGenerado = {
+        id: `bp_chat_${plan_id}_${Date.now()}`,
+        titulo: data.nuevo_blueprint.titulo,
+        categoria: data.nuevo_blueprint.categoria || 'Backend',
+        icono: data.nuevo_blueprint.icono || 'Code2',
+        tagClass: data.nuevo_blueprint.tagClass || 'bp-tag-back',
+        desc: data.nuevo_blueprint.desc || 'Componente diseñado durante la sesión con el mentor.',
+        snippet: data.nuevo_blueprint.snippet,
+        copyText: data.nuevo_blueprint.copyText || data.nuevo_blueprint.snippet,
+        askPrompt: data.nuevo_blueprint.askPrompt || `¿Cómo sigo refinando ${data.nuevo_blueprint.titulo}?`
+      };
+
+      if (!planBlueprints.some(b => (b.titulo || '').toLowerCase() === (blueprintGenerado.titulo || '').toLowerCase())) {
+        planBlueprints.push(blueprintGenerado);
+        await client.query('UPDATE profesor_mentor_planes SET blueprints = $1 WHERE id = $2', [JSON.stringify(planBlueprints), plan_id]);
+      }
+    }
+
     const updated = [
       ...hist,
       { remitente: 'estudiante', texto: mensaje, fecha: nowIso },
@@ -404,7 +1002,9 @@ Debes responder estrictamente en formato JSON:
     res.json({
       respuesta: mensajeChat,
       mensajes: updated,
-      documento_ayuda: docObj
+      documento_ayuda: docObj,
+      nuevo_blueprint: blueprintGenerado,
+      blueprints: planBlueprints
     });
   } catch(e) {
     console.error('Error en chat mentor:', e);

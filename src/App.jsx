@@ -180,7 +180,11 @@ function App() {
     enviarMensajeChatMentor,
     regenerarGuiaAyuda,
     generarBlueprintsDinamicos,
-    blueprintsLoading
+    blueprintsLoading,
+    regenerandoPlan,
+    regenerandoWord,
+    regenerarPlanMentor,
+    regenerarWordPlan
   } = useMentor();
 
   const [nombre, setNombre] = useState('');
@@ -1478,6 +1482,10 @@ function App() {
               cancelarConsultaMentor={cancelarConsultaMentor}
               generarBlueprintsDinamicos={generarBlueprintsDinamicos}
               blueprintsLoading={blueprintsLoading}
+              regenerandoPlan={regenerandoPlan}
+              regenerandoWord={regenerandoWord}
+              regenerarPlanMentor={regenerarPlanMentor}
+              regenerarWordPlan={regenerarWordPlan}
             />
           ) : vistaActiva === 'habilidades' ? (
             <HabilidadesRoadmap
