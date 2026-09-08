@@ -598,6 +598,34 @@ const client = {
         return { rows: [] };
       }
 
+      // --- 31c. UPDATE profesor_mentor_planes SET titulo = $1, plan_markdown = $2, word_url = $3, blueprints = $4, mensajes = $5 WHERE id = $6 ---
+      if (queryClean.match(/UPDATE profesor_mentor_planes\s+SET\s+titulo\s*=\s*\$1/i)) {
+        const [titulo, plan_markdown, word_url, blueprints, mensajes, id] = params;
+        let msgList = mensajes;
+        if (msgList && typeof msgList === 'string') {
+          try { msgList = JSON.parse(msgList); } catch (e) { /* ignore */ }
+        }
+        let bpList = blueprints;
+        if (bpList && typeof bpList === 'string') {
+          try { bpList = JSON.parse(bpList); } catch (e) { /* ignore */ }
+        }
+        await updateDoc(doc(firestoreDb, 'profesor_mentor_planes', id), {
+          titulo,
+          plan_markdown,
+          word_url: word_url || null,
+          blueprints: bpList || [],
+          mensajes: msgList || []
+        });
+        return { rows: [] };
+      }
+
+      // --- 31d. UPDATE profesor_mentor_planes SET word_url = $1 WHERE id = $2 ---
+      if (queryClean.match(/UPDATE profesor_mentor_planes\s+SET\s+word_url\s*=\s*\$1\s+WHERE\s+id\s*=\s*\$2/i)) {
+        const [word_url, id] = params;
+        await updateDoc(doc(firestoreDb, 'profesor_mentor_planes', id), { word_url });
+        return { rows: [] };
+      }
+
       // --- 32. UPDATE profesor_mentor_documentos_ayuda SET respuesta_mentor = $1, documento_markdown = $2, word_url = $3 WHERE id = $4 ---
       if (queryClean.match(/UPDATE profesor_mentor_documentos_ayuda/i)) {
         const [respuesta_mentor, documento_markdown, word_url, id] = params;
@@ -661,19 +689,23 @@ function parsearJSONGroq(rawText) {
 }
 
 const MODEL_ALIASES = {
-  'llama-3.1-70b-versatile': 'llama-3.3-70b-versatile',
-  'llama3-70b-8192': 'llama-3.3-70b-versatile',
-  'llama3-8b-8192': 'llama-3.1-8b-instant',
-  'mixtral-8x7b-32768': 'llama-3.3-70b-versatile',
-  'gemma2-9b-it': 'llama-3.1-8b-instant'
+  'llama-3.1-70b-versatile': 'openai/gpt-oss-120b',
+  'llama-3.3-70b-versatile': 'openai/gpt-oss-120b',
+  'llama-3.1-8b-instant': 'openai/gpt-oss-20b',
+  'llama3-70b-8192': 'openai/gpt-oss-120b',
+  'llama3-8b-8192': 'openai/gpt-oss-20b',
+  'mixtral-8x7b-32768': 'openai/gpt-oss-120b',
+  'gemma2-9b-it': 'openai/gpt-oss-20b',
+  'gemma-7b-it': 'openai/gpt-oss-20b'
 };
 
 const RESILIENT_FALLBACK_MODELS = [
-  'llama-3.3-70b-versatile',
-  'llama-3.1-8b-instant'
+  'openai/gpt-oss-120b',
+  'openai/gpt-oss-20b',
+  'qwen/qwen3.8-27b'
 ];
 
-async function ejecutarGroqConReintentos(messages, model = 'llama-3.3-70b-versatile', responseFormat = null, maxReintentos = 6, extraParams = {}) {
+async function ejecutarGroqConReintentos(messages, model = 'openai/gpt-oss-120b', responseFormat = null, maxReintentos = 6, extraParams = {}) {
   let delay = 1000;
   if (groqClients.length === 0) {
     throw new Error('No hay claves API de Groq configuradas en el pool.');
@@ -721,7 +753,7 @@ async function ejecutarGroqConReintentos(messages, model = 'llama-3.3-70b-versat
 
       // Si el modelo no existe o dio rate limit de tokens, rotar al siguiente modelo disponible del pool de resiliencia
       if (isModelNotFound || (isRateLimit && intento > 2)) {
-        const nextModel = RESILIENT_FALLBACK_MODELS.find(m => m !== activeModel) || 'llama-3.1-8b-instant';
+        const nextModel = RESILIENT_FALLBACK_MODELS.find(m => m !== activeModel) || 'openai/gpt-oss-20b';
         console.warn(`[Groq Resiliencia] Conmutando automáticamente a modelo alternativo: ${nextModel}...`);
         activeModel = nextModel;
       }
@@ -817,7 +849,7 @@ async function actualizarPerfilCognitivo(estudianteId, nuevoMensajeEstudiante, r
 
     const chatCompletion = await ejecutarGroqConReintentos(
       [{ role: 'system', content: systemPrompt }],
-      'llama-3.3-70b-versatile',
+      'openai/gpt-oss-120b',
       { type: 'json_object' }
     );
 
@@ -902,7 +934,7 @@ async function actualizarPerfilCognitivoConEvaluacion(estudianteId, tareaTitulo,
 
     const chatCompletion = await ejecutarGroqConReintentos(
       [{ role: 'system', content: systemPrompt }],
-      'llama-3.3-70b-versatile',
+      'openai/gpt-oss-120b',
       { type: 'json_object' }
     );
 

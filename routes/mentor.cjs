@@ -7,7 +7,7 @@ const docx = require('docx');
 const { client, ejecutarGroqConReintentos, parsearJSONGroq, actualizarPerfilCognitivo } = require('../db.cjs');
 const tareasPublicDir = path.join(__dirname, '..', 'public', 'tareas');
 
-const MODELO_MENTOR = 'llama-3.3-70b-versatile';
+const MODELO_MENTOR = 'openai/gpt-oss-120b';
 
 function parseInlineRuns(text, baseStyle = {}) {
   const runs = [];
@@ -517,7 +517,7 @@ Estructura obligatoria con bloques de código completos y funcionales (sin elips
     });
   } catch(e) {
     console.error('Error al generar plan:', e);
-    const status = e.status || (e.message && e.message.includes('Groq') ? 503 : 500);
+    const status = (e.status && e.status !== 404 ? e.status : (e.message && e.message.includes('Groq') ? 503 : 500));
     res.status(status).json({ error: 'Error al generar el plan de implementación', detalle: e.message || 'Error interno' });
   }
 });
@@ -676,7 +676,7 @@ Estructura obligatoria con bloques de código completos y funcionales (sin elips
     });
   } catch(e) {
     console.error('Error al regenerar plan:', e);
-    const status = e.status || (e.message && e.message.includes('Groq') ? 503 : 500);
+    const status = (e.status && e.status !== 404 ? e.status : (e.message && e.message.includes('Groq') ? 503 : 500));
     res.status(status).json({ error: 'Error al regenerar el plan de implementación', detalle: e.message || 'Error interno' });
   }
 });
