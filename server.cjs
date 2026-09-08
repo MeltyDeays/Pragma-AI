@@ -13,6 +13,19 @@ app.use(compression());
 app.use(cors());
 app.use(express.json());
 
+// Interceptor de SyntaxError para JSON malformado en body-parser
+app.use((err, req, res, next) => {
+  if (err instanceof SyntaxError && err.status === 400 && 'body' in err) {
+    res.setHeader('Content-Type', 'application/json; charset=utf-8');
+    return res.status(400).json({
+      success: false,
+      error: 'JSON malformado en el cuerpo de la petición',
+      status: 400
+    });
+  }
+  next(err);
+});
+
 // Cabeceras de seguridad esenciales (Seguridad de Nivel de Producción)
 app.use((req, res, next) => {
   res.setHeader('X-Content-Type-Options', 'nosniff');
@@ -45,7 +58,7 @@ app.get('/descargas/:filename', async (req, res, next) => {
     const result = await client.query('SELECT * FROM profesor_tareas WHERE word_url = $1', [docUrl]);
     
     if (result.rows.length === 0) {
-      return res.status(404).send('Archivo no encontrado en la base de datos');
+      return res.status(404).json({ success: false, error: 'Archivo no encontrado en la base de datos' });
     }
 
     const tarea = result.rows[0];
@@ -226,7 +239,7 @@ app.get('/descargas/:filename', async (req, res, next) => {
     return res.send(buffer);
   } catch (err) {
     console.error('Error al regenerar el documento de Word al vuelo:', err);
-    return res.status(500).send('Error interno al regenerar el documento de Word');
+    return res.status(500).json({ success: false, error: 'Error interno al regenerar el documento de Word' });
   }
 });
 
@@ -249,6 +262,43 @@ app.use(juegosRouter);
 app.use(logrosRouter);
 app.use(pragmaRouter);
 app.use(amistadesRouter);
+
+// Manejador 404 para la API (/api/*)
+app.use('/api', (req, res) => {
+  res.setHeader('Content-Type', 'application/json; charset=utf-8');
+  res.status(404).json({
+    success: false,
+    error: 'Endpoint API no encontrado',
+    ruta: req.originalUrl,
+    metodo: req.method,
+    status: 404
+  });
+});
+
+// Middleware global de manejo de errores (Blindaje anti-500 HTML)
+app.use((err, req, res, next) => {
+  console.error('[Global Error Shield]:', err);
+  if (res.headersSent) {
+    return next(err);
+  }
+  const statusCode = err.status || err.statusCode || 500;
+  res.setHeader('Content-Type', 'application/json; charset=utf-8');
+  res.status(statusCode).json({
+    success: false,
+    error: err.message || 'Error interno del servidor',
+    status: statusCode,
+    timestamp: new Date().toISOString()
+  });
+});
+
+// Manejadores globales de resiliencia del proceso Node.js
+process.on('unhandledRejection', (reason, promise) => {
+  console.error('[Global Process] Rechazo de promesa no manejado:', reason);
+});
+
+process.on('uncaughtException', (err) => {
+  console.error('[Global Process] Excepción no capturada:', err);
+});
 
 // Levantar el servidor
 const PORT = process.env.PORT || 5000;

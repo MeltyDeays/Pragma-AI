@@ -16,46 +16,62 @@ const recompensaXpDict = {
   'click_perfil':10,'click_logros':10,'click_temario':10
 };
 
-router.get('/api/logros', async (req,res)=>{
+router.get('/api/logros', async (req, res) => {
   try {
-    const {estudiante_id}=req.query;
-    if(!estudiante_id) return res.status(400).json({error:'Falta estudiante_id'});
-    const r=await client.query('SELECT logro_id, desbloqueado_at FROM profesor_logros WHERE estudiante_id = $1',[estudiante_id]);
-    res.json({logros:r.rows});
-  } catch(e){console.error(e);res.status(500).json({error:'Error logros'});}
-});
-
-router.post('/api/logros/desbloquear', async (req,res)=>{
-  try {
-    const {estudiante_id,logro_id}=req.body;
-    if(!estudiante_id||!logro_id) return res.status(400).json({error:'Faltan parámetros'});
-    const xp=recompensaXpDict[logro_id]||10;
-    const fecha=new Date().toISOString();
-    const ex=await client.query('SELECT id FROM profesor_logros WHERE estudiante_id = $1 AND logro_id = $2',[estudiante_id,logro_id]);
-    if(ex.rows.length>0) return res.json({success:false,message:'Ya desbloqueado'});
-    await client.query('INSERT INTO profesor_logros (estudiante_id, logro_id, desbloqueado_at) VALUES ($1, $2, $3)',[estudiante_id,logro_id,fecha]);
-    await client.query('UPDATE profesor_estudiantes SET xp = xp + $1 WHERE id = $2',[xp,estudiante_id]);
-    res.json({success:true,xpGanada:xp,logro_id});
-  } catch(e){console.error(e);res.status(500).json({error:'Error desbloquear'});}
-});
-
-router.post('/api/logros/desbloquear-batch', async (req,res)=>{
-  try {
-    const {estudiante_id,logros_ids}=req.body;
-    if(!estudiante_id||!Array.isArray(logros_ids)||logros_ids.length===0) return res.status(400).json({error:'Faltan parámetros'});
-    const ex=await client.query('SELECT logro_id FROM profesor_logros WHERE estudiante_id = $1 AND logro_id = ANY($2)',[estudiante_id,logros_ids]);
-    const ya=new Set(ex.rows.map(r=>r.logro_id));
-    const nuevos=logros_ids.filter(l=>!ya.has(l));
-    if(nuevos.length===0) return res.json({success:true,xpGanada:0,mensaje:'Todos ya desbloqueados'});
-    const fecha=new Date().toISOString();
-    let totalXp=0;
-    for(const lid of nuevos){
-      const xp=recompensaXpDict[lid]||10; totalXp+=xp;
-      await client.query('INSERT INTO profesor_logros (estudiante_id, logro_id, desbloqueado_at) VALUES ($1, $2, $3)',[estudiante_id,lid,fecha]);
+    const { estudiante_id } = req.query;
+    if (!estudiante_id || estudiante_id === 'undefined' || estudiante_id === 'null' || (typeof estudiante_id === 'string' && estudiante_id.trim() === '')) {
+      return res.status(200).json({ success: true, logros: [] });
     }
-    await client.query('UPDATE profesor_estudiantes SET xp = xp + $1 WHERE id = $2',[totalXp,estudiante_id]);
-    res.json({success:true,xpGanada:totalXp,nuevosDesbloqueados:nuevos});
-  } catch(e){console.error(e);res.status(500).json({error:'Error batch'});}
+    const r = await client.query('SELECT logro_id, desbloqueado_at FROM profesor_logros WHERE estudiante_id = $1', [estudiante_id]);
+    res.status(200).json({ success: true, logros: r?.rows || [] });
+  } catch (e) {
+    console.error('[Logros Error]:', e);
+    res.status(200).json({ success: true, logros: [] });
+  }
+});
+
+router.post('/api/logros/desbloquear', async (req, res) => {
+  try {
+    const { estudiante_id, logro_id } = req.body;
+    if (!estudiante_id || estudiante_id === 'undefined' || !logro_id) {
+      return res.status(400).json({ success: false, error: 'Faltan parámetros' });
+    }
+    const xp = recompensaXpDict[logro_id] || 10;
+    const fecha = new Date().toISOString();
+    const ex = await client.query('SELECT id FROM profesor_logros WHERE estudiante_id = $1 AND logro_id = $2', [estudiante_id, logro_id]);
+    if (ex.rows.length > 0) return res.json({ success: false, message: 'Ya desbloqueado' });
+    await client.query('INSERT INTO profesor_logros (estudiante_id, logro_id, desbloqueado_at) VALUES ($1, $2, $3)', [estudiante_id, logro_id, fecha]);
+    await client.query('UPDATE profesor_estudiantes SET xp = xp + $1 WHERE id = $2', [xp, estudiante_id]);
+    res.json({ success: true, xpGanada: xp, logro_id });
+  } catch (e) {
+    console.error('[Logros Desbloquear Error]:', e);
+    res.status(500).json({ success: false, error: 'Error al desbloquear logro' });
+  }
+});
+
+router.post('/api/logros/desbloquear-batch', async (req, res) => {
+  try {
+    const { estudiante_id, logros_ids } = req.body;
+    if (!estudiante_id || estudiante_id === 'undefined' || !Array.isArray(logros_ids) || logros_ids.length === 0) {
+      return res.status(400).json({ success: false, error: 'Faltan parámetros' });
+    }
+    const ex = await client.query('SELECT logro_id FROM profesor_logros WHERE estudiante_id = $1 AND logro_id = ANY($2)', [estudiante_id, logros_ids]);
+    const ya = new Set(ex.rows.map(r => r.logro_id));
+    const nuevos = logros_ids.filter(l => !ya.has(l));
+    if (nuevos.length === 0) return res.json({ success: true, xpGanada: 0, mensaje: 'Todos ya desbloqueados' });
+    const fecha = new Date().toISOString();
+    let totalXp = 0;
+    for (const lid of nuevos) {
+      const xp = recompensaXpDict[lid] || 10;
+      totalXp += xp;
+      await client.query('INSERT INTO profesor_logros (estudiante_id, logro_id, desbloqueado_at) VALUES ($1, $2, $3)', [estudiante_id, lid, fecha]);
+    }
+    await client.query('UPDATE profesor_estudiantes SET xp = xp + $1 WHERE id = $2', [totalXp, estudiante_id]);
+    res.json({ success: true, xpGanada: totalXp, nuevosDesbloqueados: nuevos });
+  } catch (e) {
+    console.error('[Logros Batch Error]:', e);
+    res.status(500).json({ success: false, error: 'Error al desbloquear logros en lote' });
+  }
 });
 
 module.exports = router;

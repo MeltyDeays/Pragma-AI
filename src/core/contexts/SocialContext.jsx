@@ -1,5 +1,6 @@
 import React, { createContext, useContext, useState, useEffect } from 'react';
 import { useEstudiante } from './EstudianteContext';
+import { safeFetchJson } from '../controladores/apiClient';
 
 const SocialContext = createContext(null);
 const API_BASE = import.meta.env.VITE_API_BASE || 'http://localhost:5000';
@@ -40,14 +41,14 @@ export function SocialProvider({ children }) {
     if (!id) return;
     try {
       const [amigosRes, pendientesRes] = await Promise.all([
-        fetch(`${API_BASE}/api/amistades/listar/${id}`),
-        fetch(`${API_BASE}/api/amistades/pendientes/${id}`)
+        safeFetchJson(`${API_BASE}/api/amistades/listar/${id}`),
+        safeFetchJson(`${API_BASE}/api/amistades/pendientes/${id}`)
       ]);
-      if (amigosRes.ok) {
-        setListaAmigos(await amigosRes.json());
+      if (amigosRes.ok && Array.isArray(amigosRes.data)) {
+        setListaAmigos(amigosRes.data);
       }
-      if (pendientesRes.ok) {
-        const pendientesData = await pendientesRes.json();
+      if (pendientesRes.ok && Array.isArray(pendientesRes.data)) {
+        const pendientesData = pendientesRes.data;
         setSolicitudesPendientes(pendientesData);
         const pendientesIds = pendientesData.map(r => r.id);
         setSolicitudesVistas(prev => {
@@ -67,18 +68,17 @@ export function SocialProvider({ children }) {
     setLoadingAmigos(true);
     setMensajeAmistad({ texto: '', tipo: '' });
     try {
-      const res = await fetch(`${API_BASE}/api/amistades/enviar`, {
+      const res = await safeFetchJson(`${API_BASE}/api/amistades/enviar`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ solicitante_id: estudiante.id, receptor_id: inputIdAmigo.trim() })
       });
-      const data = await res.json();
-      if (res.ok) {
-        setMensajeAmistad({ texto: data.mensaje, tipo: 'success' });
+      if (res.ok && res.data) {
+        setMensajeAmistad({ texto: res.data.mensaje || 'Solicitud enviada.', tipo: 'success' });
         setInputIdAmigo('');
         cargarAmigosYSolicitudes(estudiante.id);
       } else {
-        setMensajeAmistad({ texto: data.error || 'Error al enviar solicitud.', tipo: 'error' });
+        setMensajeAmistad({ texto: res.error || 'Error al enviar solicitud.', tipo: 'error' });
       }
     } catch (err) {
       console.error(err);
@@ -91,17 +91,16 @@ export function SocialProvider({ children }) {
   const responderSolicitudAmistad = async (solicitudId, accion) => {
     if (!estudiante) return;
     try {
-      const res = await fetch(`${API_BASE}/api/amistades/responder`, {
+      const res = await safeFetchJson(`${API_BASE}/api/amistades/responder`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ solicitud_id: solicitudId, accion })
       });
-      const data = await res.json();
-      if (res.ok) {
-        mostrarMensaje(data.mensaje, 'success');
+      if (res.ok && res.data) {
+        mostrarMensaje(res.data.mensaje || 'Solicitud procesada.', 'success');
         cargarAmigosYSolicitudes(estudiante.id);
       } else {
-        mostrarMensaje(data.error || 'Error al responder la solicitud.', 'error');
+        mostrarMensaje(res.error || 'Error al responder la solicitud.', 'error');
       }
     } catch (err) {
       console.error(err);
@@ -113,17 +112,16 @@ export function SocialProvider({ children }) {
     if (!estudiante) return;
     if (!confirm('¿Estás seguro de que deseas eliminar a este amigo de tu lista táctica social?')) return;
     try {
-      const res = await fetch(`${API_BASE}/api/amistades/eliminar`, {
+      const res = await safeFetchJson(`${API_BASE}/api/amistades/eliminar`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ estudiante_id: estudiante.id, amigo_id: amigoId })
       });
-      const data = await res.json();
-      if (res.ok) {
-        mostrarMensaje(data.mensaje, 'success');
+      if (res.ok && res.data) {
+        mostrarMensaje(res.data.mensaje || 'Amigo eliminado.', 'success');
         cargarAmigosYSolicitudes(estudiante.id);
       } else {
-        mostrarMensaje(data.error || 'Error al eliminar amigo.', 'error');
+        mostrarMensaje(res.error || 'Error al eliminar amigo.', 'error');
       }
     } catch (err) {
       console.error(err);
@@ -134,9 +132,9 @@ export function SocialProvider({ children }) {
   const cargarMensajesChat = async (amigoId) => {
     if (!estudiante) return;
     try {
-      const res = await fetch(`${API_BASE}/api/chats/listar/${estudiante.id}/${amigoId}`);
-      if (res.ok) {
-        setMensajesChat(await res.json());
+      const res = await safeFetchJson(`${API_BASE}/api/chats/listar/${estudiante.id}/${amigoId}`);
+      if (res.ok && Array.isArray(res.data)) {
+        setMensajesChat(res.data);
       }
     } catch (err) {
       console.error("Error al cargar mensajes de chat:", err);
@@ -148,7 +146,7 @@ export function SocialProvider({ children }) {
     if (!nuevoMensaje.trim() || !estudiante || !amigoChatActivo) return;
     setLoadingChat(true);
     try {
-      const res = await fetch(`${API_BASE}/api/chats/enviar`, {
+      const res = await safeFetchJson(`${API_BASE}/api/chats/enviar`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
@@ -162,6 +160,8 @@ export function SocialProvider({ children }) {
       if (res.ok) {
         setNuevoMensaje('');
         await cargarMensajesChat(amigoChatActivo.id);
+      } else {
+        mostrarMensaje(res.error || 'Error al enviar mensaje.', 'error');
       }
     } catch (err) {
       console.error(err);
@@ -174,7 +174,7 @@ export function SocialProvider({ children }) {
   const enviarInvitacionDuelo = async () => {
     if (!estudiante || !retarAmigoActivo) return;
     try {
-      const res = await fetch(`${API_BASE}/api/duelos/invitar`, {
+      const res = await safeFetchJson(`${API_BASE}/api/duelos/invitar`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
@@ -188,13 +188,12 @@ export function SocialProvider({ children }) {
           nivel: nivelDuelo
         })
       });
-      const data = await res.json();
-      if (res.ok) {
+      if (res.ok && res.data) {
         mostrarMensaje(`Invitación de duelo enviada a ${retarAmigoActivo.nombre}`, 'success');
-        setDueloEnviadoActivo(data.duelo);
+        setDueloEnviadoActivo(res.data.duelo);
         setRetarAmigoActivo(null);
       } else {
-        mostrarMensaje(data.error || 'Error al enviar invitación.', 'error');
+        mostrarMensaje(res.error || 'Error al enviar invitación.', 'error');
       }
     } catch (err) {
       console.error(err);
@@ -205,9 +204,9 @@ export function SocialProvider({ children }) {
   const cargarDuelosPendientes = async (id) => {
     if (!id) return;
     try {
-      const res = await fetch(`${API_BASE}/api/duelos/pendientes/${id}`);
-      if (res.ok) {
-        setDuelosRecibidos(await res.json());
+      const res = await safeFetchJson(`${API_BASE}/api/duelos/pendientes/${id}`);
+      if (res.ok && Array.isArray(res.data)) {
+        setDuelosRecibidos(res.data);
       }
     } catch (err) {
       console.error("Error al obtener duelos pendientes:", err);
@@ -216,18 +215,19 @@ export function SocialProvider({ children }) {
 
   const responderDuelo = async (dueloId, accion) => {
     try {
-      const res = await fetch(`${API_BASE}/api/duelos/responder`, {
+      const res = await safeFetchJson(`${API_BASE}/api/duelos/responder`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ duelo_id: dueloId, accion })
       });
-      if (res.ok) {
-        const data = await res.json();
+      if (res.ok && res.data) {
         mostrarMensaje(`Duelo ${accion === 'aceptar' ? 'aceptado' : 'rechazado'}.`, 'success');
-        if (accion === 'aceptar' && data.duelo) {
-          setPartidaDueloActiva(data.duelo);
+        if (accion === 'aceptar' && res.data.duelo) {
+          setPartidaDueloActiva(res.data.duelo);
         }
         if (estudiante) cargarDuelosPendientes(estudiante.id);
+      } else {
+        mostrarMensaje(res.error || 'Error al responder al duelo.', 'error');
       }
     } catch (err) {
       console.error(err);

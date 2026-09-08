@@ -1,10 +1,62 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { 
   Sparkles, RefreshCw, BookOpen, Download, Send, 
-  CheckSquare, Copy, Check, Layers, ShieldCheck, Code2, Database 
+  CheckSquare, Copy, Check, Layers, ShieldCheck, Code2, Database,
+  AlertTriangle, Search, Cpu, Radio, Smartphone, Cloud, Activity, Terminal, Lock
 } from 'lucide-react';
 import { parsearMarkdownMentor, parsearInlineMarkdown } from '../../core/controladores/markdown';
 import { descargarDocumentoPDF } from '../../core/controladores/pdfGenerator';
+import { LISTA_BLUEPRINTS, BLUEPRINT_CATEGORIAS } from '../modelos/blueprintsModel';
+
+const normalizarTexto = (texto) =>
+  (texto || '')
+    .toString()
+    .normalize('NFD')
+    .replace(/[\u0300-\u036f]/g, '')
+    .toLowerCase();
+
+const ALIAS_CATEGORIAS = {
+  'base de datos': 'Database',
+  'bases de datos': 'Database',
+  'bd': 'Database',
+  'tiempo real': 'Realtime',
+  'pruebas': 'Testing',
+  'tests': 'Testing',
+  'test': 'Testing',
+  'nube': 'Cloud',
+  'servidor': 'Backend',
+  'interfaz': 'Frontend',
+  'movil': 'Modular',
+  'arquitectura': 'Modular'
+};
+
+const ICONS_MAP = {
+  Layers,
+  Database,
+  Code2,
+  ShieldCheck,
+  Cpu,
+  Radio,
+  Smartphone,
+  Cloud,
+  Activity,
+  Terminal,
+  Lock
+};
+
+function getIconColorClass(tagClass) {
+  switch (tagClass) {
+    case 'bp-tag-arch': return 'text-indigo-400';
+    case 'bp-tag-db': return 'text-emerald-400';
+    case 'bp-tag-back': return 'text-purple-400';
+    case 'bp-tag-sec': return 'text-amber-400';
+    case 'bp-tag-front': return 'text-blue-400';
+    case 'bp-tag-realtime': return 'text-rose-400';
+    case 'bp-tag-cloud': return 'text-sky-400';
+    case 'bp-tag-test': return 'text-teal-400';
+    default: return 'text-indigo-400';
+  }
+}
 
 export default function MentorChat({
   estudiante,
@@ -32,10 +84,18 @@ export default function MentorChat({
   setPersonalidadMentor,
   mensajeChatMentor,
   setMensajeChatMentor,
-  enviarMensajeMentor
+  enviarMensajeMentor,
+  chatError = null,
+  setChatError = null,
+  cancelarConsultaMentor = null,
+  generarBlueprintsDinamicos = null,
+  blueprintsLoading = false
 }) {
   const [esMovil, setEsMovil] = useState(false);
   const [copiadoId, setCopiadoId] = useState(null);
+  const [busquedaBlueprint, setBusquedaBlueprint] = useState('');
+  const [categoriaBlueprint, setCategoriaBlueprint] = useState('Todos');
+  const [origenBlueprints, setOrigenBlueprints] = useState('proyecto');
 
   useEffect(() => {
     const handleResize = () => {
@@ -62,6 +122,12 @@ export default function MentorChat({
   });
 
   const checklist = (planActivo?.id && allChecklists[planActivo.id]) ? allChecklists[planActivo.id] : {};
+
+  const chatBottomRef = useRef(null);
+
+  useEffect(() => {
+    chatBottomRef.current?.scrollIntoView({ behavior: 'smooth' });
+  }, [planActivo?.mensajes?.length, chatLoading, chatError]);
 
   const toggleChecklistItem = (itemKey) => {
     if (!planActivo?.id) return;
@@ -102,6 +168,48 @@ export default function MentorChat({
       );
     }
   };
+
+  const handleConsultarBlueprint = (bp) => {
+    const prompt = typeof bp.askPrompt === 'function'
+      ? bp.askPrompt(planActivo?.titulo)
+      : (bp.askPrompt || `¿Cómo implemento ${bp.titulo} en ${planActivo?.titulo || 'mi proyecto'}?`);
+
+    setMensajeChatMentor(prompt);
+    if (enviarMensajeMentor && planActivo?.id && !chatLoading) {
+      enviarMensajeMentor(null, prompt);
+      const chatColumn = document.querySelector('.mentor-chat-column');
+      if (chatColumn && window.innerWidth <= 1024) {
+        chatColumn.scrollIntoView({ behavior: 'smooth' });
+      }
+    }
+  };
+
+  const blueprintsDelProyecto = (() => {
+    if (!planActivo?.blueprints) return [];
+    if (Array.isArray(planActivo.blueprints)) return planActivo.blueprints;
+    try {
+      const parsed = JSON.parse(planActivo.blueprints);
+      return Array.isArray(parsed) ? parsed : [];
+    } catch {
+      return [];
+    }
+  })();
+
+  const listaBase = origenBlueprints === 'proyecto' ? blueprintsDelProyecto : LISTA_BLUEPRINTS;
+
+  const blueprintsFiltrados = listaBase.filter(bp => {
+    const coincideCategoria = categoriaBlueprint === 'Todos' || bp.categoria === categoriaBlueprint;
+    const q = normalizarTexto(busquedaBlueprint.trim());
+    const catAlias = ALIAS_CATEGORIAS[q];
+    const coincideBusqueda = !q || 
+      normalizarTexto(bp.titulo).includes(q) || 
+      normalizarTexto(bp.desc).includes(q) ||
+      normalizarTexto(bp.categoria).includes(q) ||
+      (catAlias && bp.categoria === catAlias) ||
+      (bp.tags && normalizarTexto(Array.isArray(bp.tags) ? bp.tags.join(' ') : bp.tags).includes(q)) ||
+      (bp.snippet && normalizarTexto(bp.snippet).includes(q));
+    return coincideCategoria && coincideBusqueda;
+  });
 
   return (
     <div className="mentor-workspace animate-fade-in">
@@ -207,7 +315,7 @@ export default function MentorChat({
                   className={`plan-tab-btn ${tabMentorColumn === 'blueprints' ? 'active' : ''}`}
                   onClick={() => setTabMentorColumn('blueprints')}
                 >
-                  <Layers size={14} /> Blueprints & Recursos
+                  <Layers size={14} /> Blueprints & Recursos {blueprintsDelProyecto.length > 0 ? `(${blueprintsDelProyecto.length})` : `(${LISTA_BLUEPRINTS.length})`}
                 </button>
                 <button
                   type="button"
@@ -255,193 +363,192 @@ export default function MentorChat({
                 </>
               ) : tabMentorColumn === 'blueprints' ? (
                 <div className="mentor-blueprints-body">
-                  <div className="blueprints-header mb-4">
-                    <h3>📐 Blueprints Arquitectónicos & Recursos de Producción</h3>
-                    <p className="text-xs text-slate-400">
-                      Plantillas y andamios estructurados listos para producción para diseñar la arquitectura de tu proyecto de forma limpia.
-                    </p>
-                  </div>
-
-                  <div className="blueprints-grid">
-                    {/* Blueprint 1: Clean Architecture */}
-                    <div className="blueprint-card">
-                      <div className="blueprint-card-top">
-                        <div className="flex items-center gap-2">
-                          <Layers size={16} className="text-indigo-400" />
-                          <h4 className="font-semibold text-white text-sm">Clean Architecture & UseCases</h4>
-                        </div>
-                        <span className="bp-tag bp-tag-arch">Modular</span>
+                  <div className="blueprints-header">
+                    <div className="blueprints-header-top">
+                      <div>
+                        <h3>📐 Blueprints Arquitectónicos & Recursos</h3>
+                        <p className="text-xs text-slate-400">
+                          {origenBlueprints === 'proyecto'
+                            ? `Andamios técnicos generados dinámicamente con IA adaptados al stack de "${planActivo?.titulo || 'tu proyecto'}".`
+                            : `Plantillas y andamios arquitectónicos estándar listos para producción (${LISTA_BLUEPRINTS.length} disponibles).`}
+                        </p>
                       </div>
-                      <p className="bp-desc">
-                        Aislamiento estricto de dominio, casos de uso puros y adaptadores de infraestructura para evitar acoplamiento.
-                      </p>
-                      <pre className="bp-code-snippet">
-{`src/
-├── domain/          # Entidades y reglas de negocio
-│   └── entities/
-├── application/     # Casos de uso (CreateOrder, AuthUser)
-│   └── usecases/
-├── infrastructure/  # Repositorios DB, APIs externas, Prisma
-│   ├── database/
-│   └── repositories/
-└── interfaces/      # Controladores HTTP, DTOs y Rutas
-    └── http/`}
-                      </pre>
-                      <div className="bp-card-actions">
-                        <button
-                          type="button"
-                          className="btn-bp-copy"
-                          onClick={() => copiarTexto('bp_clean', `src/\n├── domain/entities/\n├── application/usecases/\n├── infrastructure/repositories/\n└── interfaces/http/`)}
-                        >
-                          {copiadoId === 'bp_clean' ? <Check size={13} className="text-emerald-400" /> : <Copy size={13} />}
-                          <span>{copiadoId === 'bp_clean' ? 'Copiado' : 'Copiar Estructura'}</span>
-                        </button>
-                        <button
-                          type="button"
-                          className="btn-bp-ask"
-                          onClick={() => {
-                            setMensajeChatMentor(`¿Cómo aplico Clean Architecture y casos de uso en mi proyecto ${planActivo?.titulo || ''}?`);
-                          }}
-                        >
-                          💬 Consultar al Mentor
-                        </button>
+
+                      <div className="blueprints-header-actions">
+                        <div className="bp-source-switch">
+                          <button
+                            type="button"
+                            className={`btn-bp-source ${origenBlueprints === 'proyecto' ? 'active' : ''}`}
+                            onClick={() => setOrigenBlueprints('proyecto')}
+                          >
+                            🎯 Para este Proyecto ({blueprintsDelProyecto.length})
+                          </button>
+                          <button
+                            type="button"
+                            className={`btn-bp-source ${origenBlueprints === 'biblioteca' ? 'active' : ''}`}
+                            onClick={() => setOrigenBlueprints('biblioteca')}
+                          >
+                            📚 Biblioteca Base ({LISTA_BLUEPRINTS.length})
+                          </button>
+                        </div>
+
+                        {origenBlueprints === 'proyecto' && (
+                          <button
+                            type="button"
+                            className="btn-bp-generate-ai"
+                            disabled={blueprintsLoading || !planActivo?.id}
+                            onClick={() => generarBlueprintsDinamicos?.(planActivo?.id)}
+                            title="Generar nuevos blueprints personalizados con IA para este proyecto"
+                          >
+                            {blueprintsLoading ? (
+                              <>
+                                <RefreshCw size={13} className="animate-spin" />
+                                <span>Generando con IA...</span>
+                              </>
+                            ) : (
+                              <>
+                                <Sparkles size={13} />
+                                <span>{blueprintsDelProyecto.length > 0 ? 'Regenerar con IA' : 'Generar con IA'}</span>
+                              </>
+                            )}
+                          </button>
+                        )}
                       </div>
                     </div>
 
-                    {/* Blueprint 2: Express + PostgreSQL + Prisma */}
-                    <div className="blueprint-card">
-                      <div className="blueprint-card-top">
-                        <div className="flex items-center gap-2">
-                          <Database size={16} className="text-emerald-400" />
-                          <h4 className="font-semibold text-white text-sm">Express REST + PostgreSQL & Prisma</h4>
-                        </div>
-                        <span className="bp-tag bp-tag-db">Database</span>
+                    {/* Barra de búsqueda y categorías */}
+                    <div className="blueprints-toolbar">
+                      <div className="blueprints-search-bar">
+                        <Search size={14} className="blueprints-search-icon" />
+                        <input
+                          type="text"
+                          placeholder={origenBlueprints === 'proyecto' ? "Buscar en blueprints de este proyecto..." : "Buscar blueprint o snippet..."}
+                          value={busquedaBlueprint}
+                          onChange={(e) => setBusquedaBlueprint(e.target.value)}
+                          className="blueprints-search-input"
+                        />
+                        {busquedaBlueprint && (
+                          <button
+                            type="button"
+                            className="blueprints-search-clear"
+                            onClick={() => setBusquedaBlueprint('')}
+                            title="Limpiar búsqueda"
+                          >
+                            ×
+                          </button>
+                        )}
                       </div>
-                      <p className="bp-desc">
-                        Configuración de connection pool con pg/Prisma, migraciones versionadas y middleware de manejo de errores global.
-                      </p>
-                      <pre className="bp-code-snippet">
-{`// middleware/errorHandler.js
-export function errorHandler(err, req, res, next) {
-  const status = err.statusCode || 500;
-  res.status(status).json({
-    ok: false,
-    error: err.message || 'Internal Server Error',
-    code: err.code || 'UNKNOWN_ERROR'
-  });
-}`}
-                      </pre>
-                      <div className="bp-card-actions">
-                        <button
-                          type="button"
-                          className="btn-bp-copy"
-                          onClick={() => copiarTexto('bp_express', `export function errorHandler(err, req, res, next) {\n  const status = err.statusCode || 500;\n  res.status(status).json({ ok: false, error: err.message });\n}`)}
-                        >
-                          {copiadoId === 'bp_express' ? <Check size={13} className="text-emerald-400" /> : <Copy size={13} />}
-                          <span>{copiadoId === 'bp_express' ? 'Copiado' : 'Copiar Middleware'}</span>
-                        </button>
-                        <button
-                          type="button"
-                          className="btn-bp-ask"
-                          onClick={() => {
-                            setMensajeChatMentor(`¿Cuál es el mejor esquema relacional e índices en PostgreSQL para ${planActivo?.titulo || 'este proyecto'}?`);
-                          }}
-                        >
-                          💬 Consultar al Mentor
-                        </button>
-                      </div>
-                    </div>
 
-                    {/* Blueprint 3: JWT & Refresh Rotation */}
-                    <div className="blueprint-card">
-                      <div className="blueprint-card-top">
-                        <div className="flex items-center gap-2">
-                          <ShieldCheck size={16} className="text-amber-400" />
-                          <h4 className="font-semibold text-white text-sm">Autenticación JWT & Refresh Rotation</h4>
-                        </div>
-                        <span className="bp-tag bp-tag-sec">Seguridad</span>
-                      </div>
-                      <p className="bp-desc">
-                        Tokens de acceso en memoria y refresh tokens en HttpOnly Cookies con rotación e invalidación en cierre de sesión.
-                      </p>
-                      <pre className="bp-code-snippet">
-{`// auth/tokens.js
-export function setAuthCookies(res, { accessToken, refreshToken }) {
-  res.cookie('refreshToken', refreshToken, {
-    httpOnly: true,
-    secure: process.env.NODE_ENV === 'production',
-    sameSite: 'lax',
-    maxAge: 7 * 24 * 60 * 60 * 1000 // 7 días
-  });
-}`}
-                      </pre>
-                      <div className="bp-card-actions">
-                        <button
-                          type="button"
-                          className="btn-bp-copy"
-                          onClick={() => copiarTexto('bp_jwt', `res.cookie('refreshToken', refreshToken, { httpOnly: true, secure: true, sameSite: 'lax' });`)}
-                        >
-                          {copiadoId === 'bp_jwt' ? <Check size={13} className="text-emerald-400" /> : <Copy size={13} />}
-                          <span>{copiadoId === 'bp_jwt' ? 'Copiado' : 'Copiar Cookie Config'}</span>
-                        </button>
-                        <button
-                          type="button"
-                          className="btn-bp-ask"
-                          onClick={() => {
-                            setMensajeChatMentor(`¿Cómo mitigo vulnerabilidades de XSS y CSRF en el flujo de autenticación de ${planActivo?.titulo || 'mi app'}?`);
-                          }}
-                        >
-                          💬 Consultar al Mentor
-                        </button>
-                      </div>
-                    </div>
-
-                    {/* Blueprint 4: Testing Pyramid */}
-                    <div className="blueprint-card">
-                      <div className="blueprint-card-top">
-                        <div className="flex items-center gap-2">
-                          <Code2 size={16} className="text-cyan-400" />
-                          <h4 className="font-semibold text-white text-sm">Pirámide de Pruebas (Vitest + Supertest)</h4>
-                        </div>
-                        <span className="bp-tag bp-tag-test">Testing</span>
-                      </div>
-                      <p className="bp-desc">
-                        Estructura de pruebas unitarias sobre casos de uso y pruebas de integración sobre endpoints de Express.
-                      </p>
-                      <pre className="bp-code-snippet">
-{`// tests/integration/api.test.js
-import request from 'supertest';
-import { app } from '../../src/app';
-
-describe('POST /api/recurso', () => {
-  it('debe responder 201 y retornar el recurso creado', async () => {
-    const res = await request(app).post('/api/recurso').send({ name: 'Test' });
-    expect(res.status).toBe(201);
-    expect(res.body.ok).toBe(true);
-  });
-});`}
-                      </pre>
-                      <div className="bp-card-actions">
-                        <button
-                          type="button"
-                          className="btn-bp-copy"
-                          onClick={() => copiarTexto('bp_test', `import request from 'supertest';\nimport { app } from '../../src/app';`)}
-                        >
-                          {copiadoId === 'bp_test' ? <Check size={13} className="text-emerald-400" /> : <Copy size={13} />}
-                          <span>{copiadoId === 'bp_test' ? 'Copiado' : 'Copiar Test Boilerplate'}</span>
-                        </button>
-                        <button
-                          type="button"
-                          className="btn-bp-ask"
-                          onClick={() => {
-                            setMensajeChatMentor(`¿Qué casos de prueba esenciales debo escribir para validar la lógica de ${planActivo?.titulo || 'este plan'}?`);
-                          }}
-                        >
-                          💬 Consultar al Mentor
-                        </button>
+                      <div className="blueprints-categories-bar">
+                        {BLUEPRINT_CATEGORIAS.map(cat => (
+                          <button
+                            key={cat}
+                            type="button"
+                            className={`bp-category-btn ${categoriaBlueprint === cat ? 'active' : ''}`}
+                            onClick={() => setCategoriaBlueprint(cat)}
+                          >
+                            {cat}
+                          </button>
+                        ))}
                       </div>
                     </div>
                   </div>
+
+                  {origenBlueprints === 'proyecto' && blueprintsDelProyecto.length === 0 ? (
+                    <div className="blueprints-dynamic-generator-card">
+                      <div className="bp-gen-icon-wrap">
+                        <Sparkles size={30} className="text-indigo-400 animate-pulse" />
+                      </div>
+                      <h4>Generar Blueprints Específicos con IA</h4>
+                      <p>
+                        Cada proyecto tiene requerimientos y stacks únicos. Pulsa para que el Arquitecto IA analice el alcance, stack tecnológico y contratos de <strong>"{planActivo?.titulo}"</strong> y diseñe entre 4 y 6 andamios de código 100% personalizados y listos para producción.
+                      </p>
+                      <div className="bp-gen-actions">
+                        <button
+                          type="button"
+                          className="btn-bp-generate-cta"
+                          disabled={blueprintsLoading || !planActivo?.id}
+                          onClick={() => generarBlueprintsDinamicos?.(planActivo?.id)}
+                        >
+                          {blueprintsLoading ? (
+                            <>
+                              <RefreshCw size={15} className="animate-spin" />
+                              <span>Diseñando Blueprints con IA...</span>
+                            </>
+                          ) : (
+                            <>
+                              <Sparkles size={15} />
+                              <span>✨ Generar Blueprints para "{planActivo?.titulo}"</span>
+                            </>
+                          )}
+                        </button>
+                        <button
+                          type="button"
+                          className="btn-bp-switch-library"
+                          onClick={() => setOrigenBlueprints('biblioteca')}
+                        >
+                          📚 Ver Biblioteca Base ({LISTA_BLUEPRINTS.length})
+                        </button>
+                      </div>
+                    </div>
+                  ) : blueprintsFiltrados.length === 0 ? (
+                    <div className="blueprints-empty-state">
+                      <p className="text-sm text-slate-400">No se encontraron blueprints con los filtros aplicados en esta vista.</p>
+                      <button
+                        type="button"
+                        className="btn-bp-reset"
+                        onClick={() => {
+                          setBusquedaBlueprint('');
+                          setCategoriaBlueprint('Todos');
+                        }}
+                      >
+                        Restablecer filtros
+                      </button>
+                    </div>
+                  ) : (
+                    <div className="blueprints-grid">
+                      {blueprintsFiltrados.map((bp) => {
+                        const IconComponent = ICONS_MAP[bp.icono] || Layers;
+                        return (
+                          <div key={bp.id} className="blueprint-card">
+                            <div className="blueprint-card-top">
+                              <div className="flex items-center gap-2">
+                                <IconComponent size={16} className={getIconColorClass(bp.tagClass)} />
+                                <h4 className="font-semibold text-white text-sm">{bp.titulo}</h4>
+                              </div>
+                              <div className="flex items-center gap-1.5">
+                                {origenBlueprints === 'proyecto' && (
+                                  <span className="bp-dyn-badge" title="Blueprint adaptado dinámicamente a este proyecto">⚡ IA Proyecto</span>
+                                )}
+                                <span className={`bp-tag ${bp.tagClass}`}>{bp.categoria}</span>
+                              </div>
+                            </div>
+                            <p className="bp-desc">{bp.desc}</p>
+                            <pre className="bp-code-snippet">{bp.snippet}</pre>
+                            <div className="bp-card-actions">
+                              <button
+                                type="button"
+                                className="btn-bp-copy"
+                                onClick={() => copiarTexto(bp.id, bp.copyText || bp.snippet)}
+                              >
+                                {copiadoId === bp.id ? <Check size={13} className="text-emerald-400" /> : <Copy size={13} />}
+                                <span>{copiadoId === bp.id ? 'Copiado' : 'Copiar Código'}</span>
+                              </button>
+                              <button
+                                type="button"
+                                className="btn-bp-ask"
+                                disabled={chatLoading}
+                                onClick={() => handleConsultarBlueprint(bp)}
+                                title={chatLoading ? 'Esperando respuesta del mentor...' : 'Enviar consulta al mentor'}
+                              >
+                                💬 Consultar al Mentor
+                              </button>
+                            </div>
+                          </div>
+                        );
+                      })}
+                    </div>
+                  )}
                 </div>
               ) : tabMentorColumn === 'checklist' ? (
                 <div className="mentor-checklist-body">
@@ -853,13 +960,66 @@ describe('POST /api/recurso', () => {
                   </div>
                 ))}
                 {chatLoading && (
-                  <div className="chat-message mentor loading-message">
+                  <div className="chat-message mentor loading-message animate-fade-in">
                     <div className="message-sender">Mentor de Software</div>
-                    <div className="message-text">
-                      <span className="pulse-dots">Escribiendo...</span>
+                    <div className="message-text loading-bubble">
+                      <div className="flex items-center justify-between gap-3">
+                        <span className="pulse-dots">Analizando arquitectura y generando guía...</span>
+                        {cancelarConsultaMentor && (
+                          <button
+                            type="button"
+                            className="btn-cancel-generation"
+                            onClick={cancelarConsultaMentor}
+                            title="Cancelar generación si toma demasiado tiempo"
+                          >
+                            Cancelar
+                          </button>
+                        )}
+                      </div>
                     </div>
                   </div>
                 )}
+
+                {chatError && (
+                  <div className="chat-message mentor chat-error-alert animate-fade-in">
+                    <div className="message-sender text-amber-400 flex items-center gap-1.5">
+                      <AlertTriangle size={13} />
+                      <span>Servicio del Mentor IA</span>
+                    </div>
+                    <div className="message-text error-bubble">
+                      <p className="error-message-text">{chatError.mensaje}</p>
+                      <span className="error-advice">
+                        El servicio puede estar experimentando alta demanda o una desconexión temporal. Tu consulta sigue guardada.
+                      </span>
+                      <div className="error-actions-strip">
+                        <button
+                          type="button"
+                          className="btn-retry-chat"
+                          onClick={() => {
+                            const textoAReintentar = chatError.consultaPendiente || mensajeChatMentor;
+                            if (textoAReintentar) {
+                              setMensajeChatMentor(textoAReintentar);
+                            }
+                            if (setChatError) setChatError(null);
+                            if (enviarMensajeMentor) enviarMensajeMentor(null, textoAReintentar);
+                          }}
+                        >
+                          <RefreshCw size={13} /> Reintentar Consulta
+                        </button>
+                        <button
+                          type="button"
+                          className="btn-dismiss-error"
+                          onClick={() => {
+                            if (setChatError) setChatError(null);
+                          }}
+                        >
+                          Descartar
+                        </button>
+                      </div>
+                    </div>
+                  </div>
+                )}
+                <div ref={chatBottomRef} />
               </div>
 
               <div className="mentor-personality-selector">

@@ -156,6 +156,7 @@ router.get('/api/estudiantes/:id/estado', async (req, res) => {
       let wordUrl = tarea.word_url;
       if (!wordUrl) {
         try {
+          if (!fs.existsSync(tareasPublicDir)) fs.mkdirSync(tareasPublicDir, { recursive: true });
           const archivos = fs.readdirSync(tareasPublicDir);
           const prefijo = `tarea_${id}_`;
           const candidatos = archivos.filter(f => f.startsWith(prefijo) && f.endsWith('.docx'));
@@ -222,24 +223,29 @@ router.get('/api/estudiantes/:id/estado', async (req, res) => {
   }
 });
 
-// RUTA: Presencia ping
-router.post('/api/estudiantes/:id/ping', async (req, res) => {
+// RUTA: Presencia ping (Soporte dual GET y POST resiliente)
+const pingHandler = async (req, res) => {
   const { id } = req.params;
+  const timestampStr = new Date().toISOString();
+  if (!id || id === 'undefined' || id === 'null') {
+    return res.status(200).json({ success: true, online: true, timestamp: timestampStr, ping: 'noop' });
+  }
   try {
-    const timestampStr = new Date().toISOString();
-    // Actualizar última conexión en Firestore directamente
     const updateQuery = `
       UPDATE profesor_estudiantes 
       SET ultima_conexion = $1
       WHERE id = $2
     `;
     await client.query(updateQuery, [timestampStr, id]);
-    res.json({ success: true, ultima_conexion: timestampStr });
+    res.status(200).json({ success: true, online: true, timestamp: timestampStr, ultima_conexion: timestampStr });
   } catch (error) {
     console.error('[Ping Error]:', error);
-    res.status(500).json({ error: 'Error al registrar presencia.' });
+    res.status(200).json({ success: true, online: true, timestamp: timestampStr, degraded: true });
   }
-});
+};
+
+router.post('/api/estudiantes/:id/ping', pingHandler);
+router.get('/api/estudiantes/:id/ping', pingHandler);
 
 // RUTA: Actualizar inventario/stats del estudiante
 router.post('/api/estudiantes/:id/stats', async (req, res) => {
@@ -281,8 +287,9 @@ router.get('/api/realtime/stream/:id', (req, res) => {
 
   res.writeHead(200, {
     'Content-Type': 'text/event-stream',
-    'Cache-Control': 'no-cache',
+    'Cache-Control': 'no-cache, no-transform',
     'Connection': 'keep-alive',
+    'X-Accel-Buffering': 'no',
     'Access-Control-Allow-Origin': '*'
   });
 
@@ -293,7 +300,24 @@ router.get('/api/realtime/stream/:id', (req, res) => {
   }
   clientesSSE.get(id).push(res);
 
-  req.on('close', () => {
+  // Heartbeat periódico cada 15s para prevenir timeouts en proxies (Hugging Face / Nginx)
+  const keepAliveInterval = setInterval(() => {
+    if (!res.destroyed && !res.writableEnded) {
+      try {
+        res.write(': keep-alive\n\n');
+      } catch (e) {
+        limpiarConexion();
+      }
+    } else {
+      limpiarConexion();
+    }
+  }, 15000);
+
+  let cerrado = false;
+  const limpiarConexion = () => {
+    if (cerrado) return;
+    cerrado = true;
+    clearInterval(keepAliveInterval);
     const conexiones = clientesSSE.get(id) || [];
     const filtrados = conexiones.filter(conn => conn !== res);
     if (filtrados.length === 0) {
@@ -301,6 +325,16 @@ router.get('/api/realtime/stream/:id', (req, res) => {
     } else {
       clientesSSE.set(id, filtrados);
     }
+  };
+
+  req.on('close', limpiarConexion);
+  req.on('error', (err) => {
+    console.error('[SSE req error]:', err?.message);
+    limpiarConexion();
+  });
+  res.on('error', (err) => {
+    console.error('[SSE res error]:', err?.message);
+    limpiarConexion();
   });
 });
 

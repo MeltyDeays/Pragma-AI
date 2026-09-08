@@ -1,4 +1,5 @@
 import React, { createContext, useContext, useState, useEffect } from 'react';
+import { safeFetchJson } from '../controladores/apiClient';
 
 const EstudianteContext = createContext(null);
 const API_BASE = import.meta.env.VITE_API_BASE || 'http://localhost:5000';
@@ -17,14 +18,13 @@ export function EstudianteProvider({ children }) {
 
   const cargarEstado = async (id) => {
     try {
-      const res = await fetch(`${API_BASE}/api/estudiantes/${id}/estado`);
-      const data = await res.json();
-      if (res.ok) {
-        setEstudiante(data.estudiante);
-        setTareas(data.tareas);
-        setTemario(data.temario);
+      const res = await safeFetchJson(`${API_BASE}/api/estudiantes/${id}/estado`);
+      if (res.ok && res.data?.estudiante) {
+        setEstudiante(res.data.estudiante);
+        setTareas(res.data.tareas || []);
+        setTemario(res.data.temario || []);
       } else {
-        mostrarMensaje(data.error || 'Error al cargar el estado', 'error');
+        mostrarMensaje(res.error || 'Error al cargar el estado', 'error');
       }
     } catch (err) {
       console.error(err);
@@ -35,20 +35,20 @@ export function EstudianteProvider({ children }) {
   const iniciarSesion = async (nombre, tecnologia) => {
     setLoading(true);
     try {
-      const res = await fetch(`${API_BASE}/api/estudiantes`, {
+      const res = await safeFetchJson(`${API_BASE}/api/estudiantes`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ nombre, tecnologia })
       });
-      const data = await res.json();
-      if (res.ok) {
+      if (res.ok && res.data?.id) {
+        const data = res.data;
         setEstudiante(data);
         localStorage.setItem('estudiante_sesion', JSON.stringify(data));
         await cargarEstado(data.id);
         mostrarMensaje(`¡Bienvenido de vuelta, ${data.nombre}!`, 'exito');
         return data;
       } else {
-        mostrarMensaje(data.error || 'Error al iniciar sesión', 'error');
+        mostrarMensaje(res.error || 'Error al iniciar sesión', 'error');
       }
     } catch (err) {
       console.error(err);

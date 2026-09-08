@@ -437,7 +437,7 @@ router.post('/api/pragma/copiloto/evaluar', async (req, res) => {
 
     const completion = await ejecutarGroqConReintentos(
       [{ role: 'user', content: prompt }],
-      'openai/gpt-oss-20b',
+      'llama-3.1-8b-instant',
       { type: 'json_object' }
     );
 
@@ -492,7 +492,7 @@ router.post('/api/pragma/zen/acertijo', async (req, res) => {
 
     const completion = await ejecutarGroqConReintentos(
       [{ role: 'user', content: prompt }],
-      'openai/gpt-oss-20b',
+      'llama-3.1-8b-instant',
       { type: 'json_object' }
     );
 
@@ -527,7 +527,7 @@ router.post('/api/pragma/zen/resolver', async (req, res) => {
 
     const completion = await ejecutarGroqConReintentos(
       [{ role: 'user', content: prompt }],
-      'openai/gpt-oss-20b',
+      'llama-3.1-8b-instant',
       { type: 'json_object' }
     );
 
@@ -575,7 +575,7 @@ router.post('/api/pragma/taberna/optimizar', async (req, res) => {
 
     const completion = await ejecutarGroqConReintentos(
       [{ role: 'user', content: prompt }],
-      'openai/gpt-oss-20b',
+      'llama-3.1-8b-instant',
       { type: 'json_object' }
     );
 

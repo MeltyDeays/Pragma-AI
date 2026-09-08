@@ -1,6 +1,7 @@
 import React, { createContext, useContext, useState, useEffect, useRef } from 'react';
 import { useEstudiante } from './EstudianteContext';
 import { LISTA_LOGROS } from '../../logros/modelos/logrosModel';
+import { safeFetchJson } from '../controladores/apiClient';
 
 const GamificacionContext = createContext(null);
 const API_BASE = import.meta.env.VITE_API_BASE || 'http://localhost:5000';
@@ -38,10 +39,9 @@ export function GamificacionProvider({ children }) {
   const cargarLogros = async (id) => {
     if (!id) return;
     try {
-      const res = await fetch(`${API_BASE}/api/logros?estudiante_id=${id}`);
-      const data = await res.json();
-      if (res.ok && data.logros) {
-        const ids = data.logros.map(l => l.logro_id);
+      const res = await safeFetchJson(`${API_BASE}/api/logros?estudiante_id=${id}`);
+      if (res.ok && res.data?.logros) {
+        const ids = res.data.logros.map(l => l.logro_id);
         setLogrosDesbloqueados(ids);
         logrosRef.current = ids;
       }
@@ -53,12 +53,11 @@ export function GamificacionProvider({ children }) {
   const cargarXpInfo = async () => {
     if (!estudiante) return;
     try {
-      const res = await fetch(`${API_BASE}/api/estudiantes/${estudiante.id}/estado`);
-      const data = await res.json();
-      if (res.ok && data.estudiante) {
-        const pc = typeof data.estudiante.perfil_cognitivo === 'string' 
-          ? JSON.parse(data.estudiante.perfil_cognitivo || '{}') 
-          : data.estudiante.perfil_cognitivo;
+      const res = await safeFetchJson(`${API_BASE}/api/estudiantes/${estudiante.id}/estado`);
+      if (res.ok && res.data?.estudiante) {
+        const pc = typeof res.data.estudiante.perfil_cognitivo === 'string' 
+          ? JSON.parse(res.data.estudiante.perfil_cognitivo || '{}') 
+          : res.data.estudiante.perfil_cognitivo;
         setXpInfo({
           xp: pc?.xp || 0,
           nivel_rpg: pc?.nivel_rpg || 1
@@ -77,13 +76,13 @@ export function GamificacionProvider({ children }) {
     setLogrosDesbloqueados([...logrosRef.current]);
 
     try {
-      const res = await fetch(`${API_BASE}/api/logros/desbloquear`, {
+      const res = await safeFetchJson(`${API_BASE}/api/logros/desbloquear`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ estudiante_id: estudiante.id, logro_id: logroId })
       });
-      const data = await res.json();
-      if (res.ok && data.success) {
+      if (res.ok && res.data?.success) {
+        const data = res.data;
         const logroDef = LISTA_LOGROS.find(l => l.id === logroId);
         const detalle = logroDef || { titulo: '🌟 Logro Desbloqueado', desc: '¡Has superado un nuevo desafío!', tipo: 'bronce' };
         
@@ -170,13 +169,13 @@ export function GamificacionProvider({ children }) {
     setLogrosDesbloqueados([...logrosRef.current]);
 
     try {
-      const res = await fetch(`${API_BASE}/api/logros/desbloquear-batch`, {
+      const res = await safeFetchJson(`${API_BASE}/api/logros/desbloquear-batch`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ estudiante_id: estudiante.id, logros_ids: nuevos })
       });
-      const data = await res.json();
-      if (res.ok && data.success && data.nuevosDesbloqueados && data.nuevosDesbloqueados.length > 0) {
+      if (res.ok && res.data?.success && res.data.nuevosDesbloqueados && res.data.nuevosDesbloqueados.length > 0) {
+        const data = res.data;
         const primerLogro = data.nuevosDesbloqueados[0];
         const logroDef = LISTA_LOGROS.find(l => l.id === primerLogro);
         const detalle = logroDef || { titulo: '🌟 Logro Desbloqueado', desc: '¡Has superado un nuevo desafío!', tipo: 'bronce' };

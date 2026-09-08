@@ -29,6 +29,7 @@ import { useEstudiante } from './core/contexts/EstudianteContext';
 import { useSocial } from './core/contexts/SocialContext';
 import { useGamificacion } from './core/contexts/GamificacionContext';
 import { useMentor } from './core/contexts/MentorContext';
+import { safeFetchJson } from './core/controladores/apiClient';
 
 const API_BASE = import.meta.env.VITE_API_BASE || 'http://localhost:5000';
 
@@ -172,9 +173,14 @@ function App() {
     setPerfilCognitivoExpandido,
     personalidadMentor,
     setPersonalidadMentor,
+    chatError,
+    setChatError,
+    cancelarConsultaMentor,
     crearPlanMentor,
     enviarMensajeChatMentor,
-    regenerarGuiaAyuda
+    regenerarGuiaAyuda,
+    generarBlueprintsDinamicos,
+    blueprintsLoading
   } = useMentor();
 
   const [nombre, setNombre] = useState('');
@@ -247,9 +253,9 @@ function App() {
     if (!estudiante || !dueloEnviadoActivo) return;
     const interval = setInterval(async () => {
       try {
-        const res = await fetch(`${API_BASE}/api/duelos/estado/${dueloEnviadoActivo.id}`);
-        if (res.ok) {
-          const data = await res.json();
+        const res = await safeFetchJson(`${API_BASE}/api/duelos/estado/${dueloEnviadoActivo.id}`);
+        if (res.ok && res.data) {
+          const data = res.data;
           if (data.estado === 'aceptado') {
             clearInterval(interval);
             mostrarMensaje(`¡${dueloEnviadoActivo.retado_nombre} ha aceptado tu duelo!`, 'success');
@@ -318,13 +324,13 @@ function App() {
   const cambiarTecnologia = async (nuevaTech) => {
     if (!estudiante) return;
     try {
-      const res = await fetch(`${API_BASE}/api/estudiantes`, {
+      const res = await safeFetchJson(`${API_BASE}/api/estudiantes`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ nombre: estudiante.nombre, tecnologia: nuevaTech })
       });
-      const data = await res.json();
-      if (res.ok) {
+      if (res.ok && res.data) {
+        const data = res.data;
         setEstudiante(data);
         localStorage.setItem('estudiante_sesion', JSON.stringify(data));
         await cargarEstado(data.id);
@@ -336,7 +342,7 @@ function App() {
         mostrarMensaje(`Ruta cambiada a ${nuevaTech} de forma exitosa.`, 'exito');
         await evaluarLogros();
       } else {
-        mostrarMensaje(data.error || 'Error al cambiar de ruta', 'error');
+        mostrarMensaje(res.error || 'Error al cambiar de ruta', 'error');
       }
     } catch (err) {
       console.error(err);
@@ -347,7 +353,7 @@ function App() {
   const generarNuevaTarea = async () => {
     if (!estudiante) return;
     try {
-      const res = await fetch(`${API_BASE}/api/generar-tarea`, {
+      const res = await safeFetchJson(`${API_BASE}/api/generar-tarea`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
@@ -356,12 +362,11 @@ function App() {
           nivel: estudiante.nivel_actual
         })
       });
-      const data = await res.json();
       if (res.ok) {
         mostrarMensaje('Nueva tarea conceptual y práctica generada con éxito', 'exito');
         await cargarEstado(estudiante.id);
       } else {
-        mostrarMensaje(data.error || 'Error al generar la tarea', 'error');
+        mostrarMensaje(res.error || 'Error al generar la tarea', 'error');
       }
     } catch (err) {
       console.error(err);
@@ -386,7 +391,7 @@ function App() {
 
     setEvaluating(true);
     try {
-      const res = await fetch(`${API_BASE}/api/evaluar-entrega`, {
+      const res = await safeFetchJson(`${API_BASE}/api/evaluar-entrega`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
@@ -396,8 +401,8 @@ function App() {
           codigo_entregado: tipoEntrega === 'codigo' ? codigoEntregado : ''
         })
       });
-      const data = await res.json();
-      if (res.ok) {
+      if (res.ok && res.data) {
+        const data = res.data;
         if (data.aprobada) {
           mostrarMensaje(`¡Excelente! Aprobado con ${data.entrega.puntaje}/100. Siguiente módulo desbloqueado.`, 'exito');
         } else {
@@ -419,7 +424,7 @@ function App() {
         
         await evaluarLogros();
       } else {
-        mostrarMensaje(data.error || 'Error al evaluar entrega', 'error');
+        mostrarMensaje(res.error || 'Error al evaluar entrega', 'error');
       }
     } catch (err) {
       console.error(err);
@@ -434,14 +439,13 @@ function App() {
     if (!window.confirm("¿Estás seguro de que deseas regenerar esta guía conceptual y el reto práctico? Se creará un nuevo documento con diferentes ejemplos y retos adaptados.")) return;
     setIsRegenerating(true);
     try {
-      const res = await fetch(`${API_BASE}/api/regenerar-tarea`, {
+      const res = await safeFetchJson(`${API_BASE}/api/regenerar-tarea`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ tarea_id: tareaActiva.id })
       });
-      const data = await res.json();
       if (!res.ok) {
-        mostrarMensaje(data.error || 'Error al regenerar la tarea', 'error');
+        mostrarMensaje(res.error || 'Error al regenerar la tarea', 'error');
       } else {
         mostrarMensaje('Guía conceptual y reto práctico regenerados con éxito.', 'exito');
         await cargarEstado(estudiante.id);
@@ -504,9 +508,9 @@ function App() {
     setGameTimer(null);
     setJuegoLoading(true);
     try {
-      const res = await fetch(`${API_BASE}${juego.endpoint}?estudiante_id=${estudiante.id}`);
-      const data = await res.json();
-      if (res.ok) {
+      const res = await safeFetchJson(`${API_BASE}${juego.endpoint}?estudiante_id=${estudiante.id}`);
+      if (res.ok && res.data) {
+        const data = res.data;
         setJuegoData(data);
         if (juego.id === 'sorter' && data.lineas_ordenadas) {
           const shuffled = [...data.lineas_ordenadas].sort(() => Math.random() - 0.5);
@@ -521,7 +525,7 @@ function App() {
           setGameTimer(20);
         }
       } else {
-        mostrarMensaje(data.error || 'Error al cargar el juego', 'error');
+        mostrarMensaje(res.error || 'Error al cargar el juego', 'error');
         setJuegoActivo(null);
       }
     } catch (err) {
@@ -537,13 +541,13 @@ function App() {
   const completarReto = async (tipoReto) => {
     if (!estudiante) return;
     try {
-      const res = await fetch(`${API_BASE}/api/gamificacion/completar`, {
+      const res = await safeFetchJson(`${API_BASE}/api/gamificacion/completar`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ estudiante_id: estudiante.id, tipo_reto: tipoReto })
       });
-      const data = await res.json();
-      if (res.ok) {
+      if (res.ok && res.data) {
+        const data = res.data;
         setXpInfo({ xp: data.xp_total, nivel_rpg: data.nivel_rpg });
         mostrarMensaje(`+${data.xp_ganada} XP! Total: ${data.xp_total} XP (Nivel ${data.nivel_rpg})`, 'exito');
         
@@ -1469,6 +1473,11 @@ function App() {
               mensajeChatMentor={mensajeChatMentor}
               setMensajeChatMentor={setMensajeChatMentor}
               enviarMensajeMentor={enviarMensajeChatMentor}
+              chatError={chatError}
+              setChatError={setChatError}
+              cancelarConsultaMentor={cancelarConsultaMentor}
+              generarBlueprintsDinamicos={generarBlueprintsDinamicos}
+              blueprintsLoading={blueprintsLoading}
             />
           ) : vistaActiva === 'habilidades' ? (
             <HabilidadesRoadmap

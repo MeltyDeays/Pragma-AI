@@ -440,10 +440,14 @@ const client = {
 
       // --- 20. INSERT INTO profesor_mentor_planes ---
       if (queryClean.match(/INSERT INTO profesor_mentor_planes/i)) {
-        const [id, estudiante_id, titulo, idea_proyecto, github_url, plan_markdown, word_url, mensajes] = params;
+        const [id, estudiante_id, titulo, idea_proyecto, github_url, plan_markdown, word_url, mensajes, blueprints] = params;
         let msgList = mensajes;
         if (msgList && typeof msgList === 'string') {
           try { msgList = JSON.parse(msgList); } catch (e) { /* ignore */ }
+        }
+        let bpList = blueprints;
+        if (bpList && typeof bpList === 'string') {
+          try { bpList = JSON.parse(bpList); } catch (e) { /* ignore */ }
         }
         const docData = {
           id,
@@ -454,6 +458,7 @@ const client = {
           plan_markdown,
           word_url: word_url || null,
           mensajes: msgList || [],
+          blueprints: bpList || [],
           creado_en: new Date().toISOString()
         };
         await setDoc(doc(firestoreDb, 'profesor_mentor_planes', id), docData);
@@ -582,6 +587,17 @@ const client = {
         return { rows: [] };
       }
 
+      // --- 31b. UPDATE profesor_mentor_planes SET blueprints = $1 WHERE id = $2 ---
+      if (queryClean.match(/UPDATE profesor_mentor_planes SET blueprints = \$1 WHERE id = \$2/i)) {
+        let blueprints = params[0];
+        if (blueprints && typeof blueprints === 'string') {
+          try { blueprints = JSON.parse(blueprints); } catch (e) { /* ignore */ }
+        }
+        const id = params[1];
+        await updateDoc(doc(firestoreDb, 'profesor_mentor_planes', id), { blueprints: blueprints || [] });
+        return { rows: [] };
+      }
+
       // --- 32. UPDATE profesor_mentor_documentos_ayuda SET respuesta_mentor = $1, documento_markdown = $2, word_url = $3 WHERE id = $4 ---
       if (queryClean.match(/UPDATE profesor_mentor_documentos_ayuda/i)) {
         const [respuesta_mentor, documento_markdown, word_url, id] = params;
@@ -645,23 +661,19 @@ function parsearJSONGroq(rawText) {
 }
 
 const MODEL_ALIASES = {
-  'llama-3.3-70b-versatile': 'openai/gpt-oss-120b',
-  'llama-3.1-70b-versatile': 'openai/gpt-oss-120b',
-  'llama3-70b-8192': 'openai/gpt-oss-120b',
-  'llama-3.1-8b-instant': 'openai/gpt-oss-20b',
-  'llama3-8b-8192': 'openai/gpt-oss-20b',
-  'mixtral-8x7b-32768': 'groq/compound',
-  'gemma2-9b-it': 'openai/gpt-oss-20b'
+  'llama-3.1-70b-versatile': 'llama-3.3-70b-versatile',
+  'llama3-70b-8192': 'llama-3.3-70b-versatile',
+  'llama3-8b-8192': 'llama-3.1-8b-instant',
+  'mixtral-8x7b-32768': 'llama-3.3-70b-versatile',
+  'gemma2-9b-it': 'llama-3.1-8b-instant'
 };
 
 const RESILIENT_FALLBACK_MODELS = [
-  'openai/gpt-oss-120b',
-  'openai/gpt-oss-20b',
-  'groq/compound',
-  'groq/compound-mini'
+  'llama-3.3-70b-versatile',
+  'llama-3.1-8b-instant'
 ];
 
-async function ejecutarGroqConReintentos(messages, model = 'openai/gpt-oss-120b', responseFormat = null, maxReintentos = 6) {
+async function ejecutarGroqConReintentos(messages, model = 'llama-3.3-70b-versatile', responseFormat = null, maxReintentos = 6) {
   let delay = 1000;
   if (groqClients.length === 0) {
     throw new Error('No hay claves API de Groq configuradas en el pool.');
@@ -703,7 +715,7 @@ async function ejecutarGroqConReintentos(messages, model = 'openai/gpt-oss-120b'
 
       // Si el modelo no existe o dio rate limit de tokens, rotar al siguiente modelo disponible del pool de resiliencia
       if (isModelNotFound || (isRateLimit && intento > 2)) {
-        const nextModel = RESILIENT_FALLBACK_MODELS.find(m => m !== activeModel) || 'openai/gpt-oss-20b';
+        const nextModel = RESILIENT_FALLBACK_MODELS.find(m => m !== activeModel) || 'llama-3.1-8b-instant';
         console.warn(`[Groq Resiliencia] Conmutando automáticamente a modelo alternativo: ${nextModel}...`);
         activeModel = nextModel;
       }
@@ -799,7 +811,7 @@ async function actualizarPerfilCognitivo(estudianteId, nuevoMensajeEstudiante, r
 
     const chatCompletion = await ejecutarGroqConReintentos(
       [{ role: 'system', content: systemPrompt }],
-      'openai/gpt-oss-120b',
+      'llama-3.3-70b-versatile',
       { type: 'json_object' }
     );
 
@@ -884,7 +896,7 @@ async function actualizarPerfilCognitivoConEvaluacion(estudianteId, tareaTitulo,
 
     const chatCompletion = await ejecutarGroqConReintentos(
       [{ role: 'system', content: systemPrompt }],
-      'openai/gpt-oss-120b',
+      'llama-3.3-70b-versatile',
       { type: 'json_object' }
     );
 

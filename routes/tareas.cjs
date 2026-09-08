@@ -155,7 +155,7 @@ router.post('/api/generar-tarea', async (req, res) => {
         { role: 'system', content: systemPrompt },
         { role: 'user', content: userPrompt }
       ],
-      'openai/gpt-oss-120b',
+      'llama-3.3-70b-versatile',
       { type: 'json_object' }
     );
 
@@ -681,7 +681,7 @@ router.post('/api/regenerar-tarea', async (req, res) => {
         { role: 'system', content: systemPrompt },
         { role: 'user', content: userPrompt }
       ],
-      'openai/gpt-oss-120b',
+      'llama-3.3-70b-versatile',
       { type: 'json_object' }
     );
 
@@ -1198,7 +1198,7 @@ router.post('/api/evaluar-entrega', async (req, res) => {
         { role: 'system', content: evalSystemPrompt },
         { role: 'user', content: userPrompt }
       ],
-      'openai/gpt-oss-120b',
+      'llama-3.3-70b-versatile',
       { type: 'json_object' }
     );
 

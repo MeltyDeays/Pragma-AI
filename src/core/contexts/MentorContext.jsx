@@ -1,5 +1,6 @@
-import React, { createContext, useContext, useState, useEffect } from 'react';
+import React, { createContext, useContext, useState, useEffect, useRef } from 'react';
 import { useEstudiante } from './EstudianteContext';
+import { safeFetchJson } from '../controladores/apiClient';
 
 const MentorContext = createContext(null);
 const API_BASE = import.meta.env.VITE_API_BASE || 'http://localhost:5000';
@@ -19,16 +20,30 @@ export function MentorProvider({ children }) {
   const [regeneratingGuiaId, setRegeneratingGuiaId] = useState(null);
   const [perfilCognitivoExpandido, setPerfilCognitivoExpandido] = useState(false);
   const [personalidadMentor, setPersonalidadMentor] = useState('Riguroso');
+  const [chatError, setChatError] = useState(null);
+  const chatAbortControllerRef = useRef(null);
+
+  const cancelarConsultaMentor = () => {
+    if (chatAbortControllerRef.current) {
+      chatAbortControllerRef.current.abort();
+      chatAbortControllerRef.current = null;
+    }
+    setChatLoading(false);
+    setChatError({
+      mensaje: 'Consulta cancelada por el usuario.',
+      consultaPendiente: mensajeChatMentor,
+      tipo: 'warning'
+    });
+  };
 
   const cargarPlanesMentor = async (id) => {
     if (!id) return;
     try {
-      const res = await fetch(`${API_BASE}/api/mentor/planes/${id}`);
-      const data = await res.json();
-      if (res.ok) {
-        setPlanesMentor(data);
-        if (data.length > 0 && !planActivo) {
-          setPlanActivo(data[0]);
+      const res = await safeFetchJson(`${API_BASE}/api/mentor/planes/${id}`);
+      if (res.ok && Array.isArray(res.data)) {
+        setPlanesMentor(res.data);
+        if (res.data.length > 0 && !planActivo) {
+          setPlanActivo(res.data[0]);
         }
       }
     } catch (err) {
@@ -39,10 +54,9 @@ export function MentorProvider({ children }) {
   const cargarGuiasAyuda = async (planId) => {
     if (!planId) return;
     try {
-      const res = await fetch(`${API_BASE}/api/mentor/planes/${planId}/documentos`);
-      const data = await res.json();
-      if (res.ok) {
-        setGuiasAyuda(data);
+      const res = await safeFetchJson(`${API_BASE}/api/mentor/planes/${planId}/documentos`);
+      if (res.ok && Array.isArray(res.data)) {
+        setGuiasAyuda(res.data);
       }
     } catch (err) {
       console.error('Error al cargar guías de ayuda:', err);
@@ -54,7 +68,7 @@ export function MentorProvider({ children }) {
     if (!ideaProyecto.trim() || !estudiante) return;
     setMentorLoading(true);
     try {
-      const res = await fetch(`${API_BASE}/api/mentor/crear-plan`, {
+      const res = await safeFetchJson(`${API_BASE}/api/mentor/crear-plan`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
@@ -63,15 +77,14 @@ export function MentorProvider({ children }) {
           github_url: githubUrlMentor.trim() || null
         })
       });
-      const data = await res.json();
-      if (res.ok) {
+      if (res.ok && res.data) {
         mostrarMensaje('¡Plan de desarrollo creado exitosamente por tu Mentor IA!', 'exito');
         setIdeaProyecto('');
         setGithubUrlMentor('');
         await cargarPlanesMentor(estudiante.id);
-        setPlanActivo(data);
+        setPlanActivo(res.data);
       } else {
-        mostrarMensaje(data.error || 'Error al generar el plan.', 'error');
+        mostrarMensaje(res.error || 'Error al generar el plan.', 'error');
       }
     } catch (err) {
       console.error(err);
@@ -81,10 +94,16 @@ export function MentorProvider({ children }) {
     }
   };
 
-  const enviarMensajeChatMentor = async (e) => {
-    e.preventDefault();
-    if (!mensajeChatMentor.trim() || !planActivo || !estudiante) return;
+  const enviarMensajeChatMentor = async (e, textoCustom = null) => {
+    if (e && e.preventDefault) e.preventDefault();
+    const textoAEnviar = (textoCustom !== null ? textoCustom : mensajeChatMentor).trim();
+    if (!textoAEnviar || !planActivo || !estudiante) return;
+
+    setChatError(null);
     setChatLoading(true);
+
+    const controller = new AbortController();
+    chatAbortControllerRef.current = controller;
     
     // Incrementar en localStorage mensajes mentor para evaluar logros
     const key = `ia_profesor_mensajes_mentor_${estudiante.id}`;
@@ -92,31 +111,46 @@ export function MentorProvider({ children }) {
     localStorage.setItem(key, count.toString());
 
     try {
-      const res = await fetch(`${API_BASE}/api/mentor/chat`, {
+      const res = await safeFetchJson(`${API_BASE}/api/mentor/chat`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           plan_id: planActivo.id,
-          mensaje: mensajeChatMentor.trim(),
+          mensaje: textoAEnviar,
           personalidad: personalidadMentor
-        })
+        }),
+        signal: controller.signal,
+        timeoutMs: 45000
       });
-      const data = await res.json();
-      if (res.ok) {
+
+      if (res.ok && res.data) {
         setPlanActivo(prev => ({
           ...prev,
-          mensajes: data.mensajes
+          mensajes: res.data.mensajes || prev.mensajes
         }));
         setMensajeChatMentor('');
+        setChatError(null);
         await cargarGuiasAyuda(planActivo.id);
         await cargarEstado(estudiante.id);
       } else {
-        mostrarMensaje(data.error || 'Error en el chat con el mentor.', 'error');
+        const errorMsg = res.error || 'Error en el chat con el mentor.';
+        setChatError({
+          mensaje: errorMsg,
+          consultaPendiente: textoAEnviar,
+          tipo: 'error'
+        });
+        mostrarMensaje(errorMsg, 'error');
       }
     } catch (err) {
       console.error(err);
+      setChatError({
+        mensaje: 'Error de red al enviar mensaje al mentor.',
+        consultaPendiente: textoAEnviar,
+        tipo: 'error'
+      });
       mostrarMensaje('Error de red al enviar mensaje al mentor.', 'error');
     } finally {
+      chatAbortControllerRef.current = null;
       setChatLoading(false);
     }
   };
@@ -125,21 +159,20 @@ export function MentorProvider({ children }) {
     if (!docId || !planActivo) return;
     setRegeneratingGuiaId(docId);
     try {
-      const res = await fetch(`${API_BASE}/api/mentor/documentos/regenerar`, {
+      const res = await safeFetchJson(`${API_BASE}/api/mentor/documentos/regenerar`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ documento_id: docId })
       });
-      const data = await res.json();
-      if (res.ok) {
+      if (res.ok && res.data) {
         mostrarMensaje('Guía técnica regenerada con éxito por tu Mentor.', 'exito');
         await cargarGuiasAyuda(planActivo.id);
         await cargarPlanesMentor(estudiante.id);
-        const planesAct = planesMentor.map(p => p.id === planActivo.id ? { ...p, mensajes: data.mensajes || p.mensajes } : p);
+        const planesAct = planesMentor.map(p => p.id === planActivo.id ? { ...p, mensajes: res.data.mensajes || p.mensajes } : p);
         const planMatch = planesAct.find(p => p.id === planActivo.id);
         if (planMatch) setPlanActivo(planMatch);
       } else {
-        mostrarMensaje(data.error || 'Error al regenerar guía.', 'error');
+        mostrarMensaje(res.error || 'Error al regenerar guía.', 'error');
       }
     } catch (err) {
       console.error(err);
@@ -154,6 +187,36 @@ export function MentorProvider({ children }) {
       cargarPlanesMentor(estudiante.id);
     }
   }, [estudiante]);
+
+  const [blueprintsLoading, setBlueprintsLoading] = useState(false);
+
+  const generarBlueprintsDinamicos = async (planId, enfoque = null) => {
+    if (!planId) return null;
+    setBlueprintsLoading(true);
+    try {
+      const res = await safeFetchJson(`${API_BASE}/api/mentor/planes/${planId}/generar-blueprints`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ enfoque })
+      });
+      if (res.ok && res.data && Array.isArray(res.data.blueprints)) {
+        mostrarMensaje('¡Blueprints arquitectónicos personalizados generados con IA!', 'exito');
+        const nuevosBps = res.data.blueprints;
+        setPlanActivo(prev => prev && prev.id === planId ? { ...prev, blueprints: nuevosBps } : prev);
+        setPlanesMentor(prev => prev.map(p => p.id === planId ? { ...p, blueprints: nuevosBps } : p));
+        return nuevosBps;
+      } else {
+        mostrarMensaje(res.error || 'No se pudieron generar los blueprints dinámicos.', 'error');
+        return null;
+      }
+    } catch (err) {
+      console.error('Error al generar blueprints dinámicos:', err);
+      mostrarMensaje('Error de red al generar blueprints dinámicos.', 'error');
+      return null;
+    } finally {
+      setBlueprintsLoading(false);
+    }
+  };
 
   useEffect(() => {
     if (planActivo?.id) {
@@ -185,9 +248,14 @@ export function MentorProvider({ children }) {
       setPerfilCognitivoExpandido,
       personalidadMentor,
       setPersonalidadMentor,
+      chatError,
+      setChatError,
+      cancelarConsultaMentor,
       crearPlanMentor,
       enviarMensajeChatMentor,
-      regenerarGuiaAyuda
+      regenerarGuiaAyuda,
+      generarBlueprintsDinamicos,
+      blueprintsLoading
     }}>
       {children}
     </MentorContext.Provider>
