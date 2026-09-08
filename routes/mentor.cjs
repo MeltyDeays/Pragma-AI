@@ -396,114 +396,98 @@ router.post('/api/mentor/crear-plan', async (req, res) => {
     const est = estRes.rows[0];
     const pcStr = typeof est.perfil_cognitivo === 'object' ? JSON.stringify(est.perfil_cognitivo || {}) : (est.perfil_cognitivo || '{}');
 
-    const sp = `Eres un Arquitecto de Software Senior y Mentor de Proyectos de Élite.
-Tu misión es diseñar un Plan de Implementación de Software de Producción, EXHAUSTIVO, MODULAR y 100% PRÁCTICO para el estudiante.
+    // 1. Generación Directa de Markdown Puro (Rápido, Exhaustivo, Anti-Truncamiento)
+    const spPlan = `Eres un Arquitecto de Software Senior y Mentor de Proyectos de Élite.
+Tu misión es diseñar un Plan de Implementación de Software de Producción, EXHAUSTIVO, MODULAR y 100% PRÁCTICO en formato Markdown puro para el estudiante.
 
 NEGATIVE CONSTRAINTS ESTRICTAS:
-- TERMINANTEMENTE PROHIBIDO limitarse a listas de viñetas genéricas o decir "Crea una función que haga X" sin escribir el código real.
-- ESTRICTAMENTE PROHIBIDO devolver pseudocódigo, snippets incompletos, "// TODO", "// implementar después", "/* resto del código */" o elipsis.
-- Todo bloque de código debe ser concreto, aplicable, copiable y con sintaxis completa.
+- TERMINANTEMENTE PROHIBIDO resumir, omitir código o dejar funciones con placeholders o elipsis ("// TODO", "// implementar después", "/* resto del código */").
+- Todo bloque de código debe ser 100% funcional, limpio, copiable, con importaciones completas, tipado y manejo de excepciones robusto.
 
 DIRECTIVAS CRÍTICAS DE INICIALIZACIÓN Y OPERACIONES EN EL PLAN:
-Para cada módulo, servicio o entidad central del proyecto (por ejemplo: modelos de datos, servicios bancarios o de negocio, transacciones atómicas, controladores API o Cloud Functions, lógica de notificaciones):
-1. RUTA EXACTA E INICIALIZACIÓN: Indica en la primera línea la ruta exacta del archivo (ej. "// src/services/bankService.js" o "// lib/services/transaction_service.dart"). Muestra todos los imports/requires necesarios, la inicialización del cliente de base de datos y la configuración inicial de arranque.
-2. OPERACIONES COMPLETAS ("CÓMO DEBE QUEDAR EL CÓDIGO"): No dejes funciones a la imaginación. Muestra el código real completo de:
-   - Lectura / Consulta (GET / stream / query de balance o registros).
-   - Creación y Operaciones Críticas (POST / transacción atómica con lock o atomic write para evitar condiciones de carrera o saldos negativos).
-   - Actualización de Estado (PUT/PATCH para modificar registros o saldos con validación).
+1. RUTA EXACTA E INICIALIZACIÓN: Indica en la primera línea la ruta exacta del archivo (ej. "// src/services/bankService.js"). Muestra todos los imports/requires necesarios, configuración e inicialización de clientes.
+2. OPERACIONES COMPLETAS ("CÓMO DEBE QUEDAR EL CÓDIGO"): Muestra código funcional completo para:
+   - Lectura / Consulta (GET / queries).
+   - Creación y Operaciones Críticas (POST con transacciones atómicas/locks).
+   - Actualización de Estado (PUT/PATCH con validación).
    - Eliminación / Anulación (DELETE o marcado inactivo).
-   - Notificación o Feedback (disparo de eventos WebSockets, SnackBar/Alert o push notifications).
-3. EXPLICACIÓN DIDÁCTICA ("CÓMO QUEDA Y CÓMO SE CONECTA"): Explica de forma clara qué hace cada función, qué argumentos recibe, qué responde y cómo se enlaza con la interfaz de usuario o las demás partes del sistema.
+   - Notificación o Feedback (eventos, push o alerts).
+3. EXPLICACIÓN DIDÁCTICA: Explica claramente qué hace cada función y cómo se conecta con la interfaz.
 
-El plan debe estructurarse obligatoriamente en "plan_markdown" con estas dimensiones técnicas:
-## 1. Arquitectura y Árbol de Archivos (árbol de directorios anotado con responsabilidades modulares de cada archivo).
-## 2. Inicialización de Archivos & Código Funcional Copiable (bloques de código completos de arranque, imports, modelos y servicios con operaciones GET/POST/actualizar/eliminar/notificaciones completas).
-## 3. Integración Paso a Paso & Resultado en Ejecución (comandos de instalación, .env de muestra, cableado entre capas y descripción exacta de cómo se ve en pantalla/consola).
-## 4. Criterios de Verificación & Catálogo de Trampas Comunes (checklist ejecutable de pruebas y errores frecuentes a evitar adaptados al nivel del estudiante).
+Estructura obligatoria en Markdown puro:
+# [Título formal del proyecto]
+## 1. Arquitectura y Árbol de Archivos (árbol de directorios anotado con responsabilidades modulares)
+## 2. Inicialización de Archivos & Código Funcional Copiable (archivos reales de inicio a fin)
+## 3. Integración Paso a Paso & Resultado en Ejecución (comandos de instalación, .env de muestra, cableado y resultado visual)
+## 4. Criterios de Verificación & Catálogo de Trampas Comunes (checklist de validación y errores frecuentes a evitar).`;
 
-REGLAS DE LONGITUD Y TOKENS:
-- "plan_markdown" DEBE SER UN DOCUMENTO TÉCNICO EXHAUSTIVO, EXTENSO Y PROFUNDO. ESTÁ TERMINANTEMENTE PROHIBIDO RESUMIRLO O CORTARLO A UN SOLO ENCABEZADO.
-- Debe contener código real, rutas y ejemplos paso a paso para cada fase.
-- En "blueprints", incluye exactamente 2 o 3 blueprints fundacionales iniciales más críticos para arrancar este proyecto. Los blueprints adicionales se generarán dinámicamente en el chat según el estudiante converse y plantee nuevas dudas.
+    const upPlan = `Genera el plan de arquitectura y código de producción completo para: "${idea_proyecto}". ${github_url ? `Repo base: ${github_url}` : ''} Nivel: ${est.nivel_actual || 'Intermedio'}. Perfil: ${pcStr}`;
 
-Debes responder estrictamente en formato JSON con la siguiente estructura:
+    const planCompletion = await ejecutarGroqConReintentos(
+      [{ role: 'system', content: spPlan }, { role: 'user', content: upPlan }],
+      MODELO_MENTOR,
+      null,
+      3,
+      { max_tokens: 3400, temperature: 0.25 }
+    );
+
+    let planMarkdown = planCompletion?.choices?.[0]?.message?.content || '';
+
+    // Extraer título formal desde el encabezado Markdown o idea
+    const titleMatch = planMarkdown.match(/^#\s+(.+)$/m);
+    const titulo = titleMatch ? titleMatch[1].trim().replace(/[*_#]/g, '') : (typeof idea_proyecto === 'string' ? idea_proyecto.slice(0, 60) : 'Proyecto');
+    const intro = `Plan de implementación técnica y arquitectura de software para el proyecto ${titulo}.`;
+
+    // 2. Micro-call rápido para Blueprints Fundacionales (JSON ligero)
+    let bpsDinamicos = [];
+    try {
+      const bpCompletion = await ejecutarGroqConReintentos(
+        [
+          {
+            role: 'system',
+            content: 'Eres un Arquitecto de Software. Responde exclusivamente en formato JSON con la clave "blueprints" que contenga 2 o 3 blueprints fundacionales técnicos específicos.'
+          },
+          {
+            role: 'user',
+            content: `Genera en JSON 2 o 3 blueprints técnicos para "${titulo}":
 {
-  "titulo": "Título formal del proyecto",
-  "introduccion_pedagogica": "Resumen ejecutivo y objetivos pedagógicos",
-  "plan_markdown": "Markdown detallado y completo cumpliendo exhaustivamente las 4 dimensiones técnicas y bloques de código reales",
-  "conceptos_clave": [
-    { "termino": "Nombre del concepto", "explicacion": "Definición y aplicación práctica en este proyecto" }
-  ],
   "blueprints": [
     {
       "id": "bp_proj_1",
-      "titulo": "Título técnico del Blueprint específico para este proyecto",
+      "titulo": "Título técnico del Blueprint",
       "categoria": "Modular / Database / Backend / Seguridad / Frontend / Realtime / Testing / Cloud",
       "icono": "Layers / Database / Code2 / ShieldCheck / Cpu / Radio / Smartphone / Cloud / Lock / Terminal / Activity",
       "tagClass": "bp-tag-arch / bp-tag-db / bp-tag-back / bp-tag-sec / bp-tag-front / bp-tag-realtime / bp-tag-test / bp-tag-cloud",
       "desc": "Propósito concreto y responsabilidad en el flujo del proyecto",
-      "snippet": "// Código completo de producción o estructura específica del stack",
+      "snippet": "// Código completo de producción",
       "copyText": "Código copiable",
-      "askPrompt": "Pregunta para profundizar en este componente con el mentor"
+      "askPrompt": "Pregunta para profundizar con el mentor"
     }
   ]
-}`;
-    const up = `Diseña el plan técnico exhaustivo para: "${idea_proyecto}". ${github_url ? `Repo: ${github_url}` : ''} Nivel: ${est.nivel_actual || 'Intermedio'}. Perfil: ${pcStr}`;
-    const cc = await ejecutarGroqConReintentos(
-      [{ role: 'system', content: sp }, { role: 'user', content: up }],
-      MODELO_MENTOR,
-      { type: 'json_object' },
-      6,
-      { max_tokens: 7500, temperature: 0.25 }
-    );
-    const rawContent = cc?.choices?.[0]?.message?.content || '{}';
-    const data = parsearJSONGroq(rawContent) || {};
-    const titulo = data.titulo || (typeof idea_proyecto === 'string' ? idea_proyecto.slice(0, 60) : 'Proyecto');
-    const intro = data.introduccion_pedagogica || 'Plan de implementación práctica para el proyecto.';
-    let planMarkdown = data.plan_markdown || '';
-
-    // BLINDAJE ANTI-TRUNCAMIENTO: Si Groq devolvió un string recortado en el JSON, regenerar directamente en Markdown
-    if (!planMarkdown || planMarkdown.length < 600 || !planMarkdown.includes('##')) {
-      console.log('Detectado plan_markdown trunco en JSON. Solicitando generación Markdown directa...');
-      try {
-        const fallbackCc = await ejecutarGroqConReintentos([
-          {
-            role: 'system',
-            content: `Eres un Arquitecto de Software Senior y Mentor de Proyectos de Élite.
-Genera un Plan de Implementación de Software de Producción, EXHAUSTIVO, EXTENSO y 100% COMPLETO (mínimo 1500 palabras) en formato Markdown puro para el proyecto: "${titulo}".
-TERMINANTEMENTE PROHIBIDO recortar el plan o devolver sólo títulos.
-Estructura obligatoria con bloques de código completos y funcionales (sin elipsis ni TODOs):
-# ${titulo}
-## 1. Arquitectura y Árbol de Archivos (árbol de directorios anotado con responsabilidades modulares)
-## 2. Inicialización de Archivos & Código Funcional Copiable (archivos reales de inicio a fin con GET, POST atómico con locks, PUT, DELETE y notificaciones completas)
-## 3. Integración Paso a Paso & Resultado en Ejecución (comandos de instalación, .env de muestra, cableado y resultado visual/consola)
-## 4. Criterios de Verificación & Catálogo de Trampas Comunes (checklist de validación y errores frecuentes a evitar adaptados al nivel del estudiante).`
-          },
-          {
-            role: 'user',
-            content: `Genera el plan de arquitectura y código de producción completo para: "${idea_proyecto}". ${github_url ? `Repo base: ${github_url}` : ''} Nivel: ${est.nivel_actual || 'Intermedio'}.`
+}`
           }
-        ], MODELO_MENTOR, null, 6, { max_tokens: 7500, temperature: 0.25 });
-        const fallbackContent = fallbackCc?.choices?.[0]?.message?.content;
-        if (fallbackContent && fallbackContent.length > 500) {
-          planMarkdown = fallbackContent;
-        }
-      } catch (errFb) {
-        console.warn('Fallback Markdown directo falló, usando planMarkdown obtenido:', errFb.message);
+        ],
+        MODELO_MENTOR,
+        { type: 'json_object' },
+        2,
+        { max_tokens: 1200, temperature: 0.2 }
+      );
+      const bpData = parsearJSONGroq(bpCompletion?.choices?.[0]?.message?.content || '{}');
+      if (Array.isArray(bpData.blueprints) && bpData.blueprints.length > 0) {
+        bpsDinamicos = bpData.blueprints;
       }
-    }
-
-    if (!planMarkdown || planMarkdown.length < 100) {
-      planMarkdown = `# ${titulo}\n\n## 1. Arquitectura y Árbol de Archivos\n- src/\n\n## 2. Inicialización de Archivos & Código Funcional Copiable\n\`\`\`javascript\n// Código inicial\n\`\`\`\n\n## 3. Integración Paso a Paso & Resultado en Ejecución\n1. Iniciar servidor.\n\n## 4. Criterios de Verificación & Catálogo de Trampas Comunes\n- Verificar pruebas unitarias.`;
+    } catch (errBp) {
+      console.warn('Micro-call de blueprints omitida por seguridad:', errBp.message);
     }
 
     const planUuid = crypto.randomUUID();
     const docUrl = await generarDocumentoWord(titulo, 'PLAN DE IMPLEMENTACIÓN TÉCNICA', intro, planMarkdown, planUuid, 'plan');
-    const bpsDinamicos = Array.isArray(data.blueprints) ? data.blueprints : [];
+
     await client.query(
       `INSERT INTO profesor_mentor_planes (id, estudiante_id, titulo, idea_proyecto, github_url, plan_markdown, word_url, mensajes, blueprints) VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9)`,
       [planUuid, estudiante_id, titulo, idea_proyecto, github_url || null, planMarkdown, docUrl, '[]', JSON.stringify(bpsDinamicos)]
     );
+
     res.json({
       id: planUuid,
       estudiante_id,
@@ -540,8 +524,9 @@ router.post('/api/mentor/planes/:plan_id/regenerar-plan', async (req, res) => {
       instrucciones_adicionales ? `Instrucciones del estudiante: "${instrucciones_adicionales}".` : ''
     ].filter(Boolean).join(' ');
 
-    const sp = `Eres un Arquitecto de Software Senior y Mentor de Proyectos de Élite.
-Tu misión es REGENERAR Y PROFUNDIZAR de forma EXHAUSTIVA el Plan de Implementación para este proyecto.
+    // 1. Generación Directa de Markdown Puro (Rápido, Exhaustivo, Anti-Truncamiento)
+    const spPlan = `Eres un Arquitecto de Software Senior y Mentor de Proyectos de Élite.
+Tu misión es REGENERAR Y PROFUNDIZAR de forma EXHAUSTIVA el Plan de Implementación para este proyecto en formato Markdown puro.
 
 PROYECTO: "${plan.titulo}"
 IDEA ORIGINAL: "${plan.idea_proyecto}"
@@ -552,21 +537,50 @@ NEGATIVE CONSTRAINTS ESTRICTAS:
 - TERMINANTEMENTE PROHIBIDO resumir, omitir código o dejar funciones con placeholders o elipsis.
 - Todo bloque de código debe ser 100% funcional, limpio, copiable, con importaciones completas, tipado y manejo de excepciones robusto.
 
-El plan debe estructurarse obligatoriamente en "plan_markdown" con estas 4 dimensiones técnicas completas (mínimo 1500 palabras en total):
-## 1. Arquitectura y Árbol de Archivos (árbol de directorios anotado con responsabilidades modulares de cada archivo).
-## 2. Inicialización de Archivos & Código Funcional Copiable (bloques de código completos de arranque, imports, modelos y servicios con operaciones GET/POST atómico/PUT/DELETE y notificaciones completas).
-## 3. Integración Paso a Paso & Resultado en Ejecución (comandos de instalación, .env de muestra, cableado entre capas y descripción exacta de cómo se ve en pantalla/consola).
-## 4. Criterios de Verificación & Catálogo de Trampas Comunes (checklist ejecutable de pruebas y errores frecuentes a evitar adaptados al nivel del estudiante).
+El plan debe estructurarse obligatoriamente con estas 4 dimensiones técnicas completas:
+# ${plan.titulo}
+## 1. Arquitectura y Árbol de Archivos (árbol de directorios anotado con responsabilidades modulares de cada archivo)
+## 2. Inicialización de Archivos & Código Funcional Copiable (bloques de código completos de arranque, imports, modelos y servicios con operaciones GET/POST atómico/PUT/DELETE y notificaciones completas)
+## 3. Integración Paso a Paso & Resultado en Ejecución (comandos de instalación, .env de muestra, cableado entre capas y descripción exacta de cómo se ve en pantalla/consola)
+## 4. Criterios de Verificación & Catálogo de Trampas Comunes (checklist ejecutable de pruebas y errores frecuentes a evitar adaptados al nivel del estudiante).`;
 
-Debes responder estrictamente en formato JSON con la siguiente estructura:
+    const planCompletion = await ejecutarGroqConReintentos(
+      [
+        { role: 'system', content: spPlan },
+        { role: 'user', content: `Regenera el plan técnico exhaustivo para: "${plan.idea_proyecto}". ${promptExtra} Nivel: ${est.nivel_actual || 'Intermedio'}. Perfil: ${pcStr}` }
+      ],
+      MODELO_MENTOR,
+      null,
+      3,
+      { max_tokens: 3400, temperature: 0.25 }
+    );
+
+    let planMarkdown = planCompletion?.choices?.[0]?.message?.content || '';
+    if (!planMarkdown || planMarkdown.length < 100) {
+      planMarkdown = plan.plan_markdown;
+    }
+
+    const titleMatch = planMarkdown.match(/^#\s+(.+)$/m);
+    const titulo = titleMatch ? titleMatch[1].trim().replace(/[*_#]/g, '') : plan.titulo;
+    const intro = `Plan de implementación técnica regenerado y profundizado para ${titulo}.`;
+
+    // 2. Micro-call para blueprints
+    let bpsDinamicos = Array.isArray(plan.blueprints) ? plan.blueprints : [];
+    try {
+      const bpCompletion = await ejecutarGroqConReintentos(
+        [
+          {
+            role: 'system',
+            content: 'Eres un Arquitecto de Software. Responde exclusivamente en formato JSON con la clave "blueprints" con 2 o 3 blueprints fundacionales técnicos específicos.'
+          },
+          {
+            role: 'user',
+            content: `Genera en JSON 2 o 3 blueprints técnicos para "${titulo}":
 {
-  "titulo": "${plan.titulo}",
-  "introduccion_pedagogica": "Resumen ejecutivo actualizado y objetivos pedagógicos profundizados",
-  "plan_markdown": "Markdown completo y detallado cumpliendo exhaustivamente las 4 dimensiones técnicas con código real copiable",
   "blueprints": [
     {
       "id": "bp_proj_regen_1",
-      "titulo": "Título técnico del Blueprint específico",
+      "titulo": "Título técnico",
       "categoria": "Modular / Database / Backend / Seguridad / Frontend / Realtime / Testing / Cloud",
       "icono": "Layers / Database / Code2 / ShieldCheck / Cpu / Radio / Smartphone / Cloud / Lock / Terminal / Activity",
       "tagClass": "bp-tag-arch / bp-tag-db / bp-tag-back / bp-tag-sec / bp-tag-front / bp-tag-realtime / bp-tag-test / bp-tag-cloud",
@@ -576,59 +590,20 @@ Debes responder estrictamente en formato JSON con la siguiente estructura:
       "askPrompt": "Pregunta sugerida para profundizar con el mentor"
     }
   ]
-}`;
-
-    const cc = await ejecutarGroqConReintentos(
-      [
-        { role: 'system', content: sp },
-        { role: 'user', content: `Regenera el plan técnico exhaustivo para: "${plan.idea_proyecto}". ${promptExtra} Nivel: ${est.nivel_actual || 'Intermedio'}. Perfil: ${pcStr}` }
-      ],
-      MODELO_MENTOR,
-      { type: 'json_object' },
-      6,
-      { max_tokens: 7500, temperature: 0.25 }
-    );
-
-    const rawContent = cc?.choices?.[0]?.message?.content || '{}';
-    const data = parsearJSONGroq(rawContent) || {};
-    const titulo = data.titulo || plan.titulo;
-    const intro = data.introduccion_pedagogica || 'Plan de implementación práctica regenerado para el proyecto.';
-    let planMarkdown = data.plan_markdown || '';
-
-    // Blindaje anti-truncamiento de regeneración
-    if (!planMarkdown || planMarkdown.length < 600 || !planMarkdown.includes('##')) {
-      console.log('Detectado plan_markdown trunco en regeneración. Solicitando Markdown directo...');
-      try {
-        const fbCc = await ejecutarGroqConReintentos([
-          {
-            role: 'system',
-            content: `Eres un Arquitecto de Software Senior y Mentor de Proyectos de Élite.
-Genera un Plan de Implementación de Software de Producción, EXHAUSTIVO, EXTENSO y 100% COMPLETO (mínimo 1500 palabras) en formato Markdown puro para el proyecto: "${titulo}".
-${promptExtra ? `AJUSTES: ${promptExtra}` : ''}
-TERMINANTEMENTE PROHIBIDO recortar el plan o devolver sólo títulos.
-Estructura obligatoria con bloques de código completos y funcionales (sin elipsis ni TODOs):
-# ${titulo}
-## 1. Arquitectura y Árbol de Archivos (árbol de directorios anotado con responsabilidades modulares)
-## 2. Inicialización de Archivos & Código Funcional Copiable (archivos reales de inicio a fin con GET, POST atómico con locks, PUT, DELETE y notificaciones completas)
-## 3. Integración Paso a Paso & Resultado en Ejecución (comandos de instalación, .env de muestra, cableado y resultado visual/consola)
-## 4. Criterios de Verificación & Catálogo de Trampas Comunes (checklist de validación y errores frecuentes a evitar adaptados al nivel del estudiante).`
-          },
-          {
-            role: 'user',
-            content: `Regenera y profundiza el plan técnico de arquitectura completo para: "${plan.idea_proyecto}". Nivel: ${est.nivel_actual || 'Intermedio'}.`
+}`
           }
-        ], MODELO_MENTOR, null, 6, { max_tokens: 7500, temperature: 0.25 });
-        const fbContent = fbCc?.choices?.[0]?.message?.content;
-        if (fbContent && fbContent.length > 500) {
-          planMarkdown = fbContent;
-        }
-      } catch (errFb) {
-        console.warn('Fallback Markdown directo en regeneración falló:', errFb.message);
+        ],
+        MODELO_MENTOR,
+        { type: 'json_object' },
+        2,
+        { max_tokens: 1200, temperature: 0.2 }
+      );
+      const bpData = parsearJSONGroq(bpCompletion?.choices?.[0]?.message?.content || '{}');
+      if (Array.isArray(bpData.blueprints) && bpData.blueprints.length > 0) {
+        bpsDinamicos = bpData.blueprints;
       }
-    }
-
-    if (!planMarkdown || planMarkdown.length < 100) {
-      planMarkdown = plan.plan_markdown;
+    } catch (errBp) {
+      console.warn('Micro-call de blueprints omitida por seguridad:', errBp.message);
     }
 
     const docUrl = await generarDocumentoWord(
@@ -639,10 +614,6 @@ Estructura obligatoria con bloques de código completos y funcionales (sin elips
       plan.id,
       'plan_regen'
     );
-
-    const bpsDinamicos = (Array.isArray(data.blueprints) && data.blueprints.length > 0)
-      ? data.blueprints
-      : (Array.isArray(plan.blueprints) ? plan.blueprints : []);
 
     const hist = typeof plan.mensajes === 'string' ? JSON.parse(plan.mensajes || '[]') : (plan.mensajes || []);
     const nowIso = new Date().toISOString();

@@ -75,7 +75,8 @@ export function MentorProvider({ children }) {
           estudiante_id: estudiante.id,
           idea_proyecto: ideaProyecto.trim(),
           github_url: githubUrlMentor.trim() || null
-        })
+        }),
+        timeoutMs: 90000
       });
       if (res.ok && res.data) {
         mostrarMensaje('¡Plan de desarrollo creado exitosamente por tu Mentor IA!', 'exito');
@@ -240,7 +241,7 @@ export function MentorProvider({ children }) {
           enfoque: enfoque || null,
           instrucciones_adicionales: instrucciones || null
         }),
-        timeoutMs: 65000
+        timeoutMs: 90000
       });
       if (res.ok && res.data && res.data.plan) {
         mostrarMensaje('¡Plan de desarrollo regenerado y enriquecido con éxito!', 'exito');
